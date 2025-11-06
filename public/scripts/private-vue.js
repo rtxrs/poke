@@ -417,6 +417,8 @@ createApp({
                         else if (searchTerm === 'perfect' && getIvPercent(p) >= 100) match = true;
                         else if (searchTerm === 'shadow' && p.pokemonDisplay.alignment === 1) match = true;
                         else if (searchTerm === 'purified' && p.pokemonDisplay.alignment === 2) match = true;
+                        else if (searchTerm === 'dynamax' && p.pokemonDisplay.breadModeEnum === 1) match = true;
+                        else if (searchTerm === 'gigantamax' && p.pokemonDisplay.breadModeEnum === 2) match = true;
                         const pokedexEntry = getPokedexEntry(p);
                         if (pokedexEntry?.pokemonClass === 'POKEMON_CLASS_LEGENDARY' && searchTerm === 'legendary') match = true;
                         if (pokedexEntry?.pokemonClass === 'POKEMON_CLASS_MYTHIC' && searchTerm === 'mythical') match = true;
