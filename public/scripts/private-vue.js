@@ -343,34 +343,30 @@ createApp({
             return normalEntry;
         };
 
+        const getKeepScore = (p) => {
+            if (!p) return 0;
+            let score = 0;
+            const ivPercent = (p.individualAttack + p.individualDefense + p.individualStamina) / 45 * 100;
+            if (ivPercent >= 100) score += 30;
+            else if (ivPercent === 0) score += 20;
+
+            if (p.pokemonDisplay?.shiny) score += 25;
+            if (p.isMaxLevel) score += 20;
+            if (p.pokemonDisplay?.alignment === 1) score += 15;
+            if (p.pokemonClass === 'POKEMON_CLASS_MYTHIC') score += 15;
+            if (p.isLucky) score += 10;
+            if (p.pokemonClass === 'POKEMON_CLASS_LEGENDARY') score += 10;
+            if (p.pokemonDisplay?.costume > 0) score += 10;
+            if (p.specialForm === 'Dynamax' || p.specialForm === 'Gigantamax') score += 5;
+            
+            return score;
+        };
+
         const highlights = computed(() => {
             if (!allPokemons.value || allPokemons.value.length === 0) return [];
 
-            const getRarityScore = (p) => {
-                const ivPercent = getIvPercent(p);
-                let score = 0;
-                if (ivPercent >= 100) {
-                    score += 8 + 8 * (p.cp / 10000);
-                }
-                if (p.pokemonDisplay?.shiny) {
-                    score += 4;
-                }
-                if (p.isLucky) {
-                    score += 2;
-                }
-                if (p.pokemonDisplay?.alignment === 1) {
-                    score += 1;
-                }
-                const pokedexEntry = getPokedexEntry(p);
-                if (pokedexEntry?.pokemonClass === 'POKEMON_CLASS_LEGENDARY' || pokedexEntry?.pokemonClass === 'POKEMON_CLASS_MYTHIC') {
-                    score += 8;
-                }
-                return score;
-            };
-
             const sorted = [...allPokemons.value]
-                .map(p => ({ ...p, rarityScore: getRarityScore(p) }))
-                .sort((a, b) => b.rarityScore - a.rarityScore || b.cp - a.cp);
+                .sort((a, b) => getKeepScore(b) - getKeepScore(a) || b.cp - a.cp);
 
             return sorted.slice(0, 9);
         });
@@ -463,8 +459,13 @@ pokemons.sort((a, b) => {
             // Filter for groups with more than one Pokémon
             const duplicateGroups = Object.values(groupedById).filter(group => group.length > 1);
 
-            // Sort these groups by size (descending)
+            // Sort groups by size (most duplicates first)
             duplicateGroups.sort((a, b) => b.length - a.length);
+
+            // Sub-sort Pokémon within each group by the new keep score
+            duplicateGroups.forEach(group => {
+                group.sort((a, b) => getKeepScore(b) - getKeepScore(a) || b.cp - a.cp);
+            });
 
             // Return the nested array of groups
             return duplicateGroups;
