@@ -128,256 +128,8 @@ const playerDataService = {
         }
     },
 
-    async generateAndSaveRankings() {
-        await this.init(); // Ensure uuidv4 and publicIdMap are loaded
-        try {
-            await fs.access(DATA_PATH);
-            const files = await fs.readdir(DATA_PATH);
-            const playerFiles = files.filter(f => f.endsWith('.json') && f !== 'PGSStats.json'); // Exclude PGSStats.json
-
-            const totalPlayers = playerFiles.length;
-            if (totalPlayers === 0) {
-                const emptyRankings = { recentPlayers: [], strongestPokemon: [], rarestPokemon: [] };
-                await fs.writeFile(RANKINGS_FILE, JSON.stringify(emptyRankings, null, 2));
-                await this.savePublicIdMap(); // Save map after generating new ID
-                return emptyRankings;
-            }
-
-            let allPokemon = [];
-            let recentPlayers = [];
-            const getPokedexEntry = (p) => {
-                if (!pokedexService.pokedex || !pokedexService.pokedex[p.pokemonId]) return null;
-                const allFormsForPokemon = pokedexService.pokedex[p.pokemonId];
-                const normalEntry = allFormsForPokemon['NORMAL'] || Object.values(allFormsForPokemon)[0];
-                if (!normalEntry) return null;
-
-                const playerFormName = p.pokemonDisplay.formName;
-                if (!playerFormName || playerFormName === 'Unset' || playerFormName.toUpperCase().includes('NORMAL')) {
-                    return normalEntry;
-                }
-
-                const normalizedPlayerForm = playerFormName.toUpperCase().replace(/_/g, '').replace(/-/g, '').replace(/\s/g, '');
-
-                for (const formKey in allFormsForPokemon) {
-                    const pokedexForm = allFormsForPokemon[formKey];
-                    const normalizedPokedexForm = formKey.toUpperCase().replace(/_/g, '').replace(/-/g, '').replace(/\s/g, '');
-
-                    if (normalizedPlayerForm.includes(normalizedPokedexForm)) {
-                        return pokedexForm;
-                    }
-                }
-
-                return normalEntry;
-            };
-
-            for (const file of playerFiles) {
-                const filePath = path.join(DATA_PATH, file);
-                const stats = await fs.stat(filePath);
-                const content = JSON.parse(await fs.readFile(filePath, 'utf-8'));
-
-                if (!content.account || !content.player || !content.pokemons) continue;
-
-                const playerName = content.account.name;
-                const playerId = content.account.playerSupportId;
-                const publicId = await this.generatePublicId(playerId); // Generate public ID
-
-                const buddy = content.pokemons.find(p => p.id === content.account.buddyPokemonProto?.buddyPokemonId);
-                recentPlayers.push({
-                    name: playerName,
-                    playerId: playerId,
-                    publicId: publicId, // Include public ID
-                    buddy: buddy && buddy.pokemonDisplay ? {
-                        name: pokedexService.getPokemonName(buddy.pokemonId, buddy.pokemonDisplay.formName),
-                        sprite: pokedexService.getPokemonSprite(buddy)
-                    } : null,
-                    kmWalked: content.player.kmWalked.toFixed(1),
-                    pokemonCaught: content.player.numPokemonCaptured,
-                    lastUpdate: stats.mtimeMs
-                });
-
-                content.pokemons.forEach(p => {
-                    if (!p.isEgg && p.pokemonDisplay) {
-                        const rarity = {
-                            score: 1,
-                            breakdown: {
-                                iv: { value: 1, text: '' },
-                                shiny: { value: 1, text: '' },
-                                lucky: { value: 1, text: '' },
-                                origin: { value: 1, text: '' }
-                            }
-                        };
-
-                        // IV Rarity
-                        if (p.individualAttack === 0 && p.individualDefense === 0 && p.individualStamina === 0) {
-                            rarity.breakdown.iv.value = 4097; // Prioritize 0 IV as rarer than Perfect IV (highest Perfect IV is 4096)
-                            rarity.breakdown.iv.text = '0 IV';
-                        } else if (p.individualAttack === 15 && p.individualDefense === 15 && p.individualStamina === 15) {
-                            const origin = p.originDetail?.originDetailCase;
-                            if (p.isLucky) {
-                                rarity.breakdown.iv.value = 64;
-                                rarity.breakdown.iv.text = 'Lucky Trade';
-                            } else if (p.tradedTimeMs > 0) {
-                                rarity.breakdown.iv.value = 1331; // Assuming Best Friend trade
-                                rarity.breakdown.iv.text = 'Trade';
-                            } else if (origin === 3 || origin === 13 || origin === 14 || origin === 15 || origin === 10 || origin === 24) { // GO, Egg, Raid, Research, GBL
-                                rarity.breakdown.iv.value = 216;
-                                rarity.breakdown.iv.text = 'Egg/Raid/Research';
-                            } else if (origin === 28) { // Giovanni
-                                rarity.breakdown.iv.value = 1000;
-                                rarity.breakdown.iv.text = 'Giovanni';
-                            } else if (p.pokemonDisplay?.weatherBoostedCondition) {
-                                rarity.breakdown.iv.value = 1728;
-                                rarity.breakdown.iv.text = 'Weather Boosted';
-                            } else { // Wild
-                                rarity.breakdown.iv.value = 4096;
-                                rarity.breakdown.iv.text = 'Wild';
-                            }
-                        }
-
-                        // Shiny Rarity
-                        if (p.pokemonDisplay?.shiny) {
-                            const shinyRate = pokedexService.getShinyRate(p.pokemonId, p.originDetail?.originDetailCase, getPokedexEntry(p)?.pokemonClass, p.originEvents);
-                            rarity.breakdown.shiny.value = shinyRate;
-                            if (p.originEvents && p.originEvents.some(event => event.includes('community_day'))) {
-                                rarity.breakdown.shiny.text = 'Community Day';
-                            } else {
-                                rarity.breakdown.shiny.text = 'Shiny';
-                            }
-                        }
-
-                        // Lucky Rarity
-                        if (p.isLucky) {
-                            rarity.breakdown.lucky.value = 20;
-                            rarity.breakdown.lucky.text = 'Lucky';
-                        }
-
-                        // Origin Rarity (e.g. shadow is rarer)
-                        
-                        rarity.score = rarity.breakdown.iv.value * rarity.breakdown.shiny.value * rarity.breakdown.lucky.value;
-
-                        allPokemon.push({ ...p, owner: playerName, ownerId: playerId, ownerPublicId: publicId, rarity: rarity }); // Include public ID
-                    }
-                });
-            }
-
-            const sortedRecentPlayers = recentPlayers
-                .sort((a, b) => b.lastUpdate - a.lastUpdate)
-                .slice(0, 50);
-
-            const strongestPokemon = [...allPokemon]
-                .sort((a, b) => b.cp - a.cp)
-                .slice(0, 50)
-                .map(p => ({
-                    name: pokedexService.getPokemonName(p.pokemonId, p.pokemonDisplay.formName),
-                    sprite: pokedexService.getPokemonSprite(p),
-                    cp: p.cp,
-                    owner: p.owner,
-                    ownerId: p.ownerId,
-                    ownerPublicId: p.ownerPublicId, // Include public ID
-                    iv: {
-                        attack: p.individualAttack,
-                        defense: p.individualDefense,
-                        stamina: p.individualStamina
-                    },
-                    cpm: p.cpMultiplier + (p.additionalCpMultiplier || 0),
-                    pokemonDisplay: p.pokemonDisplay,
-                    isShiny: p.pokemonDisplay.shiny,
-                    isLucky: p.isLucky,
-                    isPerfect: p.individualAttack === 15 && p.individualDefense === 15 && p.individualStamina === 15,
-                    isZeroIv: p.individualAttack === 0 && p.individualDefense === 0 && p.individualStamina === 0,
-                    isShadow: p.pokemonDisplay.alignment === 1,
-                    isPurified: p.pokemonDisplay.alignment === 2,
-                    isLegendary: getPokedexEntry(p)?.pokemonClass === 'POKEMON_CLASS_LEGENDARY',
-                    isMythical: getPokedexEntry(p)?.pokemonClass === 'POKEMON_CLASS_MYTHIC',
-                    isTraded: p.tradedTimeMs > 0,
-                    isMaxLevel: (p.cpMultiplier + (p.additionalCpMultiplier || 0)) > 0.83
-                }));
-
-            const rarestPokemonRanked = [...allPokemon]
-                .filter(p => p.rarity.score > 1)
-                .sort((a, b) => b.rarity.score - a.rarity.score || b.cp - a.cp)
-                .slice(0, 50)
-                .map(p => ({
-                    rarity: p.rarity,
-                    name: pokedexService.getPokemonName(p.pokemonId, p.pokemonDisplay.formName),
-                    sprite: pokedexService.getPokemonSprite(p),
-                    owner: p.owner,
-                    ownerId: p.ownerId,
-                    ownerPublicId: p.ownerPublicId, // Include public ID
-                    pokemonDisplay: p.pokemonDisplay,
-                    isShiny: p.pokemonDisplay.shiny,
-                    isLucky: p.isLucky,
-                    isPerfect: ((p.individualAttack + p.individualDefense + p.individualStamina) / 45) >= 1,
-                    isZeroIv: p.individualAttack === 0 && p.individualDefense === 0 && p.individualStamina === 0,
-                    isShadow: p.pokemonDisplay.alignment === 1,
-                    isPurified: p.pokemonDisplay.alignment === 2,
-                    isLegendary: getPokedexEntry(p)?.pokemonClass === 'POKEMON_CLASS_LEGENDARY',
-                    isMythical: getPokedexEntry(p)?.pokemonClass === 'POKEMON_CLASS_MYTHIC',
-                    isTraded: p.tradedTimeMs > 0,
-                    isMaxLevel: (p.cpMultiplier + (p.additionalCpMultiplier || 0)) > 0.83
-                }));
-
-            const rankings = { recentPlayers: sortedRecentPlayers, strongestPokemon, rarestPokemon: rarestPokemonRanked };
-            await fs.writeFile(RANKINGS_FILE, JSON.stringify(rankings, null, 2));
-            await this.savePublicIdMap(); // Save map after generating new ID
-            return rankings;
-
-        } catch (error) {
-            console.error("Error in playerDataService.generateAndSaveRankings:", error);
-            throw new Error('Server error processing rankings.');
-        }
-    },
-
-    async updateRankingsForPlayer(playerData) {
-        await this.init(); // Ensure uuidv4 and publicIdMap are loaded
-        const playerId = playerData.account.playerSupportId;
-        const playerName = playerData.account.name;
-        const publicId = await this.generatePublicId(playerId); // Generate public ID
-
-        let rankings = { recentPlayers: [], strongestPokemon: [], rarestPokemon: [] };
-        try {
-            const rankingsContent = await fs.readFile(RANKINGS_FILE, 'utf-8');
-            rankings = JSON.parse(rankingsContent);
-        } catch (error) {
-            if (error.code === 'ENOENT') {
-                console.log('🔄 rankings.json not found during update, generating new one.');
-                rankings = await this.generateAndSaveRankings();
-            } else {
-                console.error('Error reading rankings.json for update:', error);
-                throw error;
-            }
-        }
-
-        // --- Update Recent Players ---
-        const newRecentPlayerEntry = {
-            name: playerName,
-            playerId: playerId,
-            publicId: publicId, // Include public ID
-            buddy: playerData.pokemons.find(p => p.id === playerData.account.buddyPokemonProto?.buddyPokemonId) && playerData.pokemons.find(p => p.id === playerData.account.buddyPokemonProto?.buddyPokemonId).pokemonDisplay ? {
-                name: pokedexService.getPokemonName(playerData.pokemons.find(p => p.id === playerData.account.buddyPokemonProto?.buddyPokemonId).pokemonId, playerData.pokemons.find(p => p.id === playerData.account.buddyPokemonProto?.buddyPokemonId).pokemonDisplay.formName),
-                sprite: pokedexService.getPokemonSprite(playerData.pokemons.find(p => p.id === playerData.account.buddyPokemonProto?.buddyPokemonId))
-            } : null,
-            kmWalked: playerData.player.kmWalked.toFixed(1),
-            pokemonCaught: playerData.player.numPokemonCaptured,
-            lastUpdate: Date.now() // Use current time for last update
-        };
-
-        const existingRecentPlayerIndex = rankings.recentPlayers.findIndex(p => p.playerId === playerId);
-        if (existingRecentPlayerIndex > -1) {
-            rankings.recentPlayers[existingRecentPlayerIndex] = newRecentPlayerEntry;
-        } else {
-            rankings.recentPlayers.push(newRecentPlayerEntry);
-        }
-        rankings.recentPlayers = rankings.recentPlayers
-            .sort((a, b) => b.lastUpdate - a.lastUpdate)
-            .slice(0, 50);
-
-        // --- Re-generate Strongest and Rarest Pokemon (for simplicity) ---
-        // In a more complex scenario, this would be incremental too.
+    async _calculatePokemonRankings(playerFiles) {
         let allPokemon = [];
-        const files = await fs.readdir(DATA_PATH);
-        const playerFiles = files.filter(f => f.endsWith('.json') && f !== 'PGSStats.json');
-
         const getPokedexEntry = (p) => {
             if (!pokedexService.pokedex || !pokedexService.pokedex[p.pokemonId]) return null;
             const allFormsForPokemon = pokedexService.pokedex[p.pokemonId];
@@ -409,9 +161,9 @@ const playerDataService = {
 
             if (!content.account || !content.player || !content.pokemons) continue;
 
-            const currentOwnerName = content.account.name;
-            const currentOwnerId = content.account.playerSupportId;
-            const currentOwnerPublicId = await this.generatePublicId(currentOwnerId); // Generate public ID
+            const playerName = content.account.name;
+            const playerId = content.account.playerSupportId;
+            const publicId = await this.generatePublicId(playerId);
 
             content.pokemons.forEach(p => {
                 if (!p.isEgg && p.pokemonDisplay) {
@@ -427,7 +179,7 @@ const playerDataService = {
 
                     // IV Rarity
                     if (p.individualAttack === 0 && p.individualDefense === 0 && p.individualStamina === 0) {
-                        rarity.breakdown.iv.value = 4097; // Prioritize 0 IV as rarer than Perfect IV (highest Perfect IV is 4096)
+                        rarity.breakdown.iv.value = 4097;
                         rarity.breakdown.iv.text = '0 IV';
                     } else if (p.individualAttack === 15 && p.individualDefense === 15 && p.individualStamina === 15) {
                         const origin = p.originDetail?.originDetailCase;
@@ -435,18 +187,18 @@ const playerDataService = {
                             rarity.breakdown.iv.value = 64;
                             rarity.breakdown.iv.text = 'Lucky Trade';
                         } else if (p.tradedTimeMs > 0) {
-                            rarity.breakdown.iv.value = 1331; // Assuming Best Friend trade
+                            rarity.breakdown.iv.value = 1331;
                             rarity.breakdown.iv.text = 'Trade';
-                        } else if (origin === 3 || origin === 13 || origin === 14 || origin === 15 || origin === 10 || origin === 24) { // GO, Egg, Raid, Research, GBL
+                        } else if (origin === 3 || origin === 13 || origin === 14 || origin === 15 || origin === 10 || origin === 24) {
                             rarity.breakdown.iv.value = 216;
                             rarity.breakdown.iv.text = 'Egg/Raid/Research';
-                        } else if (origin === 28) { // Giovanni
+                        } else if (origin === 28) {
                             rarity.breakdown.iv.value = 1000;
                             rarity.breakdown.iv.text = 'Giovanni';
                         } else if (p.pokemonDisplay?.weatherBoostedCondition) {
                             rarity.breakdown.iv.value = 1728;
                             rarity.breakdown.iv.text = 'Weather Boosted';
-                        } else { // Wild
+                        } else {
                             rarity.breakdown.iv.value = 4096;
                             rarity.breakdown.iv.text = 'Wild';
                         }
@@ -469,16 +221,14 @@ const playerDataService = {
                         rarity.breakdown.lucky.text = 'Lucky';
                     }
 
-                    // Origin Rarity (e.g. shadow is rarer)
-                    
                     rarity.score = rarity.breakdown.iv.value * rarity.breakdown.shiny.value * rarity.breakdown.lucky.value;
 
-                    allPokemon.push({ ...p, owner: currentOwnerName, ownerId: currentOwnerId, ownerPublicId: currentOwnerPublicId, rarity: rarity }); // Include public ID
+                    allPokemon.push({ ...p, owner: playerName, ownerId: playerId, ownerPublicId: publicId, rarity: rarity });
                 }
             });
         }
 
-        rankings.strongestPokemon = [...allPokemon]
+        const strongestPokemon = [...allPokemon]
             .sort((a, b) => b.cp - a.cp)
             .slice(0, 50)
             .map(p => ({
@@ -487,13 +237,14 @@ const playerDataService = {
                 cp: p.cp,
                 owner: p.owner,
                 ownerId: p.ownerId,
-                ownerPublicId: p.ownerPublicId, // Include public ID
+                ownerPublicId: p.ownerPublicId,
                 iv: {
                     attack: p.individualAttack,
                     defense: p.individualDefense,
                     stamina: p.individualStamina
                 },
                 cpm: p.cpMultiplier + (p.additionalCpMultiplier || 0),
+                pokemonDisplay: p.pokemonDisplay,
                 isShiny: p.pokemonDisplay.shiny,
                 isLucky: p.isLucky,
                 isPerfect: p.individualAttack === 15 && p.individualDefense === 15 && p.individualStamina === 15,
@@ -506,7 +257,7 @@ const playerDataService = {
                 isMaxLevel: (p.cpMultiplier + (p.additionalCpMultiplier || 0)) > 0.83
             }));
 
-        rankings.rarestPokemon = [...allPokemon]
+        const rarestPokemonRanked = [...allPokemon]
             .filter(p => p.rarity.score > 1)
             .sort((a, b) => b.rarity.score - a.rarity.score || b.cp - a.cp)
             .slice(0, 50)
@@ -516,7 +267,7 @@ const playerDataService = {
                 sprite: pokedexService.getPokemonSprite(p),
                 owner: p.owner,
                 ownerId: p.ownerId,
-                ownerPublicId: p.ownerPublicId, // Include public ID
+                ownerPublicId: p.ownerPublicId,
                 pokemonDisplay: p.pokemonDisplay,
                 isShiny: p.pokemonDisplay.shiny,
                 isLucky: p.isLucky,
@@ -529,6 +280,121 @@ const playerDataService = {
                 isTraded: p.tradedTimeMs > 0,
                 isMaxLevel: (p.cpMultiplier + (p.additionalCpMultiplier || 0)) > 0.83
             }));
+
+        return { strongestPokemon, rarestPokemon: rarestPokemonRanked };
+    },
+
+    async generateAndSaveRankings() {
+        await this.init(); // Ensure uuidv4 and publicIdMap are loaded
+        try {
+            await fs.access(DATA_PATH);
+            const files = await fs.readdir(DATA_PATH);
+            const playerFiles = files.filter(f => f.endsWith('.json') && f !== 'PGSStats.json'); // Exclude PGSStats.json
+
+            const totalPlayers = playerFiles.length;
+            if (totalPlayers === 0) {
+                const emptyRankings = { recentPlayers: [], strongestPokemon: [], rarestPokemon: [] };
+                await fs.writeFile(RANKINGS_FILE, JSON.stringify(emptyRankings, null, 2));
+                await this.savePublicIdMap(); // Save map after generating new ID
+                return emptyRankings;
+            }
+
+            let recentPlayers = [];
+            for (const file of playerFiles) {
+                const filePath = path.join(DATA_PATH, file);
+                const stats = await fs.stat(filePath);
+                const content = JSON.parse(await fs.readFile(filePath, 'utf-8'));
+
+                if (!content.account || !content.player || !content.pokemons) continue;
+
+                const playerName = content.account.name;
+                const playerId = content.account.playerSupportId;
+                const publicId = await this.generatePublicId(playerId); // Generate public ID
+
+                const buddy = content.pokemons.find(p => p.id === content.account.buddyPokemonProto?.buddyPokemonId);
+                recentPlayers.push({
+                    name: playerName,
+                    playerId: playerId,
+                    publicId: publicId, // Include public ID
+                    buddy: buddy && buddy.pokemonDisplay ? {
+                        name: pokedexService.getPokemonName(buddy.pokemonId, buddy.pokemonDisplay.formName),
+                        sprite: pokedexService.getPokemonSprite(buddy)
+                    } : null,
+                    kmWalked: content.player.kmWalked.toFixed(1),
+                    pokemonCaught: content.player.numPokemonCaptured,
+                    lastUpdate: stats.mtimeMs
+                });
+            }
+
+            const sortedRecentPlayers = recentPlayers
+                .sort((a, b) => b.lastUpdate - a.lastUpdate)
+                .slice(0, 50);
+
+            const { strongestPokemon, rarestPokemon } = await this._calculatePokemonRankings(playerFiles);
+
+            const rankings = { recentPlayers: sortedRecentPlayers, strongestPokemon, rarestPokemon };
+            await fs.writeFile(RANKINGS_FILE, JSON.stringify(rankings, null, 2));
+            await this.savePublicIdMap(); // Save map after generating new ID
+            return rankings;
+
+        } catch (error) {
+            console.error("Error in playerDataService.generateAndSaveRankings:", error);
+            throw new Error('Server error processing rankings.');
+        }
+    },
+
+    async updateRankingsForPlayer(playerData) {
+        await this.init(); // Ensure uuidv4 and publicIdMap are loaded
+        const playerId = playerData.account.playerSupportId;
+        const playerName = playerData.account.name;
+        const publicId = await this.generatePublicId(playerId); // Generate public ID
+
+        let rankings = { recentPlayers: [], strongestPokemon: [], rarestPokemon: [] };
+        try {
+            const rankingsContent = await fs.readFile(RANKINGS_FILE, 'utf-8');
+            rankings = JSON.parse(rankingsContent);
+        } catch (error) {
+            if (error.code === 'ENOENT') {
+                console.log('🔄 rankings.json not found during update, generating new one.');
+                await this.generateAndSaveRankings();
+                return;
+            } else {
+                console.error('Error reading rankings.json for update:', error);
+                throw error;
+            }
+        }
+
+        // --- Update Recent Players ---
+        const newRecentPlayerEntry = {
+            name: playerName,
+            playerId: playerId,
+            publicId: publicId, // Include public ID
+            buddy: playerData.pokemons.find(p => p.id === playerData.account.buddyPokemonProto?.buddyPokemonId) && playerData.pokemons.find(p => p.id === playerData.account.buddyPokemonProto?.buddyPokemonId).pokemonDisplay ? {
+                name: pokedexService.getPokemonName(playerData.pokemons.find(p => p.id === playerData.account.buddyPokemonProto?.buddyPokemonId).pokemonId, playerData.pokemons.find(p => p.id === playerData.account.buddyPokemonProto?.buddyPokemonId).pokemonDisplay.formName),
+                sprite: pokedexService.getPokemonSprite(playerData.pokemons.find(p => p.id === playerData.account.buddyPokemonProto?.buddyPokemonId))
+            } : null,
+            kmWalked: playerData.player.kmWalked.toFixed(1),
+            pokemonCaught: playerData.player.numPokemonCaptured,
+            lastUpdate: Date.now() // Use current time for last update
+        };
+
+        const existingRecentPlayerIndex = rankings.recentPlayers.findIndex(p => p.playerId === playerId);
+        if (existingRecentPlayerIndex > -1) {
+            rankings.recentPlayers[existingRecentPlayerIndex] = newRecentPlayerEntry;
+        } else {
+            rankings.recentPlayers.push(newRecentPlayerEntry);
+        }
+        rankings.recentPlayers = rankings.recentPlayers
+            .sort((a, b) => b.lastUpdate - a.lastUpdate)
+            .slice(0, 50);
+
+        // --- Re-generate Strongest and Rarest Pokemon ---
+        const files = await fs.readdir(DATA_PATH);
+        const playerFiles = files.filter(f => f.endsWith('.json') && f !== 'PGSStats.json');
+        const { strongestPokemon, rarestPokemon } = await this._calculatePokemonRankings(playerFiles);
+        
+        rankings.strongestPokemon = strongestPokemon;
+        rankings.rarestPokemon = rarestPokemon;
 
         await fs.writeFile(RANKINGS_FILE, JSON.stringify(rankings, null, 2));
     },
