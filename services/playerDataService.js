@@ -252,10 +252,10 @@ const playerDataService = {
                         }
 
                         // Origin Rarity (e.g. shadow is rarer)
-                        if (p.pokemonDisplay?.shadow) {
+                        if (p.pokemonDisplay?.alignment === 1) {
                             rarity.breakdown.origin.value = 2; // Arbitrary multiplier for shadow
                             rarity.breakdown.origin.text = 'Shadow';
-                        } else if (p.pokemonDisplay?.purified) {
+                        } else if (p.pokemonDisplay?.alignment === 2) {
                             rarity.breakdown.origin.value = 1.5; // Arbitrary multiplier for purified
                             rarity.breakdown.origin.text = 'Purified';
                         }
@@ -292,8 +292,8 @@ const playerDataService = {
                     isLucky: p.isLucky,
                     isPerfect: p.individualAttack === 15 && p.individualDefense === 15 && p.individualStamina === 15,
                     isZeroIv: p.individualAttack === 0 && p.individualDefense === 0 && p.individualStamina === 0,
-                    isShadow: p.pokemonDisplay.shadow,
-                    isPurified: p.pokemonDisplay.purified,
+                    isShadow: p.pokemonDisplay.alignment === 1,
+                    isPurified: p.pokemonDisplay.alignment === 2,
                     isLegendary: getPokedexEntry(p)?.pokemonClass === 'POKEMON_CLASS_LEGENDARY',
                     isMythical: getPokedexEntry(p)?.pokemonClass === 'POKEMON_CLASS_MYTHIC',
                     isTraded: p.tradedTimeMs > 0,
@@ -316,8 +316,8 @@ const playerDataService = {
                     isLucky: p.isLucky,
                     isPerfect: ((p.individualAttack + p.individualDefense + p.individualStamina) / 45) >= 1,
                     isZeroIv: p.individualAttack === 0 && p.individualDefense === 0 && p.individualStamina === 0,
-                    isShadow: p.pokemonDisplay.shadow,
-                    isPurified: p.pokemonDisplay.purified,
+                    isShadow: p.pokemonDisplay.alignment === 1,
+                    isPurified: p.pokemonDisplay.alignment === 2,
                     isLegendary: getPokedexEntry(p)?.pokemonClass === 'POKEMON_CLASS_LEGENDARY',
                     isMythical: getPokedexEntry(p)?.pokemonClass === 'POKEMON_CLASS_MYTHIC',
                     isTraded: p.tradedTimeMs > 0,
@@ -477,10 +477,10 @@ const playerDataService = {
                     }
 
                     // Origin Rarity (e.g. shadow is rarer)
-                    if (p.pokemonDisplay?.shadow) {
+                    if (p.pokemonDisplay?.alignment === 1) {
                         rarity.breakdown.origin.value = 2; // Arbitrary multiplier for shadow
                         rarity.breakdown.origin.text = 'Shadow';
-                    } else if (p.pokemonDisplay?.purified) {
+                    } else if (p.pokemonDisplay?.alignment === 2) {
                         rarity.breakdown.origin.value = 1.5; // Arbitrary multiplier for purified
                         rarity.breakdown.origin.text = 'Purified';
                     }
@@ -512,8 +512,8 @@ const playerDataService = {
                 isLucky: p.isLucky,
                 isPerfect: p.individualAttack === 15 && p.individualDefense === 15 && p.individualStamina === 15,
                 isZeroIv: p.individualAttack === 0 && p.individualDefense === 0 && p.individualStamina === 0,
-                isShadow: p.pokemonDisplay.shadow,
-                isPurified: p.pokemonDisplay.purified,
+                isShadow: p.pokemonDisplay.alignment === 1,
+                isPurified: p.pokemonDisplay.alignment === 2,
                 isLegendary: getPokedexEntry(p)?.pokemonClass === 'POKEMON_CLASS_LEGENDARY',
                 isMythical: getPokedexEntry(p)?.pokemonClass === 'POKEMON_CLASS_MYTHIC',
                 isTraded: p.tradedTimeMs > 0,
@@ -536,8 +536,8 @@ const playerDataService = {
                 isLucky: p.isLucky,
                 isPerfect: ((p.individualAttack + p.individualDefense + p.individualStamina) / 45) >= 1,
                 isZeroIv: p.individualAttack === 0 && p.individualDefense === 0 && p.individualStamina === 0,
-                isShadow: p.pokemonDisplay.shadow,
-                isPurified: p.pokemonDisplay.purified,
+                isShadow: p.pokemonDisplay.alignment === 1,
+                isPurified: p.pokemonDisplay.alignment === 2,
                 isLegendary: getPokedexEntry(p)?.pokemonClass === 'POKEMON_CLASS_LEGENDARY',
                 isMythical: getPokedexEntry(p)?.pokemonClass === 'POKEMON_CLASS_MYTHIC',
                 isTraded: p.tradedTimeMs > 0,
