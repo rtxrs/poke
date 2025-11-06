@@ -252,15 +252,8 @@ const playerDataService = {
                         }
 
                         // Origin Rarity (e.g. shadow is rarer)
-                        if (p.pokemonDisplay?.alignment === 1) {
-                            rarity.breakdown.origin.value = 2; // Arbitrary multiplier for shadow
-                            rarity.breakdown.origin.text = 'Shadow';
-                        } else if (p.pokemonDisplay?.alignment === 2) {
-                            rarity.breakdown.origin.value = 1.5; // Arbitrary multiplier for purified
-                            rarity.breakdown.origin.text = 'Purified';
-                        }
                         
-                        rarity.score = rarity.breakdown.iv.value * rarity.breakdown.shiny.value * rarity.breakdown.lucky.value * rarity.breakdown.origin.value;
+                        rarity.score = rarity.breakdown.iv.value * rarity.breakdown.shiny.value * rarity.breakdown.lucky.value;
 
                         allPokemon.push({ ...p, owner: playerName, ownerId: playerId, ownerPublicId: publicId, rarity: rarity }); // Include public ID
                     }
@@ -477,15 +470,8 @@ const playerDataService = {
                     }
 
                     // Origin Rarity (e.g. shadow is rarer)
-                    if (p.pokemonDisplay?.alignment === 1) {
-                        rarity.breakdown.origin.value = 2; // Arbitrary multiplier for shadow
-                        rarity.breakdown.origin.text = 'Shadow';
-                    } else if (p.pokemonDisplay?.alignment === 2) {
-                        rarity.breakdown.origin.value = 1.5; // Arbitrary multiplier for purified
-                        rarity.breakdown.origin.text = 'Purified';
-                    }
                     
-                    rarity.score = rarity.breakdown.iv.value * rarity.breakdown.shiny.value * rarity.breakdown.lucky.value * rarity.breakdown.origin.value;
+                    rarity.score = rarity.breakdown.iv.value * rarity.breakdown.shiny.value * rarity.breakdown.lucky.value;
 
                     allPokemon.push({ ...p, owner: currentOwnerName, ownerId: currentOwnerId, ownerPublicId: currentOwnerPublicId, rarity: rarity }); // Include public ID
                 }
