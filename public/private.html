@@ -93,6 +93,35 @@
             </div>
         </div>
 
+        <!-- Cleanup Modal -->
+        <div id="cleanup-modal-backdrop" v-if="showCleanupModal" @click.self="closeCleanupModal()">
+            <div id="cleanup-modal-content" class="card">
+                <button id="cleanup-modal-close-btn" @click="closeCleanupModal()">&times;</button>
+                <div class="summary-header">
+                    <h2>Pokemon Cleanup ({{ duplicatedPokemon.length }} species)</h2>
+                    <input type="text" id="cleanup-search-bar" placeholder="Filter duplicates..." v-model="cleanupSearchQuery">
+                </div>
+                <div class="cleanup-scroll-container">
+                    <div v-for="(group, index) in duplicatedPokemon" :key="index" class="cleanup-row">
+                        <div class="cleanup-row-header">
+                            <h4>{{ group[0].name }} ({{ group.length }})</h4>
+                        </div>
+                        <div class="pokemon-row-scroll">
+                            <div v-for="p in group" :key="p.id" class="pokemon-card" :style="createBackgroundStyle(p.typeColors)" @click="openPokemonModal(p)">
+                                <img :src="p.sprite" :alt="p.nickname || p.name" loading="lazy">
+                                <p class="pokemon-name" v-html="getBadges(p, p.nickname || p.name)"></p>
+                                <p class="pokemon-cp">CP {{ p.cp }}</p>
+                                <div class="iv-bar-container">
+                                    <div class="iv-bar" :style="{ width: getIvPercent(p) + '%', backgroundColor: getIvColor(getIvPercent(p)) }"></div>
+                                </div>
+                                <small>{{ getIvPercent(p) }}% ({{ p.individualAttack }}/{{ p.individualDefense }}/{{ p.individualStamina }})</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div v-if="loading" class="loading-overlay">
             <div class="loading-spinner"></div>
             <p class="loading-message">Loading player data...</p>
@@ -308,6 +337,17 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </section>
+
+            <!-- Tools Tab -->
+            <section id="tools-section" v-show="activeTab === 'tools'" class="card">
+                <div class="summary-header">
+                    <h2>Tools</h2>
+                </div>
+                <div class="tools-container">
+                    <button class="btn" @click="openCleanupModal()">Pokemon Cleanup</button>
+                    <!-- Content for Pokemon Cleanup will go here -->
                 </div>
             </section>
         </main>

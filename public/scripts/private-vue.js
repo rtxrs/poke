@@ -395,38 +395,44 @@ createApp({
         const totalPotions = computed(() => (groupedItems.value['Potions & Revives'] || []).filter(item => item.itemName.includes('Potion')).reduce((total, item) => total + item.count, 0));
         const totalRevives = computed(() => (groupedItems.value['Potions & Revives'] || []).filter(item => item.itemName.includes('Revive')).reduce((total, item) => total + item.count, 0));
 
-        const filteredPokemon = computed(() => {
-            let pokemons = [...allPokemons.value];
-            const searchTerms = searchQuery.value.toLowerCase().trim().split(',').map(term => term.trim()).filter(term => term);
-            if (searchTerms.length > 0) {
-                pokemons = pokemons.filter(p => {
-                    if (!p.pokemonDisplay) return false;
-                    return searchTerms.every(term => {
-                        const isNegated = term.startsWith('!');
-                        const searchTerm = isNegated ? term.substring(1) : term;
-                        let match = false;
-                        const types = (p.typeColors || []).map(color => {
-                            for (const type in pokedexService.value.typeColorMap) {
-                                if (pokedexService.value.typeColorMap[type] === color) return type.toLowerCase();
-                            }
-                        });
-                        if (types.includes(searchTerm)) match = true;
-                        else if ((p.name || '').toLowerCase().includes(searchTerm) || (p.nickname || '').toLowerCase().includes(searchTerm)) match = true;
-                        else if (searchTerm === 'shiny' && p.pokemonDisplay.shiny) match = true;
-                        else if (searchTerm === 'lucky' && p.isLucky) match = true;
-                        else if (searchTerm === 'perfect' && getIvPercent(p) >= 100) match = true;
-                        else if (searchTerm === 'shadow' && p.pokemonDisplay.alignment === 1) match = true;
-                        else if (searchTerm === 'purified' && p.pokemonDisplay.alignment === 2) match = true;
-                        else if (searchTerm === 'dynamax' && p.pokemonDisplay.breadModeEnum === 1) match = true;
-                        else if (searchTerm === 'gigantamax' && p.pokemonDisplay.breadModeEnum === 2) match = true;
-                        const pokedexEntry = getPokedexEntry(p);
-                        if (pokedexEntry?.pokemonClass === 'POKEMON_CLASS_LEGENDARY' && searchTerm === 'legendary') match = true;
-                        if (pokedexEntry?.pokemonClass === 'POKEMON_CLASS_MYTHIC' && searchTerm === 'mythical') match = true;
-                        return isNegated ? !match : match;
-                    });
-                });
+        const filterPokemon = (pokemons, query) => {
+            const searchTerms = query.toLowerCase().trim().split(',').map(term => term.trim()).filter(term => term);
+            if (searchTerms.length === 0) {
+                return pokemons;
             }
-            pokemons.sort((a, b) => {
+
+            return pokemons.filter(p => {
+                if (!p.pokemonDisplay) return false;
+                return searchTerms.every(term => {
+                    const isNegated = term.startsWith('!');
+                    const searchTerm = isNegated ? term.substring(1) : term;
+                    let match = false;
+                    const types = (p.typeColors || []).map(color => {
+                        for (const type in pokedexService.value.typeColorMap) {
+                            if (pokedexService.value.typeColorMap[type] === color) return type.toLowerCase();
+                        }
+                    });
+                    if (types.includes(searchTerm)) match = true;
+                    else if ((p.name || '').toLowerCase().includes(searchTerm) || (p.nickname || '').toLowerCase().includes(searchTerm)) match = true;
+                    else if (searchTerm === 'shiny' && p.pokemonDisplay.shiny) match = true;
+                    else if (searchTerm === 'lucky' && p.isLucky) match = true;
+                    else if (searchTerm === 'perfect' && getIvPercent(p) >= 100) match = true;
+                    else if (searchTerm === 'shadow' && p.pokemonDisplay.alignment === 1) match = true;
+                    else if (searchTerm === 'purified' && p.pokemonDisplay.alignment === 2) match = true;
+                    else if (searchTerm === 'dynamax' && p.pokemonDisplay.breadModeEnum === 1) match = true;
+                    else if (searchTerm === 'gigantamax' && p.pokemonDisplay.breadModeEnum === 2) match = true;
+                    const pokedexEntry = getPokedexEntry(p);
+                    if (pokedexEntry?.pokemonClass === 'POKEMON_CLASS_LEGENDARY' && searchTerm === 'legendary') match = true;
+                    if (pokedexEntry?.pokemonClass === 'POKEMON_CLASS_MYTHIC' && searchTerm === 'mythical') match = true;
+                    return isNegated ? !match : match;
+                });
+            });
+        };
+
+        const filteredPokemon = computed(() => {
+            let pokemons = filterPokemon([...allPokemons.value], searchQuery.value);
+            
+pokemons.sort((a, b) => {
                 let valA, valB;
                 switch (sortKey.value) {
                     case 'cp': valA = a.cp; valB = b.cp; break;
@@ -440,7 +446,33 @@ createApp({
             return pokemons;
         });
 
+        const showCleanupModal = ref(false);
+        const cleanupSearchQuery = ref('');
+        const duplicatedPokemon = computed(() => {
+            const pokemonsToProcess = filterPokemon(allPokemons.value, cleanupSearchQuery.value);
+
+            // Group the (now potentially filtered) Pokémon
+            const groupedById = pokemonsToProcess.reduce((acc, p) => {
+                if (!acc[p.pokemonId]) {
+                    acc[p.pokemonId] = [];
+                }
+                acc[p.pokemonId].push(p);
+                return acc;
+            }, {});
+
+            // Filter for groups with more than one Pokémon
+            const duplicateGroups = Object.values(groupedById).filter(group => group.length > 1);
+
+            // Sort these groups by size (descending)
+            duplicateGroups.sort((a, b) => b.length - a.length);
+
+            // Return the nested array of groups
+            return duplicateGroups;
+        });
+
         // --- Methods ---
+        const openCleanupModal = () => { showCleanupModal.value = true; };
+        const closeCleanupModal = () => { showCleanupModal.value = false; };
         const toggleSortDirection = () => { sortDirection.value = sortDirection.value === 'desc' ? 'asc' : 'desc'; };
         const getItemSprite = (itemId) => `https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Items/Item_${String(itemId).padStart(4, '0')}.png`;
         const getCardClass = (p) => p.typeColors && p.typeColors.length > 0 ? 'pokemon-card colored' : 'pokemon-card';
@@ -532,7 +564,7 @@ createApp({
                         // --- Tab Navigation ---
         const updateActiveTabFromHash = () => {
             const hash = window.location.hash.replace('#', '');
-            const validTabs = ['character', 'pokemon', 'statistics'];
+            const validTabs = ['character', 'pokemon', 'statistics', 'tools'];
             if (validTabs.includes(hash)) {
                 activeTab.value = hash;
             } else {
@@ -595,7 +627,8 @@ createApp({
             teamColor, xpPercentage, xpProgressText, stardust, pokecoins, highlights,
             groupedItems, itemCategoryOrder, filteredPokemon,
             totalPokeBalls, totalPotions, totalRevives,
-            toggleSortDirection, getItemSprite, createBackgroundStyle, getIvPercent, getCardClass, getBadges, getLevelFromCpm, openPokemonModal, displayMove,
+            toggleSortDirection, getItemSprite, createBackgroundStyle, getIvPercent, getCardClass, getBadges, getLevelFromCpm, openPokemonModal, displayMove, getIvColor,
+            showCleanupModal, duplicatedPokemon, openCleanupModal, closeCleanupModal, cleanupSearchQuery,
             // Statistics
             stats_shinyRate,
             stats_perfectNundo,

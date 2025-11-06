@@ -595,3 +595,96 @@ body.dashboard-private, body:not([class]) {
     animation: aura-pulse 5s ease-in-out infinite;
     z-index: 2; /* Same layer as shadow, since they are mutually exclusive */
 }
+
+/* --- Cleanup Modal --- */
+#cleanup-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+#cleanup-modal-content {
+    position: relative;
+    width: 90%;
+    max-width: 1000px; /* Increased width for grid view */
+    height: 90vh; /* Use height instead of max-height */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Let internal grid handle scroll */
+}
+
+#cleanup-modal-close-btn {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 1.8em;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #666;
+    z-index: 10; /* Ensure it's above other content */
+}
+
+#cleanup-modal-content .summary-header {
+    flex-shrink: 0;
+}
+
+#cleanup-modal-content #all-pokemon-list {
+    flex-grow: 1;
+    overflow-y: auto;
+    margin: 0 -10px;
+    padding: 10px;
+}
+/* --- Cleanup Modal Row Layout --- */
+#cleanup-search-bar {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    font-size: 1em;
+    width: 40%;
+    max-width: 300px;
+}
+
+.cleanup-scroll-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    margin: 0 -20px -20px -20px; /* Expand to fill card padding */
+    padding: 10px 20px 20px 20px;
+}
+
+.cleanup-row {
+    margin-bottom: 20px;
+}
+
+.cleanup-row-header {
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 10px;
+}
+
+.cleanup-row-header h4 {
+    margin: 0;
+    font-size: 1.1em;
+}
+
+.pokemon-row-scroll {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 15px;
+    padding-bottom: 15px; /* Space for scrollbar */
+    min-height: 215px; /* Give row a minimum height */
+}
+
+.pokemon-row-scroll .pokemon-card {
+    flex-shrink: 0;
+    width: 140px;
+}
