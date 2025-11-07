@@ -10,19 +10,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let statusClass = 'not-run';
         let statusText = cronData.status;
-        if (cronData.status === 'Success') {
+        if (cronData.status.startsWith('Success')) {
             statusClass = 'success';
-            statusText = '✅ Success';
+            statusText = `✅ ${cronData.status}`;
         } else if (cronData.status === 'Failed') {
             statusClass = 'failed';
             statusText = '❌ Failed';
+        } else if (cronData.status === 'Running') {
+            statusClass = 'running';
+            statusText = '🏃 Running';
         }
 
         cronSummaryCard.innerHTML = `
             <div class="cron-status ${statusClass}">${statusText}</div>
             <div class="cron-details">
                 <p><strong>Last Run:</strong> ${cronData.lastRun ? new Date(cronData.lastRun).toLocaleString() : 'N/A'}</p>
-                <p>Next scheduled run is at 3:00 AM.</p>
+                <p>Next scheduled run is at the top of the hour.</p>
             </div>
         `;
     };

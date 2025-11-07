@@ -377,10 +377,29 @@
             <section id="tools-section" v-show="activeTab === 'tools'">
                 <div class="tools-container">
                     <button class="btn-primary" @click="openCleanupModal()">Pokemon Cleanup</button>
+                    <button class="btn-primary" @click="openTeamBuilderModal()">Raid Team Builder</button>
                     <!-- Content for Pokemon Cleanup will go here -->
                 </div>
             </section>
         </main>
+
+        <!-- Team Builder Modal -->
+        <div id="team-builder-modal-backdrop" v-if="showTeamBuilderModal" @click.self="closeTeamBuilderModal()">
+            <div id="team-builder-modal-content" class="card">
+                <button id="team-builder-modal-close-btn" @click="closeTeamBuilderModal()">&times;</button>
+                <div class="summary-header">
+                    <h2>Raid Team Builder</h2>
+                    <div class="raid-boss-selector">
+                        <label for="raid-boss">Select Raid Boss:</label>
+                        <select id="raid-boss" v-model="selectedRaidBoss">
+                            <option v-for="boss in raidBosses" :value="boss.id">{{ boss.names.English }}</option>
+                        </select>
+                    </div>
+                </div>
+
+                <grid-component :pokemons="teamSuggestions" @pokemon-clicked="openPokemonModal($event)"></grid-component>
+            </div>
+        </div>
     </div>
 
     <!-- 2. Link to the external Vue Application Logic -->

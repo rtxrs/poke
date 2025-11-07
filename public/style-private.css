@@ -657,6 +657,42 @@ body.dashboard-private, body:not([class]) {
     z-index: 10; /* Ensure it's above other content */
 }
 
+/* --- Team Builder Modal --- */
+#team-builder-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+#team-builder-modal-content {
+    position: relative;
+    width: 90%;
+    max-width: 1000px;
+    height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+#team-builder-modal-close-btn {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 1.8em;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #666;
+    z-index: 10;
+}
+
 #cleanup-modal-content .summary-header {
     flex-shrink: 0;
 }
@@ -735,4 +771,16 @@ body.dashboard-private, body:not([class]) {
     text-align: center;
     font-weight: bold;
     color: #333;
+}
+
+.pokemon-score {
+    font-size: 0.8em;
+    font-weight: bold;
+    color: #333;
+}
+
+/* --- Tools Tab --- */
+.tools-container {
+    display: flex;
+    gap: 15px;
 }

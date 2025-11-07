@@ -1,0 +1,12 @@
+{
+    "raidboss": {
+        "remoteHash": "e3b252399abd80f58e5745ded32ead9b159c9adf7ace1530a964dd4af00b7104a84c6ee4616b3d46d313a7e7152a40be7f16ab549f490d737b3058c81ebd750e",
+        "localHash": "e3b252399abd80f58e5745ded32ead9b159c9adf7ace1530a964dd4af00b7104a84c6ee4616b3d46d313a7e7152a40be7f16ab549f490d737b3058c81ebd750e",
+        "lastChecked": "2025-11-07T07:10:13.186Z",
+        "file": "raidboss.json"
+    },
+    "cron": {
+        "lastRun": "2025-11-07T07:10:12.898Z",
+        "status": "Success (updated)"
+    }
+}

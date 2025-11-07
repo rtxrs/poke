@@ -5,6 +5,7 @@ const crypto = require('crypto');
 const cron = require('node-cron');
 
 const { POKEDEX_API_URL, POKEDEX_FILE, DATA_DIR, SHINY_RATES_FILE, POKEDEX_RAW_FILE, COSTUME_ID_MAP_FILE, MOVE_ID_MAP_FILE, FAST_MOVES_FILE, CHARGED_MOVES_FILE } = require('../config');
+const raidBossService = require('./raidBossService');
 
 const pokedexService = {
     pokedex: null,
@@ -24,6 +25,7 @@ const pokedexService = {
         pokedex: { remoteHash: null, localHash: null, lastChecked: null, file: 'pokedex.json' },
         fastMoves: { remoteHash: null, localHash: null, lastChecked: null, file: 'fast_moves.json' },
         chargedMoves: { remoteHash: null, localHash: null, lastChecked: null, file: 'charged_moves.json' },
+        raidboss: { remoteHash: null, localHash: null, lastChecked: null, file: 'raidboss.json' },
         cron: { lastRun: null, status: 'Not yet run' }
     },
 
@@ -141,6 +143,14 @@ const pokedexService = {
     },
     
     async getHealthCheckData() {
+        try {
+            const raidBossStatusContent = await fs.readFile(path.join(__dirname, '../data/raidboss-update-status.json'), 'utf-8');
+            const raidBossStatus = JSON.parse(raidBossStatusContent);
+            this.healthStatus.raidboss = raidBossStatus.raidboss;
+            this.healthStatus.cron = raidBossStatus.cron;
+        } catch (error) {
+            // raidboss-update-status.json might not exist yet
+        }
         console.log('Serving stored health check data.');
         return this.healthStatus;
     },
@@ -235,15 +245,16 @@ const pokedexService = {
         }
     },
 
-    scheduleDailyUpdates() {
-        cron.schedule('0 3 * * *', async () => {
-            console.log('⏰ Running scheduled daily update check...');
+    scheduleHourlyUpdates() {
+        cron.schedule('0 * * * *', async () => { // Run hourly
+            console.log('⏰ Running scheduled hourly update check...');
             this.healthStatus.cron.lastRun = new Date().toISOString();
             this.healthStatus.cron.status = 'Running';
 
             try {
                 const pokedexUpdated = await this.checkForPokedexUpdates();
                 const movesUpdated = await this.checkForMoveUpdates();
+                await raidBossService.updateRaidBosses();
 
                 if (pokedexUpdated || movesUpdated) {
                     console.log('Data was updated, reprocessing and reloading all data...');
@@ -252,14 +263,14 @@ const pokedexService = {
                 console.log('Scheduled check finished successfully.');
                 this.healthStatus.cron.status = 'Success';
             } catch (error) {
-                console.error('❌ An error occurred during the scheduled daily update:', error);
+                console.error('❌ An error occurred during the scheduled hourly update:', error);
                 this.healthStatus.cron.status = 'Failed';
             }
         }, {
             scheduled: true,
             timezone: "America/New_York"
         });
-        console.log('📅 Cron job for daily data updates scheduled.');
+        console.log('📅 Cron job for hourly data updates scheduled.');
     },
 
     async initialize() {
@@ -277,8 +288,9 @@ const pokedexService = {
 
         await this.checkForPokedexUpdates();
         await this.checkForMoveUpdates();
+        await raidBossService.updateRaidBosses();
         await this._processAndLoadPokedex();
-        this.scheduleDailyUpdates();
+        this.scheduleHourlyUpdates();
     },
 
     getShinyRate(pokemonId, origin, pokemonClass, originEvents) {

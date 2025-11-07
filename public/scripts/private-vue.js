@@ -58,6 +58,7 @@ const GridComponent = {
                 <img :src="p.sprite" :alt="displayName(p)" loading="lazy">
                 <p class="pokemon-name" v-html="getBadges(p, displayName(p))"></p>
                 <p class="pokemon-cp">CP {{ p.cp }}</p>
+                <p v-if="p.score" class="pokemon-score">Score: {{ p.score.toFixed(2) }}</p>
                 <div class="iv-bar-container">
                     <div class="iv-bar" :style="{ width: getIvPercent(p) + '%', backgroundColor: getIvColor(getIvPercent(p)) }"></div>
                 </div>
@@ -528,7 +529,97 @@ pokemons.sort((a, b) => {
             return finalStructure;
         });
 
+        const showTeamBuilderModal = ref(false);
+        const selectedRaidBoss = ref('DIALGA');
+        const raidBosses = ref([]);
+        const teamSuggestions = ref([]);
+        const typeEffectiveness = ref({});
+
         // --- Methods ---
+        const openTeamBuilderModal = () => { showTeamBuilderModal.value = true; };
+        const closeTeamBuilderModal = () => { showTeamBuilderModal.value = false; };
+
+        const calculateEffectivenessScore = (pokemon, bossTypes) => {
+            const pokemonInfo = getPokedexEntry(pokemon);
+            if (!pokemonInfo) return 0;
+
+            const pokemonTypes = [pokemonInfo.primaryType.names.English];
+            if (pokemonInfo.secondaryType) {
+                pokemonTypes.push(pokemonInfo.secondaryType.names.English);
+            }
+
+            // Offensive score
+            let offensiveScore = 1;
+            const move1Type = pokemonInfo.quickMoves[pokemon.move1]?.type.names.English;
+            
+            if (move1Type) {
+                let move1Multiplier = 1;
+                bossTypes.forEach(bossType => {
+                    move1Multiplier *= typeEffectiveness.value[move1Type][bossType] || 1;
+                });
+                offensiveScore *= move1Multiplier;
+            }
+
+            const move2Type = pokemonInfo.cinematicMoves[pokemon.move2]?.type.names.English;
+            const move3Type = pokemonInfo.cinematicMoves[pokemon.move3]?.type.names.English;
+
+            let chargedMoveMultiplier = 1;
+            if (move2Type) {
+                let move2Multiplier = 1;
+                bossTypes.forEach(bossType => {
+                    move2Multiplier *= typeEffectiveness.value[move2Type][bossType] || 1;
+                });
+                chargedMoveMultiplier = move2Multiplier;
+            }
+
+            if (move3Type) {
+                let move3Multiplier = 1;
+                bossTypes.forEach(bossType => {
+                    move3Multiplier *= typeEffectiveness.value[move3Type][bossType] || 1;
+                });
+                chargedMoveMultiplier = Math.max(chargedMoveMultiplier, move3Multiplier);
+            }
+            
+            offensiveScore *= chargedMoveMultiplier;
+            
+            // Defensive score
+            let defensiveScore = 1;
+            bossTypes.forEach(bossType => {
+                pokemonTypes.forEach(pokemonType => {
+                    defensiveScore *= typeEffectiveness.value[bossType][pokemonType] || 1;
+                });
+            });
+
+            // CP Score
+            const cpScore = pokemon.cp / 4000;
+
+            // Combine scores
+            return (offensiveScore / defensiveScore) * cpScore;
+        };
+
+        const suggestTeam = () => {
+            const selectedBossData = raidBosses.value.find(b => b.id === selectedRaidBoss.value);
+            if (!selectedBossData) {
+                teamSuggestions.value = [];
+                return;
+            }
+
+            const bossTypes = selectedBossData.types;
+            if (!bossTypes || bossTypes.length === 0) {
+                teamSuggestions.value = [];
+                return;
+            }
+
+            const rankedPokemon = allPokemons.value.map(pokemon => {
+                const score = calculateEffectivenessScore(pokemon, bossTypes);
+                return { ...pokemon, score };
+            }).sort((a, b) => b.score - a.score);
+
+            teamSuggestions.value = rankedPokemon.slice(0, 12);
+        };
+
+        watch(selectedRaidBoss, suggestTeam);
+
         const openCleanupModal = () => { showCleanupModal.value = true; };
         const closeCleanupModal = () => { showCleanupModal.value = false; };
         const toggleSortDirection = () => { sortDirection.value = sortDirection.value === 'desc' ? 'asc' : 'desc'; };
@@ -666,6 +757,24 @@ pokemons.sort((a, b) => {
                     costumeIdMap.value = await costumeResponse.json();
                 }
 
+                const typeEffectivenessResponse = await fetch('/data/type_effectiveness.json');
+                if (typeEffectivenessResponse.ok) {
+                    typeEffectiveness.value = await typeEffectivenessResponse.json();
+                }
+
+                const raidBossesResponse = await fetch('/data/raidboss.json');
+                if (raidBossesResponse.ok) {
+                    const raidBossData = await raidBossesResponse.json();
+                    const currentBosses = Object.values(raidBossData.currentList).flat();
+                    raidBosses.value = currentBosses.sort((a,b) => a.names.English.localeCompare(b.names.English));
+                    if (raidBosses.value.length > 0) {
+                        selectedRaidBoss.value = raidBosses.value[0].id;
+                    }
+                }
+
+                // Initial team suggestion
+                suggestTeam();
+
                 // Update the main title with the player's name
                 const mainTitleElement = document.getElementById('main-title');
                 if (mainTitleElement && account.value.name) {
@@ -692,6 +801,8 @@ pokemons.sort((a, b) => {
             totalPokeBalls, totalPotions, totalRevives,
             toggleSortDirection, getItemSprite, createBackgroundStyle, getIvPercent, getCardClass, getBadges, getLevelFromCpm, openPokemonModal, displayMove, getIvColor,
             showCleanupModal, openCleanupModal, closeCleanupModal, cleanupSearchQuery, groupSubstitutes, defaultCleanupData, formGroupedCleanupData,
+            showTeamBuilderModal, openTeamBuilderModal, closeTeamBuilderModal, selectedRaidBoss, raidBosses, teamSuggestions,
+
             // Statistics
             stats_shinyRate,
             stats_perfectNundo,
