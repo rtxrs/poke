@@ -374,12 +374,9 @@
             </section>
 
             <!-- Tools Tab -->
-            <section id="tools-section" v-show="activeTab === 'tools'" class="card">
-                <div class="summary-header">
-                    <h2>Tools</h2>
-                </div>
+            <section id="tools-section" v-show="activeTab === 'tools'">
                 <div class="tools-container">
-                    <button class="btn" @click="openCleanupModal()">Pokemon Cleanup</button>
+                    <button class="btn-primary" @click="openCleanupModal()">Pokemon Cleanup</button>
                     <!-- Content for Pokemon Cleanup will go here -->
                 </div>
             </section>
