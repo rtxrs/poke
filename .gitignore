@@ -18,6 +18,9 @@ data/publicIdMap.json
 data/rankings.json
 data/charged_moves.json
 data/fast_moves.json
+data/raidboss.json
+data/raidboss-update-status.json
+data/type-effectiveness.json
 
 # Environment Variables (Good Practice)
 # Contains sensitive information like API keys or secrets.

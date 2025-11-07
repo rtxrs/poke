@@ -4,7 +4,7 @@ const fetch = require('node-fetch');
 const crypto = require('crypto');
 const cron = require('node-cron');
 
-const { POKEDEX_API_URL, POKEDEX_FILE, DATA_DIR, SHINY_RATES_FILE, POKEDEX_RAW_FILE, COSTUME_ID_MAP_FILE, MOVE_ID_MAP_FILE, FAST_MOVES_FILE, CHARGED_MOVES_FILE } = require('../config');
+const { POKEDEX_API_URL, POKEDEX_FILE, DATA_DIR, SHINY_RATES_FILE, POKEDEX_RAW_FILE, COSTUME_ID_MAP_FILE, MOVE_ID_MAP_FILE, FAST_MOVES_FILE, CHARGED_MOVES_FILE, TYPE_EFFECTIVENESS_FILE, TYPE_EFFECTIVENESS_API_URL } = require('../config');
 const raidBossService = require('./raidBossService');
 
 const pokedexService = {
@@ -26,6 +26,7 @@ const pokedexService = {
         fastMoves: { remoteHash: null, localHash: null, lastChecked: null, file: 'fast_moves.json' },
         chargedMoves: { remoteHash: null, localHash: null, lastChecked: null, file: 'charged_moves.json' },
         raidboss: { remoteHash: null, localHash: null, lastChecked: null, file: 'raidboss.json' },
+        type_effectiveness: { remoteHash: null, localHash: null, lastChecked: null, file: 'type_effectiveness.json' },
         cron: { lastRun: null, status: 'Not yet run' }
     },
 
@@ -137,6 +138,59 @@ const pokedexService = {
             }
         } catch (error) {
             console.error(`❌ An error occurred during the move file update check: ${error.message}`);
+            return updated;
+        }
+        return updated;
+    },
+
+    async checkForTypeEffectivenessUpdate() {
+        let updated = false;
+        try {
+            console.log('🔄 Checking for type effectiveness file updates...');
+            const hashesResponse = await fetch('https://pogoapi.net/api/v1/api_hashes.json');
+            if (!hashesResponse.ok) {
+                throw new Error(`Failed to fetch api_hashes.json with status ${hashesResponse.status}`);
+            }
+            const remoteHashes = await hashesResponse.json();
+
+            const file = { name: 'type_effectiveness.json', path: TYPE_EFFECTIVENESS_FILE, url: TYPE_EFFECTIVENESS_API_URL };
+            const healthKey = 'type_effectiveness';
+            const remoteHash = remoteHashes[file.name]?.hash_sha256;
+            
+            this.healthStatus[healthKey].remoteHash = remoteHash || null;
+            this.healthStatus[healthKey].lastChecked = new Date().toISOString();
+
+            if (!remoteHash) {
+                console.warn(`⚠️ Could not find hash for ${file.name} in remote hashes file.`);
+                return updated;
+            }
+
+            let localHash = '';
+            try {
+                const localFileContent = await fs.readFile(file.path);
+                localHash = crypto.createHash('sha256').update(localFileContent).digest('hex');
+                this.healthStatus[healthKey].localHash = localHash;
+            } catch (error) {
+                if (error.code !== 'ENOENT') throw error;
+                console.log(`No local ${file.name} found. A new one will be downloaded.`);
+                this.healthStatus[healthKey].localHash = null;
+            }
+
+            if (localHash.toLowerCase() !== remoteHash.toLowerCase()) {
+                console.log(`${file.name} update available. Downloading new version...`);
+                const fileResponse = await fetch(file.url);
+                if (!fileResponse.ok) {
+                    throw new Error(`Failed to download ${file.name} with status ${fileResponse.status}`);
+                }
+                const newFileContent = await fileResponse.text();
+                await fs.writeFile(file.path, newFileContent);
+                console.log(`✅ New ${file.name} downloaded successfully.`);
+                updated = true;
+            } else {
+                console.log(`👍 ${file.name} is already up to date.`);
+            }
+        } catch (error) {
+            console.error(`❌ An error occurred during the type effectiveness file update check: ${error.message}`);
             return updated;
         }
         return updated;
@@ -254,6 +308,7 @@ const pokedexService = {
             try {
                 const pokedexUpdated = await this.checkForPokedexUpdates();
                 const movesUpdated = await this.checkForMoveUpdates();
+                await this.checkForTypeEffectivenessUpdate();
                 await raidBossService.updateRaidBosses();
 
                 if (pokedexUpdated || movesUpdated) {
@@ -288,6 +343,7 @@ const pokedexService = {
 
         await this.checkForPokedexUpdates();
         await this.checkForMoveUpdates();
+        await this.checkForTypeEffectivenessUpdate();
         await raidBossService.updateRaidBosses();
         await this._processAndLoadPokedex();
         this.scheduleHourlyUpdates();
