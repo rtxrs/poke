@@ -388,12 +388,13 @@
             <div id="team-builder-modal-content" class="card">
                 <button id="team-builder-modal-close-btn" @click="closeTeamBuilderModal()">&times;</button>
                 <div class="summary-header">
-                    <h2>Raid Team Builder</h2>
                     <div class="raid-boss-selector">
-                        <label for="raid-boss">Select Raid Boss:</label>
-                        <select id="raid-boss" v-model="selectedRaidBoss">
-                            <option v-for="boss in raidBosses" :value="boss.id">{{ boss.names.English }}</option>
-                        </select>
+                        <raid-boss-selector
+                            :raid-bosses="raidBosses"
+                            :selected-raid-boss="selectedRaidBoss"
+                            :create-background-style="createBackgroundStyle"
+                            @boss-selected="selectedRaidBoss = $event"
+                        ></raid-boss-selector>
                     </div>
                 </div>
 

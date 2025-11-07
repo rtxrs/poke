@@ -110,10 +110,63 @@ const GridComponent = {
     }
 };
 
+const RaidBossSelector = {
+    props: ['raidBosses', 'selectedRaidBoss', 'createBackgroundStyle'],
+    emits: ['boss-selected'],
+    setup(props) {
+        const groupedBosses = Vue.computed(() => {
+            const groups = {};
+            props.raidBosses.forEach(boss => {
+                if (!groups[boss.level]) {
+                    groups[boss.level] = [];
+                }
+                groups[boss.level].push(boss);
+            });
+            const groupOrder = ['mega', 'shadow_lvl5', 'lvl5', 'shadow_lvl3', 'lvl3', 'shadow_lvl1', 'lvl1'];
+            const sortedGroups = {};
+            groupOrder.forEach(level => {
+                if (groups[level]) {
+                    sortedGroups[level] = groups[level];
+                }
+            });
+            return sortedGroups;
+        });
+
+        const getBossImage = (boss) => {
+            if (boss.assets && boss.assets.image) {
+                return boss.assets.image;
+            }
+            return 'https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon/pokemon_icon_000.png';
+        };
+
+        return {
+            groupedBosses,
+            getBossImage
+        };
+    },
+    template: `
+        <div class="raid-boss-selector">
+            <div v-for="(bosses, level) in groupedBosses" :key="level" class="raid-boss-group">
+                <h3 class="raid-boss-level-title">{{ level.replace('_', ' ').toUpperCase() }}</h3>
+                <div class="raid-boss-icons">
+                    <div v-for="boss in bosses" :key="boss.id"
+                         class="raid-boss-icon"
+                         :class="{ selected: boss.id === selectedRaidBoss }"
+                         @click="$emit('boss-selected', boss.id)"
+                         :style="createBackgroundStyle(boss.typeColors)">
+                        <img :src="getBossImage(boss)" :alt="boss.names.English">
+                    </div>
+                </div>
+            </div>
+        </div>
+    `
+};
+
 // --- Main Vue App Instance ---
 createApp({
     components: {
-        'grid-component': GridComponent
+        'grid-component': GridComponent,
+        'raid-boss-selector': RaidBossSelector
     },
     setup() {
         // --- Reactive State ---
@@ -766,7 +819,24 @@ pokemons.sort((a, b) => {
                 if (raidBossesResponse.ok) {
                     const raidBossData = await raidBossesResponse.json();
                     const currentBosses = Object.values(raidBossData.currentList).flat();
-                    raidBosses.value = currentBosses.sort((a,b) => a.names.English.localeCompare(b.names.English));
+                    const groupOrder = ['mega', 'shadow_lvl5', 'lvl5', 'shadow_lvl3', 'lvl3', 'shadow_lvl1', 'lvl1'];
+                    
+                    currentBosses.forEach(boss => {
+                        if (boss.types) {
+                            boss.typeColors = boss.types.map(type => pokedexService.value.typeColorMap[type.toUpperCase()]);
+                        } else {
+                            boss.typeColors = [];
+                        }
+                    });
+
+                    raidBosses.value = currentBosses.sort((a, b) => {
+                        const levelA = groupOrder.indexOf(a.level);
+                        const levelB = groupOrder.indexOf(b.level);
+                        if (levelA !== levelB) {
+                            return levelA - levelB;
+                        }
+                        return a.names.English.localeCompare(b.names.English);
+                    });
                     if (raidBosses.value.length > 0) {
                         selectedRaidBoss.value = raidBosses.value[0].id;
                     }
@@ -795,7 +865,7 @@ pokemons.sort((a, b) => {
 
         // --- Expose to Template ---
         return {
-            loading, account, player, items, activeTab, searchQuery, sortKey, sortDirection, itemsExpanded, selectedPokemon, moveMap, costumeIdMap,
+            loading, account, player, items, activeTab, searchQuery, sortKey, sortDirection, itemsExpanded, selectedPokemon, moveMap, costumeIdMap, pokedexService,
             teamColor, xpPercentage, xpProgressText, stardust, pokecoins, highlights,
             groupedItems, itemCategoryOrder, filteredPokemon,
             totalPokeBalls, totalPotions, totalRevives,
