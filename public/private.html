@@ -98,11 +98,44 @@
             <div id="cleanup-modal-content" class="card">
                 <button id="cleanup-modal-close-btn" @click="closeCleanupModal()">&times;</button>
                 <div class="summary-header">
-                    <h2>Pokemon Cleanup ({{ duplicatedPokemon.length }} species)</h2>
-                    <input type="text" id="cleanup-search-bar" placeholder="Filter duplicates..." v-model="cleanupSearchQuery">
+                    <h2>Pokemon Cleanup</h2>
+                    <div class="cleanup-controls">
+                        <label class="checkbox-label">
+                            <input type="checkbox" v-model="groupSubstitutes">
+                            Group by Form/Costume
+                        </label>
+                        <input type="text" id="cleanup-search-bar" placeholder="Filter duplicates..." v-model="cleanupSearchQuery">
+                    </div>
                 </div>
-                <div class="cleanup-scroll-container">
-                    <div v-for="(group, index) in duplicatedPokemon" :key="index" class="cleanup-row">
+
+                <!-- Sub-Grouped View -->
+                <div v-if="groupSubstitutes" class="cleanup-scroll-container">
+                    <div v-for="species in formGroupedCleanupData" :key="species.speciesName" class="cleanup-row">
+                        <div class="cleanup-row-header">
+                            <h4>{{ species.speciesName }} ({{ species.count }})</h4>
+                        </div>
+                        <div class="pokemon-row-scroll">
+                            <div v-for="formGroup in species.forms" class="form-group-wrapper">
+                                <h5 class="form-group-header">{{ formGroup.displayName }}</h5>
+                                <div class="form-group-box">
+                                    <div v-for="p in formGroup.pokemons" :key="p.id" class="pokemon-card" :style="createBackgroundStyle(p.typeColors)" @click="openPokemonModal(p)">
+                                        <img :src="p.sprite" :alt="p.nickname || p.name" loading="lazy">
+                                        <p class="pokemon-name" v-html="getBadges(p, p.nickname || p.name)"></p>
+                                        <p class="pokemon-cp">CP {{ p.cp }}</p>
+                                        <div class="iv-bar-container">
+                                            <div class="iv-bar" :style="{ width: getIvPercent(p) + '%', backgroundColor: getIvColor(getIvPercent(p)) }"></div>
+                                        </div>
+                                        <small>{{ getIvPercent(p) }}% ({{ p.individualAttack }}/{{ p.individualDefense }}/{{ p.individualStamina }})</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Default View -->
+                <div v-else class="cleanup-scroll-container">
+                    <div v-for="(group, index) in defaultCleanupData" :key="index" class="cleanup-row">
                         <div class="cleanup-row-header">
                             <h4>{{ group[0].name }} ({{ group.length }})</h4>
                         </div>

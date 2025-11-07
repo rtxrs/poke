@@ -130,6 +130,7 @@ createApp({
         const sortDirection = ref(defaultSortDirections.caughtTime);
         const selectedPokemon = ref(null);
         const moveMap = ref({});
+        const costumeIdMap = ref({});
 
         // --- Statistics Computed Properties ---
         const stats_shinyRate = computed(() => {
@@ -444,31 +445,87 @@ pokemons.sort((a, b) => {
 
         const showCleanupModal = ref(false);
         const cleanupSearchQuery = ref('');
-        const duplicatedPokemon = computed(() => {
-            const pokemonsToProcess = filterPokemon(allPokemons.value, cleanupSearchQuery.value);
+        const groupSubstitutes = ref(false);
 
-            // Group the (now potentially filtered) Pokémon
+        const defaultCleanupData = computed(() => {
+            const pokemonsToProcess = filterPokemon(allPokemons.value, cleanupSearchQuery.value);
             const groupedById = pokemonsToProcess.reduce((acc, p) => {
-                if (!acc[p.pokemonId]) {
-                    acc[p.pokemonId] = [];
-                }
+                if (!acc[p.pokemonId]) acc[p.pokemonId] = [];
                 acc[p.pokemonId].push(p);
                 return acc;
             }, {});
-
-            // Filter for groups with more than one Pokémon
             const duplicateGroups = Object.values(groupedById).filter(group => group.length > 1);
-
-            // Sort groups by size (most duplicates first)
             duplicateGroups.sort((a, b) => b.length - a.length);
-
-            // Sub-sort Pokémon within each group by the new keep score
             duplicateGroups.forEach(group => {
                 group.sort((a, b) => getKeepScore(b) - getKeepScore(a) || b.cp - a.cp);
             });
-
-            // Return the nested array of groups
             return duplicateGroups;
+        });
+
+        const formGroupedCleanupData = computed(() => {
+            const pokemonsToProcess = filterPokemon(allPokemons.value, cleanupSearchQuery.value);
+            const groupedBySpecies = pokemonsToProcess.reduce((acc, p) => {
+                if (!acc[p.pokemonId]) acc[p.pokemonId] = [];
+                acc[p.pokemonId].push(p);
+                return acc;
+            }, {});
+            const duplicateSpeciesGroups = Object.values(groupedBySpecies).filter(group => group.length > 1);
+
+            const finalStructure = duplicateSpeciesGroups.map(speciesGroup => {
+                const getFormKey = (p) => {
+                    const form = p.pokemonDisplay.formName || 'NORMAL';
+                    const costume = p.pokemonDisplay.costume || 'NONE';
+                    return `${form}-${costume}`;
+                };
+                const subGroupedByForm = speciesGroup.reduce((acc, p) => {
+                    const key = getFormKey(p);
+                    if (!acc[key]) acc[key] = [];
+                    acc[key].push(p);
+                    return acc;
+                }, {});
+
+                Object.values(subGroupedByForm).forEach(formGroup => {
+                    formGroup.sort((a, b) => getKeepScore(b) - getKeepScore(a) || b.cp - a.cp);
+                });
+
+                return {
+                    speciesName: speciesGroup[0].name,
+                    count: speciesGroup.length,
+                    forms: Object.entries(subGroupedByForm).map(([key, pokemons]) => {
+                        const [form, costumeId] = key.split('-');
+                        
+                        let formName = '';
+                        if (form !== 'NORMAL') {
+                            formName = form.replace(/_/g, ' ').toLowerCase();
+                            formName = formName.charAt(0).toUpperCase() + formName.slice(1);
+                        }
+
+                        let costumeName = '';
+                        if (costumeId !== 'NONE' && costumeIdMap.value[costumeId]) {
+                            costumeName = costumeIdMap.value[costumeId].replace(/_/g, ' ').toLowerCase();
+                            costumeName = costumeName.charAt(0).toUpperCase() + costumeName.slice(1);
+                        }
+
+                        let displayName = formName;
+                        if (costumeName) {
+                            displayName = costumeName;
+                            if (formName) {
+                                displayName += ` (${formName})`;
+                            }
+                        } else if (!formName) {
+                            displayName = 'Normal';
+                        }
+
+                        return {
+                            displayName,
+                            pokemons
+                        };
+                    })
+                };
+            });
+
+            finalStructure.sort((a, b) => b.count - a.count);
+            return finalStructure;
         });
 
         // --- Methods ---
@@ -604,6 +661,11 @@ pokemons.sort((a, b) => {
                     moveMap.value = await movesResponse.json();
                 }
 
+                const costumeResponse = await fetch('/data/costumeIdMap.json');
+                if (costumeResponse.ok) {
+                    costumeIdMap.value = await costumeResponse.json();
+                }
+
                 // Update the main title with the player's name
                 const mainTitleElement = document.getElementById('main-title');
                 if (mainTitleElement && account.value.name) {
@@ -624,12 +686,12 @@ pokemons.sort((a, b) => {
 
         // --- Expose to Template ---
         return {
-            loading, account, player, items, activeTab, searchQuery, sortKey, sortDirection, itemsExpanded, selectedPokemon, moveMap,
+            loading, account, player, items, activeTab, searchQuery, sortKey, sortDirection, itemsExpanded, selectedPokemon, moveMap, costumeIdMap,
             teamColor, xpPercentage, xpProgressText, stardust, pokecoins, highlights,
             groupedItems, itemCategoryOrder, filteredPokemon,
             totalPokeBalls, totalPotions, totalRevives,
             toggleSortDirection, getItemSprite, createBackgroundStyle, getIvPercent, getCardClass, getBadges, getLevelFromCpm, openPokemonModal, displayMove, getIvColor,
-            showCleanupModal, duplicatedPokemon, openCleanupModal, closeCleanupModal, cleanupSearchQuery,
+            showCleanupModal, openCleanupModal, closeCleanupModal, cleanupSearchQuery, groupSubstitutes, defaultCleanupData, formGroupedCleanupData,
             // Statistics
             stats_shinyRate,
             stats_perfectNundo,
