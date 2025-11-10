@@ -607,6 +607,18 @@ pokemons.sort((a, b) => {
         const customEnemies = ref([]);
         const activeTeamBuilderTab = ref('Overall');
         const allPokedex = ref([]); // To populate the custom enemy selector
+
+        const allPokedexNames = computed(() => {
+            if (!allPokedex.value) return [];
+            const names = new Set();
+            allPokedex.value.forEach(p => {
+                names.add(p.names.English);
+                if (p.regionForms) {
+                    Object.values(p.regionForms).forEach(rf => names.add(rf.names.English));
+                }
+            });
+            return Array.from(names).sort();
+        });
         const customEnemyInput = ref('');
 
         const allTeamSuggestions = ref({}); // New object to hold all suggestions
@@ -735,14 +747,26 @@ pokemons.sort((a, b) => {
             const pokemonName = customEnemyInput.value;
             if (!pokemonName) return;
 
-            const pokemonData = allPokedex.value.find(p => {
-                if (p.names.English.toLowerCase() !== pokemonName.toLowerCase()) return false;
-                const formId = p.formId.toUpperCase().replace(/_/g, '');
-                const id = p.id.toUpperCase().replace(/_/g, '');
-                return formId === 'NORMAL' || formId === id;
-            });
+            let pokemonData = null;
+            
+            // Search for the pokemon in the main list and in regional forms
+            for (const p of allPokedex.value) {
+                if (p.names.English.toLowerCase() === pokemonName.toLowerCase()) {
+                    pokemonData = p;
+                    break;
+                }
+                if (p.regionForms) {
+                    for (const rf of Object.values(p.regionForms)) {
+                        if (rf.names.English.toLowerCase() === pokemonName.toLowerCase()) {
+                            pokemonData = rf;
+                            break;
+                        }
+                    }
+                }
+                if (pokemonData) break;
+            }
 
-            if (pokemonData && !customEnemies.value.some(e => e.id === pokemonData.id)) {
+            if (pokemonData && !customEnemies.value.some(e => e.names.English === pokemonData.names.English)) {
                 const types = [];
                 if (pokemonData.primaryType) types.push(pokemonData.primaryType.names.English);
                 if (pokemonData.secondaryType) types.push(pokemonData.secondaryType.names.English);
@@ -969,7 +993,7 @@ pokemons.sort((a, b) => {
             toggleSortDirection, getItemSprite, createBackgroundStyle, getIvPercent, getCardClass, getBadges, getLevelFromCpm, openPokemonModal, displayMove, getIvColor,
             showCleanupModal, openCleanupModal, closeCleanupModal, cleanupSearchQuery, groupSubstitutes, defaultCleanupData, formGroupedCleanupData,
             showTeamBuilderModal, openTeamBuilderModal, closeTeamBuilderModal, selectedRaidBoss, raidBosses,
-            teamBuilderMode, customEnemies, activeTeamBuilderTab, allPokedex, activeTabSuggestions, addCustomEnemy, removeCustomEnemy, customEnemyInput,
+            teamBuilderMode, customEnemies, activeTeamBuilderTab, allPokedex, allPokedexNames, activeTabSuggestions, addCustomEnemy, removeCustomEnemy, customEnemyInput,
 
             // Statistics
             stats_shinyRate,

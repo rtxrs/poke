@@ -412,7 +412,7 @@
                     <div class="custom-enemy-input-wrapper">
                         <input type="text" list="pokedex-list" v-model="customEnemyInput" @change="addCustomEnemy" @keyup.enter="addCustomEnemy" placeholder="Type a Pokémon name..." />
                         <datalist id="pokedex-list">
-                            <option v-for="p in allPokedex" :value="p.names.English"></option>
+                            <option v-for="name in allPokedexNames" :value="name"></option>
                         </datalist>
                         <button class="btn-add-enemy" @click="addCustomEnemy">Add</button>
                     </div>
