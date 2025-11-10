@@ -2,7 +2,7 @@
  * This script contains the complete Vue.js application logic for the private dashboard.
  */
 
-const { createApp, ref, computed, onMounted, watch } = Vue;
+const { createApp, ref, computed, onMounted, watch, watchEffect } = Vue;
 
 // --- CPM Table for Level Calculation ---
 const cpmTable = { 1: 0.094, 1.5: 0.13513743, 2: 0.16639787, 2.5: 0.19265091, 3: 0.21573247, 3.5: 0.23657266, 4: 0.25572005, 4.5: 0.27353038, 5: 0.29024988, 5.5: 0.30605737, 6: 0.3210876, 6.5: 0.33544503, 7: 0.34921268, 7.5: 0.36245775, 8: 0.3752356, 8.5: 0.38759241, 9: 0.39956728, 9.5: 0.41119355, 10: 0.4225, 10.5: 0.4329264, 11: 0.44310755, 11.5: 0.45305995, 12: 0.4627984, 12.5: 0.47233609, 13: 0.48168495, 13.5: 0.4908558, 14: 0.49985844, 14.5: 0.50870176, 15: 0.51739395, 15.5: 0.52594251, 16: 0.5343543, 16.5: 0.54263573, 17: 0.5507927, 17.5: 0.55883058, 18: 0.5667545, 18.5: 0.57456913, 19: 0.5822789, 19.5: 0.5898879, 20: 0.5974, 20.5: 0.60482366, 21: 0.6121573, 21.5: 0.61940412, 22: 0.6265671, 22.5: 0.63364914, 23: 0.64065295, 23.5: 0.64758096, 24: 0.65443563, 24.5: 0.66121925, 25: 0.667934, 25.5: 0.67458189, 26: 0.6811649, 26.5: 0.6876849, 27: 0.69414365, 27.5: 0.70054287, 28: 0.7068842, 28.5: 0.7131691, 29: 0.7193991, 29.5: 0.72557561, 30: 0.7317, 30.5: 0.734741, 31: 0.73776948, 31.5: 0.7407895, 32: 0.74378943, 32.5: 0.74677015, 33: 0.7497256, 33.5: 0.75266097, 34: 0.75557274, 34.5: 0.75847129, 35: 0.76138438, 35.5: 0.76418652, 36: 0.76698068, 36.5: 0.76975685, 37: 0.7725421, 37.5: 0.77529827, 38: 0.77803515, 38.5: 0.78076949, 39: 0.7835, 39.5: 0.78623275, 40: 0.7903, 40.5: 0.7928, 41: 0.7953, 41.5: 0.7978, 42: 0.8003, 42.5: 0.8028, 43: 0.8053, 43.5: 0.8078, 44: 0.8103, 44.5: 0.8128, 45: 0.8153, 45.5: 0.8178, 46: 0.8203, 46.5: 0.8228, 47: 0.8253, 47.5: 0.8278, 48: 0.8303, 48.5: 0.8328, 49: 0.8353, 49.5: 0.8378, 50: 0.8403, 50.5: 0.8428, 51: 0.8453 };
@@ -586,8 +586,16 @@ pokemons.sort((a, b) => {
         const showTeamBuilderModal = ref(false);
         const selectedRaidBoss = ref('DIALGA');
         const raidBosses = ref([]);
-        const teamSuggestions = ref([]);
         const typeEffectiveness = ref({});
+
+        // New state for custom team builder
+        const teamBuilderMode = ref('raid'); // 'raid' or 'custom'
+        const customEnemies = ref([]);
+        const activeTeamBuilderTab = ref('Overall');
+        const allPokedex = ref([]); // To populate the custom enemy selector
+        const customEnemyInput = ref('');
+
+        const allTeamSuggestions = ref({}); // New object to hold all suggestions
 
         // --- Methods ---
         const openTeamBuilderModal = () => { showTeamBuilderModal.value = true; };
@@ -651,28 +659,112 @@ pokemons.sort((a, b) => {
             return (offensiveScore / defensiveScore) * cpScore;
         };
 
-        const suggestTeam = () => {
-            const selectedBossData = raidBosses.value.find(b => b.id === selectedRaidBoss.value);
-            if (!selectedBossData) {
-                teamSuggestions.value = [];
+        const generateSuggestions = () => {
+            let enemies = [];
+            if (teamBuilderMode.value === 'raid') {
+                const boss = raidBosses.value.find(b => b.id === selectedRaidBoss.value);
+                if (boss) enemies.push(boss);
+            } else {
+                enemies = customEnemies.value;
+            }
+
+            if (enemies.length === 0) {
+                allTeamSuggestions.value = {};
                 return;
             }
 
-            const bossTypes = selectedBossData.types;
-            if (!bossTypes || bossTypes.length === 0) {
-                teamSuggestions.value = [];
-                return;
-            }
+            const suggestions = {};
+            const overallScores = {};
 
-            const rankedPokemon = allPokemons.value.map(pokemon => {
-                const score = calculateEffectivenessScore(pokemon, bossTypes);
-                return { ...pokemon, score };
-            }).sort((a, b) => b.score - a.score);
+            allPokemons.value.forEach(p => {
+                overallScores[p.id] = { ...p, score: 0 };
+            });
 
-            teamSuggestions.value = rankedPokemon.slice(0, 12);
+            enemies.forEach(enemy => {
+                const enemyTypes = enemy.types;
+                if (!enemyTypes || enemyTypes.length === 0) {
+                    suggestions[enemy.names.English] = [];
+                    return;
+                }
+
+                const rankedPokemon = allPokemons.value.map(pokemon => {
+                    const score = calculateEffectivenessScore(pokemon, enemyTypes);
+                    overallScores[pokemon.id].score += score;
+                    return { ...pokemon, score };
+                }).sort((a, b) => b.score - a.score);
+
+                suggestions[enemy.names.English] = rankedPokemon.slice(0, 12);
+            });
+
+            const overallRanked = Object.values(overallScores).sort((a, b) => b.score - a.score);
+            suggestions['Overall'] = overallRanked.slice(0, 12);
+
+            allTeamSuggestions.value = suggestions;
         };
 
-        watch(selectedRaidBoss, suggestTeam);
+        const teamBuilderTabs = computed(() => {
+            if (teamBuilderMode.value === 'raid') {
+                const boss = raidBosses.value.find(b => b.id === selectedRaidBoss.value);
+                return boss ? [boss.names.English] : [];
+            } else { // custom mode
+                if (customEnemies.value.length > 1) {
+                    return ['Overall', ...customEnemies.value.map(e => e.names.English)];
+                } else {
+                    return customEnemies.value.map(e => e.names.English);
+                }
+            }
+        });
+
+        const activeTabSuggestions = computed(() => {
+            if (teamBuilderMode.value === 'raid') {
+                const boss = raidBosses.value.find(b => b.id === selectedRaidBoss.value);
+                return boss ? allTeamSuggestions.value[boss.names.English] || [] : [];
+            } else { // custom mode
+                if (customEnemies.value.length === 0) return [];
+                if (customEnemies.value.length === 1) {
+                    return allTeamSuggestions.value[customEnemies.value[0].names.English] || [];
+                }
+                // If customEnemies.length > 1, use the activeTeamBuilderTab
+                return allTeamSuggestions.value[activeTeamBuilderTab.value] || [];
+            }
+        });
+
+        const addCustomEnemy = () => {
+            if (customEnemies.value.length >= 6) return;
+            const pokemonName = customEnemyInput.value;
+            if (!pokemonName) return;
+
+            const pokemonData = allPokedex.value.find(p => {
+                if (p.names.English.toLowerCase() !== pokemonName.toLowerCase()) return false;
+                const formId = p.formId.toUpperCase().replace(/_/g, '');
+                const id = p.id.toUpperCase().replace(/_/g, '');
+                return formId === 'NORMAL' || formId === id;
+            });
+
+            if (pokemonData && !customEnemies.value.some(e => e.id === pokemonData.id)) {
+                const types = [];
+                if (pokemonData.primaryType) types.push(pokemonData.primaryType.names.English);
+                if (pokemonData.secondaryType) types.push(pokemonData.secondaryType.names.English);
+                const typeColors = types.map(type => pokedexService.value.typeColorMap[type.toUpperCase()]);
+
+                customEnemies.value.push({ ...pokemonData, types, typeColors });
+            }
+            customEnemyInput.value = ''; // Clear the input
+        };
+
+        const removeCustomEnemy = (index) => {
+            customEnemies.value.splice(index, 1);
+        };
+
+        watchEffect(generateSuggestions);
+
+        watch(teamBuilderTabs, (newTabs) => {
+            if (newTabs.length > 0 && !newTabs.includes(activeTeamBuilderTab.value)) {
+                activeTeamBuilderTab.value = newTabs[0];
+            } else if (newTabs.length === 0) {
+                activeTeamBuilderTab.value = '';
+            }
+        });
 
         const openCleanupModal = () => { showCleanupModal.value = true; };
         const closeCleanupModal = () => { showCleanupModal.value = false; };
@@ -843,8 +935,10 @@ pokemons.sort((a, b) => {
                     }
                 }
 
-                // Initial team suggestion
-                suggestTeam();
+                const pokedexResponse = await fetch('/data/pokedex_modified.json');
+                if (pokedexResponse.ok) {
+                    allPokedex.value = await pokedexResponse.json();
+                }
 
                 // Update the main title with the player's name
                 const mainTitleElement = document.getElementById('main-title');
@@ -872,7 +966,8 @@ pokemons.sort((a, b) => {
             totalPokeBalls, totalPotions, totalRevives,
             toggleSortDirection, getItemSprite, createBackgroundStyle, getIvPercent, getCardClass, getBadges, getLevelFromCpm, openPokemonModal, displayMove, getIvColor,
             showCleanupModal, openCleanupModal, closeCleanupModal, cleanupSearchQuery, groupSubstitutes, defaultCleanupData, formGroupedCleanupData,
-            showTeamBuilderModal, openTeamBuilderModal, closeTeamBuilderModal, selectedRaidBoss, raidBosses, teamSuggestions,
+            showTeamBuilderModal, openTeamBuilderModal, closeTeamBuilderModal, selectedRaidBoss, raidBosses,
+            teamBuilderMode, customEnemies, activeTeamBuilderTab, allPokedex, teamBuilderTabs, activeTabSuggestions, addCustomEnemy, removeCustomEnemy, customEnemyInput,
 
             // Statistics
             stats_shinyRate,

@@ -389,18 +389,49 @@
         <div id="team-builder-modal-backdrop" v-if="showTeamBuilderModal" @click.self="closeTeamBuilderModal()">
             <div id="team-builder-modal-content" class="card">
                 <button id="team-builder-modal-close-btn" @click="closeTeamBuilderModal()">&times;</button>
-                <div class="summary-header">
-                    <div class="raid-boss-selector">
-                        <raid-boss-selector
-                            :raid-bosses="raidBosses"
-                            :selected-raid-boss="selectedRaidBoss"
-                            :create-background-style="createBackgroundStyle"
-                            @boss-selected="selectedRaidBoss = $event"
-                        ></raid-boss-selector>
+                
+                <!-- Mode Tabs -->
+                <div class="modal-tabs">
+                    <button :class="{ active: teamBuilderMode === 'raid' }" @click="teamBuilderMode = 'raid'">Raid Boss</button>
+                    <button :class="{ active: teamBuilderMode === 'custom' }" @click="teamBuilderMode = 'custom'">Custom Team</button>
+                </div>
+
+                <!-- Raid Boss Selector -->
+                <div v-if="teamBuilderMode === 'raid'" class="summary-header">
+                    <raid-boss-selector
+                        :raid-bosses="raidBosses"
+                        :selected-raid-boss="selectedRaidBoss"
+                        :create-background-style="createBackgroundStyle"
+                        @boss-selected="selectedRaidBoss = $event">
+                    </raid-boss-selector>
+                </div>
+
+                <!-- Custom Team Selector -->
+                <div v-if="teamBuilderMode === 'custom'" class="summary-header custom-team-selector">
+                    <h4>Select up to 6 Enemy Pokémon</h4>
+                    <div class="custom-enemy-input-wrapper">
+                        <input type="text" list="pokedex-list" v-model="customEnemyInput" @change="addCustomEnemy" @keyup.enter="addCustomEnemy" placeholder="Type a Pokémon name..." />
+                        <datalist id="pokedex-list">
+                            <option v-for="p in allPokedex" :value="p.names.English"></option>
+                        </datalist>
+                        <button class="btn-add-enemy" @click="addCustomEnemy">Add</button>
+                    </div>
+                    <div class="custom-enemy-display">
+                        <div v-for="(enemy, index) in customEnemies" :key="index" class="custom-enemy-tag" :style="createBackgroundStyle(enemy.typeColors)">
+                            {{ enemy.names.English }}
+                            <button @click="removeCustomEnemy(index)">&times;</button>
+                        </div>
                     </div>
                 </div>
 
-                <grid-component :pokemons="teamSuggestions" @pokemon-clicked="openPokemonModal($event)"></grid-component>
+                <!-- Results Tabs -->
+                <div class="modal-tabs result-tabs" v-if="teamBuilderMode === 'custom' && customEnemies.length > 1">
+                    <button v-for="tab in teamBuilderTabs" :key="tab" :class="{ active: activeTeamBuilderTab === tab }" @click="activeTeamBuilderTab = tab">
+                        {{ tab }}
+                    </button>
+                </div>
+
+                <grid-component :pokemons="activeTabSuggestions" @pokemon-clicked="openPokemonModal($event)"></grid-component>
             </div>
         </div>
     </div>
