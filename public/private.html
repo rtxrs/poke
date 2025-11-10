@@ -115,20 +115,22 @@
                             <h4>{{ species.speciesName }} ({{ species.count }})</h4>
                         </div>
                         <div class="pokemon-row-scroll">
-                            <div v-for="formGroup in species.forms" class="form-group-wrapper">
-                                <h5 class="form-group-header">{{ formGroup.displayName }}</h5>
-                                <div class="form-group-box">
-                                    <div v-for="p in formGroup.pokemons" :key="p.id" class="pokemon-card" :style="createBackgroundStyle(p.typeColors)" @click="openPokemonModal(p)">
-                                        <img :src="p.sprite" :alt="p.nickname || p.name" loading="lazy">
-                                        <p class="pokemon-name" v-html="getBadges(p, p.nickname || p.name)"></p>
-                                        <p class="pokemon-cp">CP {{ p.cp }}</p>
-                                        <div class="iv-bar-container">
-                                            <div class="iv-bar" :style="{ width: getIvPercent(p) + '%', backgroundColor: getIvColor(getIvPercent(p)) }"></div>
+                            <template v-for="formGroup in species.forms">
+                                <div v-if="formGroup.pokemons.length > 1" class="form-group-wrapper">
+                                    <h5 class="form-group-header">{{ formGroup.displayName }}</h5>
+                                    <div class="form-group-box">
+                                        <div v-for="p in formGroup.pokemons" :key="p.id" class="pokemon-card" :style="createBackgroundStyle(p.typeColors)" @click="openPokemonModal(p)">
+                                            <img :src="p.sprite" :alt="p.nickname || p.name" loading="lazy">
+                                            <p class="pokemon-name" v-html="getBadges(p, p.nickname || p.name)"></p>
+                                            <p class="pokemon-cp">CP {{ p.cp }}</p>
+                                            <div class="iv-bar-container">
+                                                <div class="iv-bar" :style="{ width: getIvPercent(p) + '%', backgroundColor: getIvColor(getIvPercent(p)) }"></div>
+                                            </div>
+                                            <small>{{ getIvPercent(p) }}% ({{ p.individualAttack }}/{{ p.individualDefense }}/{{ p.individualStamina }})</small>
                                         </div>
-                                        <small>{{ getIvPercent(p) }}% ({{ p.individualAttack }}/{{ p.individualDefense }}/{{ p.individualStamina }})</small>
                                     </div>
                                 </div>
-                            </div>
+                            </template>
                         </div>
                     </div>
                 </div>
