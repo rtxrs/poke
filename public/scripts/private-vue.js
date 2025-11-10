@@ -372,6 +372,7 @@ createApp({
         const stardust = computed(() => account.value.currencyBalance?.find(c => c.currencyType === 'STARDUST')?.quantity || 0);
         const pokecoins = computed(() => account.value.currencyBalance?.find(c => c.currencyType === 'POKECOIN')?.quantity || 0);
         const getIvPercent = (p) => p ? ((p.individualAttack + p.individualDefense + p.individualStamina) / 45 * 100).toFixed(1) : 0;
+        const getIvPercentAsNumber = (p) => p ? ((p.individualAttack + p.individualDefense + p.individualStamina) / 45 * 100) : 0;
         
         const getPokedexEntry = (p) => {
             if (!pokedexService.value.pokedex || !pokedexService.value.pokedex[p.pokemonId]) return null;
@@ -511,7 +512,7 @@ pokemons.sort((a, b) => {
             const duplicateGroups = Object.values(groupedById).filter(group => group.length > 1);
             duplicateGroups.sort((a, b) => b.length - a.length);
             duplicateGroups.forEach(group => {
-                group.sort((a, b) => getKeepScore(b) - getKeepScore(a) || b.cp - a.cp);
+                group.sort((a, b) => getKeepScore(b) - getKeepScore(a) || getIvPercentAsNumber(b) - getIvPercentAsNumber(a) || b.cp - a.cp);
             });
             return duplicateGroups;
         });
@@ -539,7 +540,7 @@ pokemons.sort((a, b) => {
                 }, {});
 
                 Object.values(subGroupedByForm).forEach(formGroup => {
-                    formGroup.sort((a, b) => getKeepScore(b) - getKeepScore(a) || b.cp - a.cp);
+                    formGroup.sort((a, b) => getKeepScore(b) - getKeepScore(a) || getIvPercentAsNumber(b) - getIvPercentAsNumber(a) || b.cp - a.cp);
                 });
 
                 return {
