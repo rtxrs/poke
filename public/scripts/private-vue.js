@@ -376,16 +376,30 @@ createApp({
         
         const getPokedexEntry = (p) => {
             if (!pokedexService.value.pokedex || !pokedexService.value.pokedex[p.pokemonId]) return null;
-            const allFormsForPokemon = pokedexService.value.pokedex[p.pokemonId];
-            const normalEntry = allFormsForPokemon['NORMAL'] || Object.values(allFormsForPokemon)[0];
-            if (!normalEntry) return null;
 
-            const playerFormName = p.pokemonDisplay.formName;
-            if (!playerFormName || playerFormName === 'Unset' || playerFormName.toUpperCase().includes('NORMAL')) {
+            const basePokemonData = Object.values(pokedexService.value.pokedex[p.pokemonId])[0];
+            if (!basePokemonData) return null;
+
+            const playerFormName = p.pokemonDisplay.formName?.toUpperCase() || '';
+
+            // Priority 1: Check for regional forms in the regionForms property
+            if (basePokemonData.regionForms) {
+                for (const regionFormKey in basePokemonData.regionForms) {
+                    if (playerFormName.includes(regionFormKey.replace(/_/g, ''))) {
+                        return basePokemonData.regionForms[regionFormKey];
+                    }
+                }
+            }
+
+            // Fallback to existing logic for other forms (costumes, etc.)
+            const allFormsForPokemon = pokedexService.value.pokedex[p.pokemonId];
+            const normalEntry = allFormsForPokemon['NORMAL'] || basePokemonData;
+
+            if (!playerFormName || playerFormName === 'UNSET' || playerFormName.includes('NORMAL')) {
                 return normalEntry;
             }
 
-            const normalizedPlayerForm = playerFormName.toUpperCase().replace(/_/g, '').replace(/-/g, '').replace(/\s/g, '');
+            const normalizedPlayerForm = playerFormName.replace(/_/g, '').replace(/-/g, '').replace(/\s/g, '');
 
             for (const formKey in allFormsForPokemon) {
                 const pokedexForm = allFormsForPokemon[formKey];
