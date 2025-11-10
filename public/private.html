@@ -417,18 +417,37 @@
                         <button class="btn-add-enemy" @click="addCustomEnemy">Add</button>
                     </div>
                     <div class="custom-enemy-display">
-                        <div v-for="(enemy, index) in customEnemies" :key="index" class="custom-enemy-tag" :style="createBackgroundStyle(enemy.typeColors)">
-                            {{ enemy.names.English }}
-                            <button @click="removeCustomEnemy(index)">&times;</button>
-                        </div>
+                        <!-- This area is now handled by the result tabs below -->
                     </div>
                 </div>
 
-                <!-- Results Tabs -->
-                <div class="modal-tabs result-tabs" v-if="teamBuilderMode === 'custom' && customEnemies.length > 1">
-                    <button v-for="tab in teamBuilderTabs" :key="tab" :class="{ active: activeTeamBuilderTab === tab }" @click="activeTeamBuilderTab = tab">
-                        {{ tab }}
+                <!-- Combined Results/Enemy Tabs -->
+                <div class="modal-tabs result-tabs" v-if="(teamBuilderMode === 'custom' && customEnemies.length > 0) || (teamBuilderMode === 'raid' && selectedRaidBoss)">
+                    <!-- Overall Tab (Custom Mode Only) -->
+                    <button v-if="teamBuilderMode === 'custom' && customEnemies.length > 1" :class="{ active: activeTeamBuilderTab === 'Overall' }" @click="activeTeamBuilderTab = 'Overall'">
+                        Overall
                     </button>
+                    
+                    <!-- Enemy Tabs (Custom Mode) -->
+                    <template v-if="teamBuilderMode === 'custom'">
+                        <button v-for="(enemy, index) in customEnemies" :key="enemy.id" 
+                                :class="{ active: activeTeamBuilderTab === enemy.names.English }" 
+                                @click="activeTeamBuilderTab = enemy.names.English" 
+                                :style="createBackgroundStyle(enemy.typeColors)"
+                                class="enemy-tab">
+                            {{ enemy.names.English }}
+                            <span class="remove-tab-btn" @click.stop="removeCustomEnemy(index)">&times;</span>
+                        </button>
+                    </template>
+
+                    <!-- Boss Tab (Raid Mode) -->
+                    <template v-if="teamBuilderMode === 'raid'">
+                        <button v-if="selectedRaidBoss"
+                                :class="{ active: true }"
+                                :style="createBackgroundStyle(raidBosses.find(b => b.id === selectedRaidBoss)?.typeColors || [])">
+                            {{ raidBosses.find(b => b.id === selectedRaidBoss)?.names.English }}
+                        </button>
+                    </template>
                 </div>
 
                 <grid-component :pokemons="activeTabSuggestions" @pokemon-clicked="openPokemonModal($event)"></grid-component>

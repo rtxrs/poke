@@ -702,19 +702,6 @@ pokemons.sort((a, b) => {
             allTeamSuggestions.value = suggestions;
         };
 
-        const teamBuilderTabs = computed(() => {
-            if (teamBuilderMode.value === 'raid') {
-                const boss = raidBosses.value.find(b => b.id === selectedRaidBoss.value);
-                return boss ? [boss.names.English] : [];
-            } else { // custom mode
-                if (customEnemies.value.length > 1) {
-                    return ['Overall', ...customEnemies.value.map(e => e.names.English)];
-                } else {
-                    return customEnemies.value.map(e => e.names.English);
-                }
-            }
-        });
-
         const activeTabSuggestions = computed(() => {
             if (teamBuilderMode.value === 'raid') {
                 const boss = raidBosses.value.find(b => b.id === selectedRaidBoss.value);
@@ -758,13 +745,14 @@ pokemons.sort((a, b) => {
 
         watchEffect(generateSuggestions);
 
-        watch(teamBuilderTabs, (newTabs) => {
-            if (newTabs.length > 0 && !newTabs.includes(activeTeamBuilderTab.value)) {
-                activeTeamBuilderTab.value = newTabs[0];
-            } else if (newTabs.length === 0) {
-                activeTeamBuilderTab.value = '';
+        watch(customEnemies, (newEnemies) => {
+            // When the list of enemies changes, reset the active tab.
+            if (newEnemies.length > 1) {
+                activeTeamBuilderTab.value = 'Overall';
+            } else if (newEnemies.length === 1) {
+                activeTeamBuilderTab.value = newEnemies[0].names.English;
             }
-        });
+        }, { deep: true }); // deep watch is needed for array mutations
 
         const openCleanupModal = () => { showCleanupModal.value = true; };
         const closeCleanupModal = () => { showCleanupModal.value = false; };
@@ -967,7 +955,7 @@ pokemons.sort((a, b) => {
             toggleSortDirection, getItemSprite, createBackgroundStyle, getIvPercent, getCardClass, getBadges, getLevelFromCpm, openPokemonModal, displayMove, getIvColor,
             showCleanupModal, openCleanupModal, closeCleanupModal, cleanupSearchQuery, groupSubstitutes, defaultCleanupData, formGroupedCleanupData,
             showTeamBuilderModal, openTeamBuilderModal, closeTeamBuilderModal, selectedRaidBoss, raidBosses,
-            teamBuilderMode, customEnemies, activeTeamBuilderTab, allPokedex, teamBuilderTabs, activeTabSuggestions, addCustomEnemy, removeCustomEnemy, customEnemyInput,
+            teamBuilderMode, customEnemies, activeTeamBuilderTab, allPokedex, activeTabSuggestions, addCustomEnemy, removeCustomEnemy, customEnemyInput,
 
             // Statistics
             stats_shinyRate,
