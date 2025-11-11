@@ -607,7 +607,6 @@ pokemons.sort((a, b) => {
         const customEnemies = ref([]);
         const activeTeamBuilderTab = ref('Overall');
         const allPokedex = ref([]); // To populate the custom enemy selector
-
         const allPokedexNames = computed(() => {
             if (!allPokedex.value) return [];
             const names = new Set();
@@ -615,6 +614,11 @@ pokemons.sort((a, b) => {
                 names.add(p.names.English);
                 if (p.regionForms) {
                     Object.values(p.regionForms).forEach(rf => names.add(rf.names.English));
+                }
+                if (p.hasMegaEvolution && p.megaEvolutions) {
+                    for (const megaKey in p.megaEvolutions) {
+                        names.add(p.megaEvolutions[megaKey].names.English);
+                    }
                 }
             });
             return Array.from(names).sort();
@@ -637,7 +641,7 @@ pokemons.sort((a, b) => {
             }
 
             // Offensive score
-            let offensiveScore = 1;
+            let fastMoveScore = 1;
             const move1Type = pokemonInfo.quickMoves[pokemon.move1]?.type.names.English;
             
             if (move1Type) {
@@ -645,19 +649,19 @@ pokemons.sort((a, b) => {
                 bossTypes.forEach(bossType => {
                     move1Multiplier *= typeEffectiveness.value[move1Type][bossType] || 1;
                 });
-                offensiveScore *= move1Multiplier;
+                fastMoveScore = move1Multiplier;
             }
 
             const move2Type = pokemonInfo.cinematicMoves[pokemon.move2]?.type.names.English;
             const move3Type = pokemonInfo.cinematicMoves[pokemon.move3]?.type.names.English;
 
-            let chargedMoveMultiplier = 1;
+            let bestChargedMoveScore = 1;
             if (move2Type) {
                 let move2Multiplier = 1;
                 bossTypes.forEach(bossType => {
                     move2Multiplier *= typeEffectiveness.value[move2Type][bossType] || 1;
                 });
-                chargedMoveMultiplier = move2Multiplier;
+                bestChargedMoveScore = move2Multiplier;
             }
 
             if (move3Type) {
@@ -665,10 +669,10 @@ pokemons.sort((a, b) => {
                 bossTypes.forEach(bossType => {
                     move3Multiplier *= typeEffectiveness.value[move3Type][bossType] || 1;
                 });
-                chargedMoveMultiplier = Math.max(chargedMoveMultiplier, move3Multiplier);
+                bestChargedMoveScore = Math.max(bestChargedMoveScore, move3Multiplier);
             }
             
-            offensiveScore *= chargedMoveMultiplier;
+            const offensiveScore = (fastMoveScore + bestChargedMoveScore) / 2;
             
             // Defensive score
             let defensiveScore = 1;
@@ -679,10 +683,10 @@ pokemons.sort((a, b) => {
             });
 
             // CP Score
-            const cpScore = pokemon.cp / 4000;
+            const cpScore = pokemon.cp / 3000;
 
             // Combine scores
-            return (offensiveScore / defensiveScore) * cpScore;
+            return (offensiveScore / (defensiveScore ** 0.5)) * cpScore;
         };
 
         const generateSuggestions = () => {
@@ -748,9 +752,10 @@ pokemons.sort((a, b) => {
             if (!pokemonName) return;
 
             let pokemonData = null;
-            
-            // Search for the pokemon in the main list and in regional forms
+            let isMegaEvolution = false;
+
             for (const p of allPokedex.value) {
+                // Check for base form and regional forms
                 if (p.names.English.toLowerCase() === pokemonName.toLowerCase()) {
                     pokemonData = p;
                     break;
@@ -759,6 +764,16 @@ pokemons.sort((a, b) => {
                     for (const rf of Object.values(p.regionForms)) {
                         if (rf.names.English.toLowerCase() === pokemonName.toLowerCase()) {
                             pokemonData = rf;
+                            break;
+                        }
+                    }
+                }
+                // Check for Mega Evolutions
+                if (p.hasMegaEvolution && p.megaEvolutions) {
+                    for (const megaKey in p.megaEvolutions) {
+                        if (p.megaEvolutions[megaKey].names.English.toLowerCase() === pokemonName.toLowerCase()) {
+                            pokemonData = p.megaEvolutions[megaKey]; // This is the Mega Evolution object
+                            isMegaEvolution = true;
                             break;
                         }
                     }
@@ -772,7 +787,16 @@ pokemons.sort((a, b) => {
                 if (pokemonData.secondaryType) types.push(pokemonData.secondaryType.names.English);
                 const typeColors = types.map(type => pokedexService.value.typeColorMap[type.toUpperCase()]);
 
-                customEnemies.value.push({ ...pokemonData, types, typeColors });
+                // For Mega Evolutions, we need to ensure the ID is unique and reflects it's a mega form
+                const enemyId = isMegaEvolution ? `${pokemonData.id}_MEGA` : pokemonData.id;
+                
+                customEnemies.value.push({ 
+                    ...pokemonData, 
+                    id: enemyId, // Use a unique ID for mega forms
+                    types, 
+                    typeColors,
+                    isMegaEvolution: isMegaEvolution // Add a flag for easier identification if needed
+                });
             }
             customEnemyInput.value = ''; // Clear the input
         };
@@ -1009,4 +1033,3 @@ pokemons.sort((a, b) => {
         };
     }
 }).mount('#app');
-
