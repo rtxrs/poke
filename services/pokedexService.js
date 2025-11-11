@@ -391,7 +391,14 @@ const pokedexService = {
 
         const formNameUpper = p.pokemonDisplay.formName.toUpperCase();
         const baseNameUpper = basePokemon.names.English.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        let formKey = formNameUpper.replace(baseNameUpper, '').replace(/_/g, '').replace(/-/g, '').replace(/\s/g, '').trim();
+        
+        let formKey;
+        if (p.pokemonId === 201) { // Special handling for Unown
+            formKey = formNameUpper.replace(/_/g, '').replace(/-/g, '').replace(/\s/g, '').trim();
+        } else {
+            formKey = formNameUpper.replace(baseNameUpper, '').replace(/_/g, '').replace(/-/g, '').replace(/\s/g, '').trim();
+        }
+
         if (formKey === "" || formKey === "NORMAL") formKey = null;
 
         let costumeKey = null;
