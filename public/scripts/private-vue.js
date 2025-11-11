@@ -44,6 +44,11 @@ function getIvColor(iv) {
     return '#6c757d';
 }
 
+const getMoveTypeIconUrl = (type) => {
+    if (!type) return '';
+    return `https://leekduck.com/assets/img/types/${type.toLowerCase()}.png`;
+};
+
 // --- Vue Components ---
 
 /**
@@ -642,7 +647,7 @@ pokemons.sort((a, b) => {
 
             // Offensive score
             let fastMoveScore = 1;
-            const move1Type = pokemonInfo.quickMoves[pokemon.move1]?.type.names.English;
+            const move1Type = moveMap.value[pokemon.move1]?.type;
             
             if (move1Type) {
                 let move1Multiplier = 1;
@@ -652,8 +657,8 @@ pokemons.sort((a, b) => {
                 fastMoveScore = move1Multiplier;
             }
 
-            const move2Type = pokemonInfo.cinematicMoves[pokemon.move2]?.type.names.English;
-            const move3Type = pokemonInfo.cinematicMoves[pokemon.move3]?.type.names.English;
+            const move2Type = moveMap.value[pokemon.move2]?.type;
+            const move3Type = moveMap.value[pokemon.move3]?.type;
 
             let bestChargedMoveScore = 1;
             if (move2Type) {
@@ -858,51 +863,43 @@ pokemons.sort((a, b) => {
             return name;
         };
 
-                                const displayMove = (moveId) => moveMap.value[moveId] || moveId;
+                                const displayMove = (moveId) => moveMap.value[moveId]?.name || moveId;
 
-                        
+    const openPokemonModal = (pokemon) => {
+        const pokemonWithMoveTypes = { ...pokemon };
 
-                                const openPokemonModal = (pokemon) => {
+        // Use the moveMap to get move types
+        if (pokemon.move1 && moveMap.value[pokemon.move1]) {
+            pokemonWithMoveTypes.move1Type = moveMap.value[pokemon.move1].type;
+        }
+        if (pokemon.move2 && moveMap.value[pokemon.move2]) {
+            pokemonWithMoveTypes.move2Type = moveMap.value[pokemon.move2].type;
+        }
+        if (pokemon.move3 && moveMap.value[pokemon.move3]) {
+            pokemonWithMoveTypes.move3Type = moveMap.value[pokemon.move3].type;
+        }
 
-                                    selectedPokemon.value = pokemon;
+        selectedPokemon.value = pokemonWithMoveTypes;
 
-                                    setTimeout(() => {
+        setTimeout(() => {
+            const attackBar = document.querySelector('#modal-content .stat-bar-fill[data-stat="attack"]');
+            const defenseBar = document.querySelector('#modal-content .stat-bar-fill[data-stat="defense"]');
+            const staminaBar = document.querySelector('#modal-content .stat-bar-fill[data-stat="stamina"]');
 
-                                        const attackBar = document.querySelector('#modal-content .stat-bar-fill[data-stat="attack"]');
-
-                                        const defenseBar = document.querySelector('#modal-content .stat-bar-fill[data-stat="defense"]');
-
-                                        const staminaBar = document.querySelector('#modal-content .stat-bar-fill[data-stat="stamina"]');
-
-                        
-
-                                        if (attackBar) {
-
-                                            attackBar.style.width = `${(pokemon.individualAttack / 15) * 100}%`;
-
-                                            attackBar.style.backgroundColor = pokemon.individualAttack === 15 ? '#da7a79' : '#f79513';
-
-                                        }
-
-                                        if (defenseBar) {
-
-                                            defenseBar.style.width = `${(pokemon.individualDefense / 15) * 100}%`;
-
-                                            defenseBar.style.backgroundColor = pokemon.individualDefense === 15 ? '#da7a79' : '#f79513';
-
-                                        }
-
-                                        if (staminaBar) {
-
-                                            staminaBar.style.width = `${(pokemon.individualStamina / 15) * 100}%`;
-
-                                            staminaBar.style.backgroundColor = pokemon.individualStamina === 15 ? '#da7a79' : '#f79513';
-
-                                        }
-
-                                    }, 100);
-
-                                };
+            if (attackBar) {
+                attackBar.style.width = `${(pokemon.individualAttack / 15) * 100}%`;
+                attackBar.style.backgroundColor = pokemon.individualAttack === 15 ? '#da7a79' : '#f79513';
+            }
+            if (defenseBar) {
+                defenseBar.style.width = `${(pokemon.individualDefense / 15) * 100}%`;
+                defenseBar.style.backgroundColor = pokemon.individualDefense === 15 ? '#da7a79' : '#f79513';
+            }
+            if (staminaBar) {
+                staminaBar.style.width = `${(pokemon.individualStamina / 15) * 100}%`;
+                staminaBar.style.backgroundColor = pokemon.individualStamina === 15 ? '#da7a79' : '#f79513';
+            }
+        }, 100);
+    };
 
                 
 
@@ -1017,7 +1014,8 @@ pokemons.sort((a, b) => {
             toggleSortDirection, getItemSprite, createBackgroundStyle, getIvPercent, getCardClass, getBadges, getLevelFromCpm, openPokemonModal, displayMove, getIvColor,
             showCleanupModal, openCleanupModal, closeCleanupModal, cleanupSearchQuery, groupSubstitutes, defaultCleanupData, formGroupedCleanupData,
             showTeamBuilderModal, openTeamBuilderModal, closeTeamBuilderModal, selectedRaidBoss, raidBosses,
-            teamBuilderMode, customEnemies, activeTeamBuilderTab, allPokedex, allPokedexNames, activeTabSuggestions, addCustomEnemy, removeCustomEnemy, customEnemyInput,
+            teamBuilderMode, customEnemies, activeTeamBuilderTab, allPokedex, allPokedexNames, activeTabSuggestions, addCustomEnemy, removeCustomEnemy,             customEnemyInput,
+            getMoveTypeIconUrl,
 
             // Statistics
             stats_shinyRate,

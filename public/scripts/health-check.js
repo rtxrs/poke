@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
         container.innerHTML = ''; // Clear loading message
 
         for (const [key, value] of Object.entries(data)) {
-            if (key === 'cron') continue; // Skip cron data here
+            if (key === 'cron' || key === 'raidboss') continue; // Skip cron and raidboss data here
 
             const card = document.createElement('div');
             card.className = 'health-card';

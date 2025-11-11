@@ -955,3 +955,10 @@ body.dashboard-private, body:not([class]) {
     background-color: rgba(0,0,0,0.8);
 }
 
+.move-type-icon {
+    width: 20px; /* Adjust size as needed */
+    height: 20px; /* Adjust size as needed */
+    vertical-align: middle; /* Align with text */
+    margin-left: 5px; /* Space from the move name */
+}
+

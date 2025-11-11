@@ -76,9 +76,27 @@
 
                     <h4>Combat</h4>
                     <div class="grid-stats moves-grid">
-                        <div><span>Fast Move</span><strong>{{ displayMove(selectedPokemon.move1) }}</strong></div>
-                        <div><span>Charged Move</span><strong>{{ displayMove(selectedPokemon.move2) }}</strong></div>
-                        <div v-if="selectedPokemon.move3"><span>Charged Move 2</span><strong>{{ displayMove(selectedPokemon.move3) }}</strong></div>
+                        <div>
+                            <span>Fast Move</span>
+                            <strong>
+                                <img v-if="selectedPokemon.move1Type" :src="getMoveTypeIconUrl(selectedPokemon.move1Type)" :alt="selectedPokemon.move1Type" class="move-type-icon">
+                                {{ displayMove(selectedPokemon.move1) }}
+                            </strong>
+                        </div>
+                        <div>
+                            <span>Charged Move</span>
+                            <strong>
+                                <img v-if="selectedPokemon.move2Type" :src="getMoveTypeIconUrl(selectedPokemon.move2Type)" :alt="selectedPokemon.move2Type" class="move-type-icon">
+                                {{ displayMove(selectedPokemon.move2) }}
+                            </strong>
+                        </div>
+                        <div v-if="selectedPokemon.move3">
+                            <span>Charged Move 2</span>
+                            <strong>
+                                <img v-if="selectedPokemon.move3Type" :src="getMoveTypeIconUrl(selectedPokemon.move3Type)" :alt="selectedPokemon.move3Type" class="move-type-icon">
+                                {{ displayMove(selectedPokemon.move3) }}
+                            </strong>
+                        </div>
                     </div>
 
                     <h4>Details</h4>

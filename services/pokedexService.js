@@ -268,8 +268,8 @@ const pokedexService = {
             const chargedMoves = JSON.parse(chargedMovesContent);
     
             const finalMoveMap = {};
-            fastMoves.forEach(move => { finalMoveMap[move.move_id] = move.name; });
-            chargedMoves.forEach(move => { finalMoveMap[move.move_id] = move.name; });
+            fastMoves.forEach(move => { finalMoveMap[move.move_id] = { name: move.name, type: move.type }; });
+            chargedMoves.forEach(move => { finalMoveMap[move.move_id] = { name: move.name, type: move.type }; });
             this.moveMap = finalMoveMap;
             console.log(`👍 Move map is now loaded with ${Object.keys(this.moveMap).length} entries.`);
         } catch (error) {
