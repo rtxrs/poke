@@ -437,6 +437,11 @@
                     <div class="custom-enemy-display">
                         <!-- This area is now handled by the result tabs below -->
                     </div>
+                    <div class="team-builder-options">
+                        <button class="btn-toggle" :class="{ active: useMaxBattles }" @click="useMaxBattles = !useMaxBattles">
+                            MAX Battles
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Combined Results/Enemy Tabs -->

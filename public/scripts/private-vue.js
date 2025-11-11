@@ -629,6 +629,7 @@ pokemons.sort((a, b) => {
             return Array.from(names).sort();
         });
         const customEnemyInput = ref('');
+        const useMaxBattles = ref(false);
 
         const allTeamSuggestions = ref({}); // New object to hold all suggestions
 
@@ -711,7 +712,12 @@ pokemons.sort((a, b) => {
             const suggestions = {};
             const overallScores = {};
 
-            allPokemons.value.forEach(p => {
+            let pokemonPool = allPokemons.value;
+            if (useMaxBattles.value) {
+                pokemonPool = allPokemons.value.filter(p => p.pokemonDisplay.breadModeEnum === 1 || p.pokemonDisplay.breadModeEnum === 2);
+            }
+
+            pokemonPool.forEach(p => {
                 overallScores[p.id] = { ...p, score: 0 };
             });
 
@@ -722,7 +728,7 @@ pokemons.sort((a, b) => {
                     return;
                 }
 
-                const rankedPokemon = allPokemons.value.map(pokemon => {
+                const rankedPokemon = pokemonPool.map(pokemon => {
                     const score = calculateEffectivenessScore(pokemon, enemyTypes);
                     overallScores[pokemon.id].score += score;
                     return { ...pokemon, score };
@@ -1014,7 +1020,7 @@ pokemons.sort((a, b) => {
             toggleSortDirection, getItemSprite, createBackgroundStyle, getIvPercent, getCardClass, getBadges, getLevelFromCpm, openPokemonModal, displayMove, getIvColor,
             showCleanupModal, openCleanupModal, closeCleanupModal, cleanupSearchQuery, groupSubstitutes, defaultCleanupData, formGroupedCleanupData,
             showTeamBuilderModal, openTeamBuilderModal, closeTeamBuilderModal, selectedRaidBoss, raidBosses,
-            teamBuilderMode, customEnemies, activeTeamBuilderTab, allPokedex, allPokedexNames, activeTabSuggestions, addCustomEnemy, removeCustomEnemy,             customEnemyInput,
+            teamBuilderMode, customEnemies, activeTeamBuilderTab, allPokedex, allPokedexNames, activeTabSuggestions, addCustomEnemy, removeCustomEnemy,             customEnemyInput, useMaxBattles,
             getMoveTypeIconUrl,
 
             // Statistics

@@ -962,3 +962,33 @@ body.dashboard-private, body:not([class]) {
     margin-left: 5px; /* Space from the move name */
 }
 
+.team-builder-options {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 15px;
+}
+
+.btn-toggle {
+    padding: 8px 15px;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    background-color: #f0f0f0;
+    color: #555;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: bold;
+    min-width: 120px; /* Ensure consistent width */
+}
+
+.btn-toggle.active {
+    background-image: linear-gradient(to right, #FF0033, #87CEEB);
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.btn-toggle:hover {
+    opacity: 0.9;
+}
+
