@@ -869,6 +869,7 @@ body.dashboard-private, body:not([class]) {
     transition: border-color 0.3s;
     position: relative;
     overflow: hidden;
+    background: var(--pokemon-bg); /* Apply the dynamic background color */
 }
 
 .raid-boss-icon:last-child {
@@ -955,7 +956,7 @@ body.dashboard-private, body:not([class]) {
     padding: 8px 12px;
     border: none;
     border-radius: 6px;
-    background-color: transparent;
+    background-color: var(--pokemon-bg, transparent); /* Use variable with fallback */
     color: #333;
     cursor: pointer;
     font-weight: bold;
@@ -968,10 +969,11 @@ body.dashboard-private, body:not([class]) {
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-.enemy-tab {
+.modal-tabs .enemy-tab {
     position: relative;
     color: white;
     text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
+    background: var(--pokemon-bg); /* Apply the dynamic background color */
 }
 
 .remove-tab-btn {

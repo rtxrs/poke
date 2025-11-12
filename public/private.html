@@ -479,7 +479,7 @@
                     <template v-if="teamBuilderMode === 'raid'">
                         <button v-if="selectedRaidBoss"
                                 :class="{ active: true }"
-                                :style="createBackgroundStyle(raidBosses.find(b => b.id === selectedRaidBoss)?.typeColors || [])">
+                                :style="createBackgroundStyle(raidBosses.find(b => b.id === selectedRaidBoss)?.typeColors || [])" class="enemy-tab">
                             {{ raidBosses.find(b => b.id === selectedRaidBoss)?.names.English }}
                         </button>
                     </template>
