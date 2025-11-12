@@ -859,33 +859,15 @@ body.dashboard-private, body:not([class]) {
     flex-direction: row;
 }
 
-.raid-boss-icon {
+.raid-boss-selector .pokemon-image-container {
     width: 80px;
     height: 80px;
-    border-radius: 50%;
-    margin-right: 10px;
     cursor: pointer;
     border: 3px solid transparent;
     transition: border-color 0.3s;
-    position: relative;
-    overflow: hidden;
-    background: var(--pokemon-bg); /* Apply the dynamic background color */
 }
 
-.raid-boss-icon:last-child {
-    margin-right: 0;
-}
-
-.raid-boss-icon img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    position: relative;
-    z-index: 1;
-    border-radius: 50%; /* Make the image itself circular */
-}
-
-.raid-boss-icon.selected {
+.raid-boss-selector .pokemon-image-container.selected {
     border-color: #ffcb05;
     box-shadow: 0 0 15px #ffcb05;
 }

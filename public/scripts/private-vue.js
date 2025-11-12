@@ -163,10 +163,11 @@ const RaidBossSelector = {
                 <h3 class="raid-boss-level-title">{{ level.replace('_', ' ').toUpperCase() }}</h3>
                 <div class="raid-boss-icons">
                     <div v-for="boss in bosses" :key="boss.id"
-                         class="raid-boss-icon"
+                         class="pokemon-image-container"
                          :class="{ selected: boss.id === selectedRaidBoss }"
+                         :style="createBackgroundStyle(boss.typeColors)"
                          @click="$emit('boss-selected', boss.id)">
-                        <img :src="getBossImage(boss)" :alt="boss.names.English" :style="createBackgroundStyle(boss.typeColors)">
+                        <img :src="getBossImage(boss)" :alt="boss.names.English">
                     </div>
                 </div>
             </div>
