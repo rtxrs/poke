@@ -865,6 +865,12 @@ body.dashboard-private, body:not([class]) {
     cursor: pointer;
     border: 3px solid transparent;
     transition: border-color 0.3s;
+    border-radius: 50%; /* Ensure it's circular */
+    margin-right: 10px; /* Add spacing */
+}
+
+.raid-boss-selector .pokemon-image-container:last-child {
+    margin-right: 0; /* Remove margin from the last child */
 }
 
 .raid-boss-selector .pokemon-image-container.selected {
