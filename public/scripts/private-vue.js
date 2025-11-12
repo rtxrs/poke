@@ -104,7 +104,7 @@ const GridComponent = {
             if (p.isMaxLevel) badges.push('<span class="badge max-level-badge">Max</span>');
 
             if (p.pokemonDisplay.locationCard) {
-                badges.push('<span class="badge location-badge">Location</span>');
+                badges.push('<span class="badge background-badge">Background</span>');
             }
 
             if (badges.length > 0) {
@@ -868,7 +868,7 @@ pokemons.sort((a, b) => {
             if (p.isMaxLevel) badges.push('<span class="badge max-level-badge">Max</span>');
 
             if (p.pokemonDisplay.locationCard) {
-                badges.push('<span class="badge location-badge">Location</span>');
+                badges.push('<span class="badge background-badge">Background</span>');
             }
 
             if (badges.length > 0) {

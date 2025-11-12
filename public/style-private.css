@@ -992,8 +992,14 @@ body.dashboard-private, body:not([class]) {
     opacity: 0.9;
 }
 
-.location-badge {
-    background-color: #8e44ad; /* A purple color, similar to mythical/legendary */
+.background-badge {
+    background: linear-gradient(90deg, #8e44ad, #bdc3c7, #3498db); /* Purple, Silver, Blue */
     color: white;
+    animation: pulse-background 2s infinite alternate; /* Simple pulsing animation */
+}
+
+@keyframes pulse-background {
+    0% { transform: scale(1); opacity: 0.8; }
+    100% { transform: scale(1.05); opacity: 1; }
 }
 
