@@ -826,6 +826,11 @@ pokemons.sort((a, b) => {
 
         watchEffect(generateSuggestions);
 
+        watch(teamBuilderMode, (newMode) => {
+            // Reset battle mode when switching between Raid and Custom
+            battleMode.value = 'standard';
+        });
+
         watch(customEnemies, (newEnemies) => {
             // When the list of enemies changes, reset the active tab.
             if (newEnemies.length > 1) {
