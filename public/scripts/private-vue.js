@@ -28,8 +28,10 @@ function getLevelFromCpm(cpm) {
  */
 function createBackgroundStyle(colors) {
     if (!colors || colors.length === 0) return '';
-    if (colors.length === 1) return `background-color: ${colors[0]};`;
-    return `background: linear-gradient(135deg, ${colors[0]} 30%, ${colors[1]} 70%);`;
+    const backgroundValue = colors.length === 1 
+        ? colors[0]
+        : `linear-gradient(135deg, ${colors[0]} 30%, ${colors[1]} 70%)`;
+    return `--pokemon-bg: ${backgroundValue};`;
 }
 
 /**
