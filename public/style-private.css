@@ -517,7 +517,7 @@ body.dashboard-private, body:not([class]) {
 
 /* Styles for the colored modal */
 #modal-content {
-    color: white;
+    color: black;
 }
 
 #modal-content h2,
@@ -528,13 +528,13 @@ body.dashboard-private, body:not([class]) {
 #modal-content .pokemon-stats-grid div,
 #modal-content strong,
 #modal-content span {
-    color: white !important;
-    text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
+    color: black !important;
+    text-shadow: none;
 }
 
 #modal-content #modal-close-btn {
-    color: white !important;
-    text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
+    color: black !important;
+    text-shadow: none;
 }
 
 #modal-content .stat-bar {
@@ -552,6 +552,7 @@ body.dashboard-private, body:not([class]) {
     background-color: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
     overflow: hidden; /* To contain the effects */
+    padding: 5px; /* Add padding to create the circular background */
 }
 
 .pokemon-modal-header .sprite-container {
@@ -566,7 +567,7 @@ body.dashboard-private, body:not([class]) {
     height: 100%;
     background-color: transparent;
     margin-right: 0;
-    border-radius: 0;
+    border-radius: 50%; /* Make the image itself circular */
 }
 
 .vfx-layer {
@@ -619,6 +620,21 @@ body.dashboard-private, body:not([class]) {
     background: radial-gradient(circle, rgba(220, 220, 220, 0.7) 30%, rgba(173, 216, 230, 0) 70%);
     animation: aura-pulse 5s ease-in-out infinite;
     z-index: 2; /* Same layer as shadow, since they are mutually exclusive */
+}
+
+.pokemon-image-container {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: 0 auto 10px;
+    position: relative;
+}
+
+.pokemon-image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 /* --- Cleanup Modal --- */
@@ -747,9 +763,22 @@ body.dashboard-private, body:not([class]) {
     min-height: 215px; /* Give row a minimum height */
 }
 
-.pokemon-row-scroll .pokemon-card {
+#pokemon-highlights-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: center;
+}
+
+#pokemon-highlights-container .pokemon-card {
     flex-shrink: 0;
     width: 140px;
+}
+
+#pokemon-highlights-container .pokemon-card img {
+    width: 100%;
+    height: auto;
+    margin-bottom: 10px;
 }
 
 /* --- Cleanup Modal Form Grouping --- */
@@ -840,6 +869,7 @@ body.dashboard-private, body:not([class]) {
     object-fit: cover;
     position: relative;
     z-index: 1;
+    border-radius: 50%; /* Make the image itself circular */
 }
 
 .raid-boss-icon.selected {

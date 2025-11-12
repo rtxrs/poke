@@ -59,8 +59,10 @@ const GridComponent = {
     emits: ['pokemon-clicked'],
     template: `
         <div id="all-pokemon-list">
-            <div v-for="p in pokemons" :key="p.id" :class="getCardClass(p)" :style="createBackgroundStyle(p.typeColors)" @click="$emit('pokemon-clicked', p)">
-                <img :src="p.sprite" :alt="displayName(p)" loading="lazy">
+            <div v-for="p in pokemons" :key="p.id" :class="getCardClass(p)" @click="$emit('pokemon-clicked', p)">
+                <div class="pokemon-image-container" :style="createBackgroundStyle(p.typeColors)">
+                    <img :src="p.sprite" :alt="displayName(p)" loading="lazy">
+                </div>
                 <p class="pokemon-name" v-html="getBadges(p, displayName(p))"></p>
                 <p class="pokemon-cp">CP {{ p.cp }}</p>
                 <p v-if="p.score" class="pokemon-score">Score: {{ p.score.toFixed(2) }}</p>
@@ -112,7 +114,7 @@ const GridComponent = {
             }
             return name;
         },
-        getCardClass(p) { return p.typeColors && p.typeColors.length > 0 ? 'pokemon-card colored' : 'pokemon-card'; },
+        getCardClass(p) { return 'pokemon-card'; },
         // Make global helpers available in this component's template
         createBackgroundStyle,
         getIvColor
@@ -161,9 +163,8 @@ const RaidBossSelector = {
                     <div v-for="boss in bosses" :key="boss.id"
                          class="raid-boss-icon"
                          :class="{ selected: boss.id === selectedRaidBoss }"
-                         @click="$emit('boss-selected', boss.id)"
-                         :style="createBackgroundStyle(boss.typeColors)">
-                        <img :src="getBossImage(boss)" :alt="boss.names.English">
+                         @click="$emit('boss-selected', boss.id)">
+                        <img :src="getBossImage(boss)" :alt="boss.names.English" :style="createBackgroundStyle(boss.typeColors)">
                     </div>
                 </div>
             </div>
@@ -835,7 +836,7 @@ pokemons.sort((a, b) => {
         const closeCleanupModal = () => { showCleanupModal.value = false; };
         const toggleSortDirection = () => { sortDirection.value = sortDirection.value === 'desc' ? 'asc' : 'desc'; };
         const getItemSprite = (itemId) => `https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Items/Item_${String(itemId).padStart(4, '0')}.png`;
-        const getCardClass = (p) => p.typeColors && p.typeColors.length > 0 ? 'pokemon-card colored' : 'pokemon-card';
+        const getCardClass = (p) => 'pokemon-card';
         const getBadges = (p, name) => {
             const badges = [];
             if (!p || !p.pokemonDisplay) return name;

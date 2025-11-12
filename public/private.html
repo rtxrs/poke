@@ -24,11 +24,11 @@
         
         <!-- Pokémon Detail Modal -->
         <div id="modal-backdrop" v-if="selectedPokemon" @click.self="selectedPokemon = null">
-            <div id="modal-content" class="card" :style="createBackgroundStyle(selectedPokemon.typeColors)">
+            <div id="modal-content" class="card">
                 <button id="modal-close-btn" @click="selectedPokemon = null">&times;</button>
                 
                 <div class="pokemon-modal-header">
-                    <div class="sprite-container">
+                    <div class="sprite-container" :style="createBackgroundStyle(selectedPokemon.typeColors)">
                         <div v-if="selectedPokemon.pokemonDisplay.alignment === 1" class="vfx-layer shadow-aura"></div>
                         <div v-if="selectedPokemon.pokemonDisplay.alignment === 2" class="vfx-layer purified-glow"></div>
                         <div v-if="selectedPokemon.isLucky" class="vfx-layer lucky-glow"></div>
@@ -137,8 +137,10 @@
                                 <div v-if="formGroup.pokemons.length > 1" class="form-group-wrapper">
                                     <h5 class="form-group-header">{{ formGroup.displayName }}</h5>
                                     <div class="form-group-box">
-                                        <div v-for="p in formGroup.pokemons" :key="p.id" class="pokemon-card" :style="createBackgroundStyle(p.typeColors)" @click="openPokemonModal(p)">
-                                            <img :src="p.sprite" :alt="p.nickname || p.name" loading="lazy">
+                                        <div v-for="p in formGroup.pokemons" :key="p.id" class="pokemon-card" @click="openPokemonModal(p)">
+                                            <div class="pokemon-image-container" :style="createBackgroundStyle(p.typeColors)">
+                                                <img :src="p.sprite" :alt="p.nickname || p.name" loading="lazy">
+                                            </div>
                                             <p class="pokemon-name" v-html="getBadges(p, p.nickname || p.name)"></p>
                                             <p class="pokemon-cp">CP {{ p.cp }}</p>
                                             <div class="iv-bar-container">
@@ -160,8 +162,10 @@
                             <h4>{{ group[0].name }} ({{ group.length }})</h4>
                         </div>
                         <div class="pokemon-row-scroll">
-                            <div v-for="p in group" :key="p.id" class="pokemon-card" :style="createBackgroundStyle(p.typeColors)" @click="openPokemonModal(p)">
-                                <img :src="p.sprite" :alt="p.nickname || p.name" loading="lazy">
+                            <div v-for="p in group" :key="p.id" class="pokemon-card" @click="openPokemonModal(p)">
+                                <div class="pokemon-image-container" :style="createBackgroundStyle(p.typeColors)">
+                                    <img :src="p.sprite" :alt="p.nickname || p.name" loading="lazy">
+                                </div>
                                 <p class="pokemon-name" v-html="getBadges(p, p.nickname || p.name)"></p>
                                 <p class="pokemon-cp">CP {{ p.cp }}</p>
                                 <div class="iv-bar-container">
@@ -243,8 +247,10 @@
                                 <h2>Pokémon Highlights</h2>
                             </div>
                             <div id="pokemon-highlights-container">
-                                <div v-for="p in highlights" :key="p.id" :class="getCardClass(p)" :style="createBackgroundStyle(p.typeColors)" @click="openPokemonModal(p)">
-                                    <img :src="p.sprite" :alt="p.nickname || p.name" loading="lazy">
+                                <div v-for="p in highlights" :key="p.id" :class="getCardClass(p)" @click="openPokemonModal(p)">
+                                    <div class="pokemon-image-container" :style="createBackgroundStyle(p.typeColors)">
+                                        <img :src="p.sprite" :alt="p.nickname || p.name" loading="lazy">
+                                    </div>
                                     <p class="pokemon-name" v-html="getBadges(p, p.nickname || p.name)"></p>
                                     <p class="pokemon-cp">CP {{ p.cp }}</p>
                                 </div>
