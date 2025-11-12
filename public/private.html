@@ -417,7 +417,7 @@
 
         <!-- Team Builder Modal -->
         <div id="team-builder-modal-backdrop" v-if="showTeamBuilderModal" @click.self="closeTeamBuilderModal()">
-            <div id="team-builder-modal-content" class="card">
+            <div id="team-builder-modal-content" class="card" :class="{ 'max-mode-active': battleMode === 'max' }">
                 <button id="team-builder-modal-close-btn" @click="closeTeamBuilderModal()">&times;</button>
                 
                 <!-- Mode Tabs -->
@@ -438,9 +438,14 @@
 
                 <!-- Custom Team Selector -->
                 <div v-if="teamBuilderMode === 'custom'" class="summary-header custom-team-selector">
-                    <h4>Select up to 6 Enemy Pokémon</h4>
+                    <div class="team-builder-options">
+                            <div class="segmented-control">
+                                <button :class="{ active: battleMode === 'standard' }" @click="battleMode = 'standard'">Standard</button>
+                                <button :class="{ active: battleMode === 'max' }" @click="battleMode = 'max'">MAX Battles</button>
+                            </div>
+                        </div>
                     <div class="custom-enemy-input-wrapper">
-                        <input type="text" list="pokedex-list" v-model="customEnemyInput" @change="addCustomEnemy" @keyup.enter="addCustomEnemy" placeholder="Type a Pokémon name..." />
+                        <input type="text" list="pokedex-list" v-model="customEnemyInput" @change="addCustomEnemy" @keyup.enter="addCustomEnemy" placeholder="Select up to 6 Enemy Pokémon" />
                         <datalist id="pokedex-list">
                             <option v-for="name in allPokedexNames" :value="name"></option>
                         </datalist>
@@ -448,11 +453,6 @@
                     </div>
                     <div class="custom-enemy-display">
                         <!-- This area is now handled by the result tabs below -->
-                    </div>
-                    <div class="team-builder-options">
-                        <button class="btn-toggle" :class="{ active: useMaxBattles }" @click="useMaxBattles = !useMaxBattles">
-                            MAX Battles
-                        </button>
                     </div>
                 </div>
 

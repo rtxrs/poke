@@ -637,7 +637,7 @@ pokemons.sort((a, b) => {
             return Array.from(names).sort();
         });
         const customEnemyInput = ref('');
-        const useMaxBattles = ref(false);
+        const battleMode = ref('standard'); // 'standard' or 'max'
 
         const allTeamSuggestions = ref({}); // New object to hold all suggestions
 
@@ -721,7 +721,7 @@ pokemons.sort((a, b) => {
             const overallScores = {};
 
             let pokemonPool = allPokemons.value;
-            if (useMaxBattles.value) {
+            if (battleMode.value === 'max') {
                 pokemonPool = allPokemons.value.filter(p => p.pokemonDisplay.breadModeEnum === 1 || p.pokemonDisplay.breadModeEnum === 2);
             }
 
@@ -1049,7 +1049,7 @@ pokemons.sort((a, b) => {
             toggleSortDirection, getItemSprite, createBackgroundStyle, getIvPercent, getCardClass, getBadges, getLevelFromCpm, openPokemonModal, displayMove, getIvColor, getPokemonTypes,
             showCleanupModal, openCleanupModal, closeCleanupModal, cleanupSearchQuery, groupSubstitutes, defaultCleanupData, formGroupedCleanupData,
             showTeamBuilderModal, openTeamBuilderModal, closeTeamBuilderModal, selectedRaidBoss, raidBosses,
-            teamBuilderMode, customEnemies, activeTeamBuilderTab, allPokedex, allPokedexNames, activeTabSuggestions, addCustomEnemy, removeCustomEnemy,             customEnemyInput, useMaxBattles,
+            teamBuilderMode, customEnemies, activeTeamBuilderTab, allPokedex, allPokedexNames, activeTabSuggestions, addCustomEnemy, removeCustomEnemy,             customEnemyInput, battleMode,
             getMoveTypeIconUrl,
 
             // Statistics
