@@ -103,6 +103,10 @@ const GridComponent = {
 
             if (p.isMaxLevel) badges.push('<span class="badge max-level-badge">Max</span>');
 
+            if (p.pokemonDisplay.locationCard) {
+                badges.push('<span class="badge location-badge">Location</span>');
+            }
+
             if (badges.length > 0) {
                 return `${name}<br>${badges.join(' ')}`;
             }
@@ -862,6 +866,10 @@ pokemons.sort((a, b) => {
             if (p.specialForm === 'Gigantamax') badges.push('<span class="badge gigantamax-badge">G-Max</span>');
 
             if (p.isMaxLevel) badges.push('<span class="badge max-level-badge">Max</span>');
+
+            if (p.pokemonDisplay.locationCard) {
+                badges.push('<span class="badge location-badge">Location</span>');
+            }
 
             if (badges.length > 0) {
                 return `${name}<br>${badges.join(' ')}`;

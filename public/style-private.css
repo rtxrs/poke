@@ -992,3 +992,8 @@ body.dashboard-private, body:not([class]) {
     opacity: 0.9;
 }
 
+.location-badge {
+    background-color: #8e44ad; /* A purple color, similar to mythical/legendary */
+    color: white;
+}
+
