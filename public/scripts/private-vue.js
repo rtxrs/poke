@@ -834,6 +834,23 @@ pokemons.sort((a, b) => {
             }
         }, { deep: true }); // deep watch is needed for array mutations
 
+        const getPokemonTypes = (pokemon) => {
+            if (!pokemon || !pokemon.typeColors || !pokedexService.value.typeColorMap) {
+                return [];
+            }
+            const typeMap = pokedexService.value.typeColorMap;
+            const types = pokemon.typeColors.map(color => {
+                const typeName = Object.keys(typeMap).find(key => typeMap[key] === color);
+                if (typeName) {
+                    // Capitalize first letter, lowercase the rest
+                    const formattedName = typeName.charAt(0).toUpperCase() + typeName.slice(1).toLowerCase();
+                    return { name: formattedName, color: color };
+                }
+                return null;
+            });
+            return types.filter(Boolean); // Filter out any nulls
+        };
+
         const openCleanupModal = () => { showCleanupModal.value = true; };
         const closeCleanupModal = () => { showCleanupModal.value = false; };
         const toggleSortDirection = () => { sortDirection.value = sortDirection.value === 'desc' ? 'asc' : 'desc'; };
@@ -1028,7 +1045,7 @@ pokemons.sort((a, b) => {
             teamColor, xpPercentage, xpProgressText, stardust, pokecoins, highlights,
             groupedItems, itemCategoryOrder, filteredPokemon,
             totalPokeBalls, totalPotions, totalRevives,
-            toggleSortDirection, getItemSprite, createBackgroundStyle, getIvPercent, getCardClass, getBadges, getLevelFromCpm, openPokemonModal, displayMove, getIvColor,
+            toggleSortDirection, getItemSprite, createBackgroundStyle, getIvPercent, getCardClass, getBadges, getLevelFromCpm, openPokemonModal, displayMove, getIvColor, getPokemonTypes,
             showCleanupModal, openCleanupModal, closeCleanupModal, cleanupSearchQuery, groupSubstitutes, defaultCleanupData, formGroupedCleanupData,
             showTeamBuilderModal, openTeamBuilderModal, closeTeamBuilderModal, selectedRaidBoss, raidBosses,
             teamBuilderMode, customEnemies, activeTeamBuilderTab, allPokedex, allPokedexNames, activeTabSuggestions, addCustomEnemy, removeCustomEnemy,             customEnemyInput, useMaxBattles,

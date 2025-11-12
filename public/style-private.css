@@ -520,14 +520,7 @@ body.dashboard-private, body:not([class]) {
     color: black;
 }
 
-#modal-content h2,
-#modal-content h4,
-#modal-content .stat-label,
-#modal-content .stat-value,
-#modal-content .grid-stats div,
-#modal-content .pokemon-stats-grid div,
-#modal-content strong,
-#modal-content span {
+#modal-content h2 {
     color: black !important;
     text-shadow: none;
 }
@@ -1002,6 +995,21 @@ body.dashboard-private, body:not([class]) {
 
 .remove-tab-btn:hover {
     background-color: rgba(0,0,0,0.8);
+}
+
+.type-info {
+    margin-left: 0.5em;
+    font-weight: normal;
+}
+
+.type-icons {
+    margin-left: 0.5em;
+    vertical-align: middle;
+}
+
+.type-text {
+    font-size: 0.8em; /* Smaller relative to h2 */
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
 }
 
 .move-type-icon {

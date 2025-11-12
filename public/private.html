@@ -37,7 +37,13 @@
                     </div>
                     <div class="pokemon-info">
                         <h2>
-                            {{ selectedPokemon.nickname || selectedPokemon.name }}
+                            {{ selectedPokemon.nickname || selectedPokemon.name }} |
+                            <span v-if="getPokemonTypes(selectedPokemon).length > 0">
+                                <template v-for="(type, index) in getPokemonTypes(selectedPokemon)">
+                                    <span class="type-text" :style="{ color: type.color }">{{ type.name }}</span>
+                                    <span v-if="index < getPokemonTypes(selectedPokemon).length - 1"> / </span>
+                                </template>
+                            </span>
                             <span class="badges-container" v-html="getBadges(selectedPokemon, '')"></span>
                         </h2>
                         <div class="pokemon-stats-grid">
