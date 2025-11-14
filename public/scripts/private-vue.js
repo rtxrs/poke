@@ -515,7 +515,7 @@ createApp({
                 const max = Number(parts[2]);
                 const value = stat === 'cp' ? p.cp : p.stamina;
                 if (value <= max) match = true;
-            } else if (searchTerm.match(/^\d\*?$/)) {
+            } else if (searchTerm.match(/^\d\*$/)) {
                 const stars = parseInt(searchTerm);
                 const ivPercent = getIvPercentAsNumber(p);
                 if (stars === 4 && ivPercent === 100) match = true;
@@ -523,6 +523,8 @@ createApp({
                 else if (stars === 2 && ivPercent >= 66.7 && ivPercent < 82.2) match = true;
                 else if (stars === 1 && ivPercent >= 51.1 && ivPercent < 66.7) match = true;
                 else if (stars === 0 && ivPercent < 51.1) match = true;
+            } else if (searchTerm.match(/^\d+$/)) {
+                if (p.pokemonId == searchTerm) match = true;
             } else {
                 const types = (p.typeColors || []).map(color => {
                     for (const type in pokedexService.value.typeColorMap) {
@@ -561,14 +563,14 @@ createApp({
                 return pokemons;
             }
 
-            const tokens = query.toLowerCase().match(/(!?@?\w+(-\w*)*)|(\d+\*?)|(\d+-\d*)|(-\d+)|(\+?\w+)|([,&;:])|(\w+)/g) || [];
+            const tokens = query.toLowerCase().match(/(\d+\*)|(!?@?\w+(-\w*)*)|(\d+-\d*)|(-\d+)|(\+?\w+)|([,&;:])|(\w+)/g) || [];
 
             const outputQueue = [];
             const operatorStack = [];
             const precedence = { '&': 2, ',': 1, ';': 1, ':': 1 };
 
             tokens.forEach(token => {
-                if (token.match(/(!?@?\w+(-\w*)*)|(\d+\*?)|(\d+-\d*)|(-\d+)|(\+?\w+)/)) {
+                if (token.match(/(\d+\*)|(!?@?\w+(-\w*)*)|(\d+-\d*)|(-\d+)|(\+?\w+)/)) {
                     outputQueue.push(token);
                 } else if (token === '&' || token === ',' || token === ';' || token === ':') {
                     while (operatorStack.length > 0 && precedence[operatorStack[operatorStack.length - 1]] >= precedence[token]) {
