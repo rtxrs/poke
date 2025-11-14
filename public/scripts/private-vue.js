@@ -476,37 +476,128 @@ createApp({
         const totalPotions = computed(() => (groupedItems.value['Potions & Revives'] || []).filter(item => item.itemName.includes('Potion')).reduce((total, item) => total + item.count, 0));
         const totalRevives = computed(() => (groupedItems.value['Potions & Revives'] || []).filter(item => item.itemName.includes('Revive')).reduce((total, item) => total + item.count, 0));
 
+        const evaluateTerm = (p, term, pokedexService, moveMap, getIvPercentAsNumber) => {
+            const isNegated = term.startsWith('!');
+            const searchTerm = isNegated ? term.substring(1) : term;
+
+            let match = false;
+
+            if (searchTerm.startsWith('@')) {
+                const moveSearch = searchTerm.substring(1).toLowerCase();
+                const move1 = moveMap.value[p.move1]?.name.toLowerCase();
+                const move2 = moveMap.value[p.move2]?.name.toLowerCase();
+                const move3 = moveMap.value[p.move3]?.name.toLowerCase();
+                if (move1 === moveSearch || move2 === moveSearch || move3 === moveSearch) {
+                    match = true;
+                } else {
+                    const move1Type = moveMap.value[p.move1]?.type.toLowerCase();
+                    const move2Type = moveMap.value[p.move2]?.type.toLowerCase();
+                    const move3Type = moveMap.value[p.move3]?.type.toLowerCase();
+                    if (move1Type === moveSearch || move2Type === moveSearch || move3Type === moveSearch) {
+                        match = true;
+                    }
+                }
+            } else if (searchTerm.startsWith('+')) {
+                const pokemonName = searchTerm.substring(1).toLowerCase();
+                if (p.name.toLowerCase().includes(pokemonName)) {
+                    match = true;
+                }
+            } else if (searchTerm.match(/^(cp|hp)(\d+)-(\d*)$/)) {
+                const parts = searchTerm.match(/^(cp|hp)(\d+)-(\d*)$/);
+                const stat = parts[1];
+                const min = Number(parts[2]);
+                const max = parts[3] ? Number(parts[3]) : Infinity;
+                const value = stat === 'cp' ? p.cp : p.stamina;
+                if (value >= min && value <= max) match = true;
+            } else if (searchTerm.match(/^(cp|hp)-(\d+)$/)) {
+                const parts = searchTerm.match(/^(cp|hp)-(\d+)$/);
+                const stat = parts[1];
+                const max = Number(parts[2]);
+                const value = stat === 'cp' ? p.cp : p.stamina;
+                if (value <= max) match = true;
+            } else if (searchTerm.match(/^\d\*?$/)) {
+                const stars = parseInt(searchTerm);
+                const ivPercent = getIvPercentAsNumber(p);
+                if (stars === 4 && ivPercent === 100) match = true;
+                else if (stars === 3 && ivPercent >= 82.2 && ivPercent < 100) match = true;
+                else if (stars === 2 && ivPercent >= 66.7 && ivPercent < 82.2) match = true;
+                else if (stars === 1 && ivPercent >= 51.1 && ivPercent < 66.7) match = true;
+                else if (stars === 0 && ivPercent < 51.1) match = true;
+            } else {
+                const types = (p.typeColors || []).map(color => {
+                    for (const type in pokedexService.value.typeColorMap) {
+                        if (pokedexService.value.typeColorMap[type] === color) return type.toLowerCase();
+                    }
+                });
+
+                if (types.includes(searchTerm)) match = true;
+                else if ((p.name || '').toLowerCase().includes(searchTerm) || (p.nickname || '').toLowerCase().includes(searchTerm)) match = true;
+                else if (searchTerm === 'shiny' && p.pokemonDisplay.shiny) match = true;
+                else if (searchTerm === 'lucky' && p.isLucky) match = true;
+                else if (searchTerm === 'perfect' && getIvPercentAsNumber(p) === 100) match = true;
+                else if (searchTerm === 'nundo' && getIvPercentAsNumber(p) === 0) match = true;
+                else if (searchTerm === 'shadow' && p.pokemonDisplay.alignment === 1) match = true;
+                else if (searchTerm === 'purified' && p.pokemonDisplay.alignment === 2) match = true;
+                else if (searchTerm === 'dynamax' && p.pokemonDisplay.breadModeEnum === 1) match = true;
+                else if (searchTerm === 'gigantamax' && p.pokemonDisplay.breadModeEnum === 2) match = true;
+                else if (searchTerm === 'legendary' && p.pokemonClass === 'POKEMON_CLASS_LEGENDARY') match = true;
+                else if (searchTerm === 'mythical' && p.pokemonClass === 'POKEMON_CLASS_MYTHIC') match = true;
+                else if (searchTerm === 'hatched' && p.hatchedFromEgg) match = true;
+                else if (searchTerm === 'traded' && p.tradedTimeMs > 0) match = true;
+                else if (searchTerm === 'favorite' && p.favorite) match = true;
+                else if (searchTerm === 'background' && p.pokemonDisplay.locationCard) match = true;
+                else if (searchTerm.startsWith('age')) {
+                    const age = parseInt(searchTerm.substring(3));
+                    const days = (Date.now() - p.creationTimeMs) / (1000 * 60 * 60 * 24);
+                    if (days <= age) match = true;
+                }
+            }
+
+            return isNegated ? !match : match;
+        };
+
         const filterPokemon = (pokemons, query) => {
-            const searchTerms = query.toLowerCase().trim().split(',').map(term => term.trim()).filter(term => term);
-            if (searchTerms.length === 0) {
+            if (!query.trim()) {
                 return pokemons;
             }
 
+            const tokens = query.toLowerCase().match(/(!?@?\w+(-\w*)*)|(\d+\*?)|(\d+-\d*)|(-\d+)|(\+?\w+)|([,&;:])|(\w+)/g) || [];
+
+            const outputQueue = [];
+            const operatorStack = [];
+            const precedence = { '&': 2, ',': 1, ';': 1, ':': 1 };
+
+            tokens.forEach(token => {
+                if (token.match(/(!?@?\w+(-\w*)*)|(\d+\*?)|(\d+-\d*)|(-\d+)|(\+?\w+)/)) {
+                    outputQueue.push(token);
+                } else if (token === '&' || token === ',' || token === ';' || token === ':') {
+                    while (operatorStack.length > 0 && precedence[operatorStack[operatorStack.length - 1]] >= precedence[token]) {
+                        outputQueue.push(operatorStack.pop());
+                    }
+                    operatorStack.push(token);
+                }
+            });
+
+            while (operatorStack.length > 0) {
+                outputQueue.push(operatorStack.pop());
+            }
+
             return pokemons.filter(p => {
-                if (!p.pokemonDisplay) return false;
-                return searchTerms.every(term => {
-                    const isNegated = term.startsWith('!');
-                    const searchTerm = isNegated ? term.substring(1) : term;
-                    let match = false;
-                    const types = (p.typeColors || []).map(color => {
-                        for (const type in pokedexService.value.typeColorMap) {
-                            if (pokedexService.value.typeColorMap[type] === color) return type.toLowerCase();
+                const evaluationStack = [];
+                outputQueue.forEach(token => {
+                    if (token === '&' || token === ',' || token === ';' || token === ':') {
+                        const right = evaluationStack.pop();
+                        const left = evaluationStack.pop();
+                        if (token === '&') {
+                            evaluationStack.push(left && right);
+                        } else {
+                            evaluationStack.push(left || right);
                         }
-                    });
-                    if (types.includes(searchTerm)) match = true;
-                    else if ((p.name || '').toLowerCase().includes(searchTerm) || (p.nickname || '').toLowerCase().includes(searchTerm)) match = true;
-                    else if (searchTerm === 'shiny' && p.pokemonDisplay.shiny) match = true;
-                    else if (searchTerm === 'lucky' && p.isLucky) match = true;
-                    else if (searchTerm === 'perfect' && getIvPercent(p) >= 100) match = true;
-                    else if (searchTerm === 'shadow' && p.pokemonDisplay.alignment === 1) match = true;
-                    else if (searchTerm === 'purified' && p.pokemonDisplay.alignment === 2) match = true;
-                    else if (searchTerm === 'dynamax' && p.pokemonDisplay.breadModeEnum === 1) match = true;
-                    else if (searchTerm === 'gigantamax' && p.pokemonDisplay.breadModeEnum === 2) match = true;
-                    const pokedexEntry = getPokedexEntry(p);
-                    if (pokedexEntry?.pokemonClass === 'POKEMON_CLASS_LEGENDARY' && searchTerm === 'legendary') match = true;
-                    if (pokedexEntry?.pokemonClass === 'POKEMON_CLASS_MYTHIC' && searchTerm === 'mythical') match = true;
-                    return isNegated ? !match : match;
+                    } else {
+                        evaluationStack.push(evaluateTerm(p, token, pokedexService, moveMap, getIvPercentAsNumber));
+                    }
                 });
+                return evaluationStack[0];
             });
         };
 
