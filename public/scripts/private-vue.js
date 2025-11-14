@@ -1146,7 +1146,7 @@ pokemons.sort((a, b) => {
                 if (account.value.name && account.value.userId) {
                     document.title = `Pokemon GO | ${account.value.name} #${account.value.userId}`;
                     if (mainTitle) {
-                        mainTitle.innerHTML = `${account.value.name} <span class="player-badge" style="${generateGradient(account.value.publicId)}">#${account.value.userId}</span>`;
+                        mainTitle.innerHTML = `${account.value.name} | <span class="player-badge" style="${generateGradient(account.value.publicId)}">#${account.value.userId}</span>`;
                     }
                 } else if (account.value.name) {
                     document.title = `Pokemon GO | ${account.value.name}'s Profile`;

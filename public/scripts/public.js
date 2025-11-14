@@ -319,7 +319,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (authStatus.loggedIn && authStatus.userId) {
             document.title = `Pokemon GO | #${authStatus.userId}`;
             if (mainTitle) {
-                mainTitle.innerHTML = renderPlayerBadge({ userId: authStatus.userId, publicId: authStatus.publicId });
+                mainTitle.innerHTML = `Pokémon GO Player Dashboard | ${renderPlayerBadge({ userId: authStatus.userId, publicId: authStatus.publicId })}`;
             }
         } else {
             document.title = `Pokemon GO | Dashboard`;
