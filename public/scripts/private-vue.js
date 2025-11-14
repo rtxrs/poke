@@ -103,8 +103,8 @@ const GridComponent = {
             if (p.pokemonClass === 'POKEMON_CLASS_LEGENDARY') badges.push('<span class="badge legendary-badge">Legendary</span>');
             if (p.pokemonClass === 'POKEMON_CLASS_MYTHIC') badges.push('<span class="badge mythical-badge">Mythical</span>');
 
-            if (p.specialForm === 'Dynamax') badges.push('<span class="badge dynamax-badge">Dynamax</span>');
-            if (p.specialForm === 'Gigantamax') badges.push('<span class="badge gigantamax-badge">G-Max</span>');
+            if (p.pokemonDisplay.breadModeEnum === 1) badges.push('<span class="badge dynamax-badge">Dynamax</span>');
+            if (p.pokemonDisplay.breadModeEnum === 2) badges.push('<span class="badge gigantamax-badge">G-Max</span>');
 
             if (p.isMaxLevel) badges.push('<span class="badge max-level-badge">Max</span>');
 
@@ -436,12 +436,13 @@ createApp({
 
             if (p.pokemonDisplay?.shiny) score += 25;
             if (p.isMaxLevel) score += 20;
+            if (p.pokemonDisplay.locationCard) score += 20;
             if (p.pokemonDisplay?.alignment === 1) score += 15;
             if (p.pokemonClass === 'POKEMON_CLASS_MYTHIC') score += 15;
             if (p.isLucky) score += 10;
-            if (p.pokemonClass === 'POKEMON_CLASS_LEGENDARY') score += 10;
+            if (p.pokemonClass === 'POKEMON_CLASS_LEGENDARY') score += 15;
             if (p.pokemonDisplay?.costume > 0) score += 10;
-            if (p.specialForm === 'Dynamax' || p.specialForm === 'Gigantamax') score += 5;
+            if (p.pokemonDisplay.breadModeEnum === 1 || p.pokemonDisplay.breadModeEnum === 2) score += 5;
             
             return score;
         };
@@ -890,8 +891,8 @@ pokemons.sort((a, b) => {
             if (p.pokemonClass === 'POKEMON_CLASS_LEGENDARY') badges.push('<span class="badge legendary-badge">Legendary</span>');
             if (p.pokemonClass === 'POKEMON_CLASS_MYTHIC') badges.push('<span class="badge mythical-badge">Mythical</span>');
 
-            if (p.specialForm === 'Dynamax') badges.push('<span class="badge dynamax-badge">Dynamax</span>');
-            if (p.specialForm === 'Gigantamax') badges.push('<span class="badge gigantamax-badge">G-Max</span>');
+            if (p.pokemonDisplay.breadModeEnum === 1) badges.push('<span class="badge dynamax-badge">Dynamax</span>');
+            if (p.pokemonDisplay.breadModeEnum === 2) badges.push('<span class="badge gigantamax-badge">G-Max</span>');
 
             if (p.isMaxLevel) badges.push('<span class="badge max-level-badge">Max</span>');
 

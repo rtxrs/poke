@@ -196,47 +196,52 @@ const playerDataService = {
                         rarity.breakdown.iv.value = 4097;
                         rarity.breakdown.iv.text = '0 IV';
                         } else if (p.individualAttack === 15 && p.individualDefense === 15 && p.individualStamina === 15) { // PERFECT IV LOGIC
-                            const origin = p.originDetail?.originDetailCase;
-                            const alignment = p.pokemonDisplay.alignment;
+                            if (p.pokemonDisplay.isStrongPokemon) {
+                                rarity.breakdown.iv.value = 37;
+                                rarity.breakdown.iv.text = 'Mighty Hundo';
+                            } else {
+                                const origin = p.originDetail?.originDetailCase;
+                                const alignment = p.pokemonDisplay.alignment;
 
-                            if (alignment === 1) { // Shadow
-                                if (origin === 3 || origin === 28) { // Raid or Giovanni
-                                    rarity.breakdown.iv.value = 1000;
-                                    rarity.breakdown.iv.text = 'Shadow Hundo (Raid/Boss)';
-                                } else if (p.pokemonDisplay?.weatherBoostedCondition) {
-                                    rarity.breakdown.iv.value = 1728;
-                                    rarity.breakdown.iv.text = 'Shadow Hundo (Weather Boost)';
-                                } else {
-                                    rarity.breakdown.iv.value = 4096;
-                                    rarity.breakdown.iv.text = 'Shadow Hundo (Wild)';
-                                }
-                            } else if (alignment === 2) { // Purified
-                                if (origin === 3 || origin === 28) { // Assuming origin is preserved after purification
-                                    rarity.breakdown.iv.value = 37;
-                                    rarity.breakdown.iv.text = 'Purified Hundo (Raid/Boss)';
-                                } else if (p.pokemonDisplay?.weatherBoostedCondition) { // Assuming weather is preserved
-                                    rarity.breakdown.iv.value = 64;
-                                    rarity.breakdown.iv.text = 'Purified Hundo (Weather Boost)';
-                                } else {
-                                    rarity.breakdown.iv.value = 152;
-                                    rarity.breakdown.iv.text = 'Purified Hundo (Base)';
-                                }
-                            } else { // Normal (alignment === 0 or undefined)
-                                if (p.isLucky) {
-                                    rarity.breakdown.iv.value = 64;
-                                    rarity.breakdown.iv.text = 'Lucky Hundo';
-                                } else if (p.tradedTimeMs > 0) {
-                                    rarity.breakdown.iv.value = 987; // New value for trades
-                                    rarity.breakdown.iv.text = 'Traded Hundo';
-                                } else if (origin === 3 || origin === 13 || origin === 14 || origin === 15 || origin === 10 || origin === 24) { // Egg, Raid, Research, GBL
-                                    rarity.breakdown.iv.value = 216;
-                                    rarity.breakdown.iv.text = 'Hundo (Egg/Raid/Research)';
-                                } else if (p.pokemonDisplay?.weatherBoostedCondition) {
-                                    rarity.breakdown.iv.value = 1728;
-                                    rarity.breakdown.iv.text = 'Hundo (Weather Boost)';
-                                } else { // Wild
-                                    rarity.breakdown.iv.value = 4096;
-                                    rarity.breakdown.iv.text = 'Hundo (Wild)';
+                                if (alignment === 1) { // Shadow
+                                    if (origin === 3 || origin === 28) { // Raid or Giovanni
+                                        rarity.breakdown.iv.value = 1000;
+                                        rarity.breakdown.iv.text = 'Shadow Hundo (Raid/Boss)';
+                                    } else if (p.pokemonDisplay?.weatherBoostedCondition) {
+                                        rarity.breakdown.iv.value = 1728;
+                                        rarity.breakdown.iv.text = 'Shadow Hundo (Weather Boost)';
+                                    } else {
+                                        rarity.breakdown.iv.value = 4096;
+                                        rarity.breakdown.iv.text = 'Shadow Hundo (Wild)';
+                                    }
+                                } else if (alignment === 2) { // Purified
+                                    if (origin === 3 || origin === 28) { // Assuming origin is preserved after purification
+                                        rarity.breakdown.iv.value = 37;
+                                        rarity.breakdown.iv.text = 'Purified Hundo (Raid/Boss)';
+                                    } else if (p.pokemonDisplay?.weatherBoostedCondition) { // Assuming weather is preserved
+                                        rarity.breakdown.iv.value = 64;
+                                        rarity.breakdown.iv.text = 'Purified Hundo (Weather Boost)';
+                                    } else {
+                                        rarity.breakdown.iv.value = 152;
+                                        rarity.breakdown.iv.text = 'Purified Hundo (Base)';
+                                    }
+                                } else { // Normal (alignment === 0 or undefined)
+                                    if (p.isLucky) {
+                                        rarity.breakdown.iv.value = 64;
+                                        rarity.breakdown.iv.text = 'Lucky Hundo';
+                                    } else if (p.tradedTimeMs > 0) {
+                                        rarity.breakdown.iv.value = 987; // New value for trades
+                                        rarity.breakdown.iv.text = 'Traded Hundo';
+                                    } else if (origin === 3 || origin === 13 || origin === 14 || origin === 15 || origin === 10 || origin === 24) { // Egg, Raid, Research, GBL
+                                        rarity.breakdown.iv.value = 216;
+                                        rarity.breakdown.iv.text = 'Hundo (Egg/Raid/Research)';
+                                    } else if (p.pokemonDisplay?.weatherBoostedCondition) {
+                                        rarity.breakdown.iv.value = 1728;
+                                        rarity.breakdown.iv.text = 'Hundo (Weather Boost)';
+                                    } else { // Wild
+                                        rarity.breakdown.iv.value = 4096;
+                                        rarity.breakdown.iv.text = 'Hundo (Wild)';
+                                    }
                                 }
                             }
                         }
