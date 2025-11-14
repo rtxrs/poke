@@ -46,13 +46,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         return closestLevel;
     }
 
-    // Function to mask username
-    const maskUsername = (username) => {
-        if (!username || username.length <= 2) {
-            return username;
+    function stringToHslColor(str, s, l) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = str.charCodeAt(i) + ((hash << 5) - hash);
         }
-        return username.charAt(0) + '*'.repeat(username.length - 2) + username.charAt(username.length - 1);
-    };
+        const h = hash % 360;
+        return `hsl(${h}, ${s}%, ${l}%)`;
+    }
+
+    function generateGradient(id) {
+        const color1 = stringToHslColor(id, 80, 75);
+        const color2 = stringToHslColor(id.split('').reverse().join(''), 90, 70);
+        const color3 = stringToHslColor(id, 70, 80);
+        return `linear-gradient(135deg, ${color1}, ${color2}, ${color3})`;
+    }
+
+    function renderPlayerBadge(player) {
+        if (!player || !player.userId) {
+            // Fallback for data that might be missing the new ID
+            return `<span class="player-badge" style="background: #eee; color: #333;">${player.name || 'N/A'}</span>`;
+        }
+        const gradient = generateGradient(player.publicId);
+        return `<span class="player-badge" style="background: ${gradient};">${player.userId}</span>`;
+    }
+
 
     function openRarityCalculationModal(pokemon) {
         const getStatLine = (label, breakdown) => {
@@ -73,7 +91,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </span>
                     </h2>
                     <div class="pokemon-stats-grid">
-                        <div><span>Owner</span><strong>${maskUsername(pokemon.owner)}</strong></div>
+                        <div><span>Owner</span><strong>${renderPlayerBadge({ userId: pokemon.userId, publicId: pokemon.ownerPublicId })}</strong></div>
                         <div><span>Rarity Score</span><strong>1 in ${Math.round(pokemon.rarity.score).toLocaleString()}</strong></div>
                     </div>
                 </div>
@@ -160,7 +178,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </span>
                     </h2>
                     <div class="pokemon-stats-grid">
-                        <div><span>Owner</span><strong>${maskUsername(pokemon.owner)}</strong></div>
+                        <div><span>Owner</span><strong>${renderPlayerBadge({ userId: pokemon.userId, publicId: pokemon.ownerPublicId })}</strong></div>
                         <div><span>CP</span><strong>${pokemon.cp}</strong></div>
                         <div><span>Level</span><strong>${level}</strong></div>
                     </div>
@@ -236,7 +254,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             modalContent.innerHTML = `
                 <button id="modal-close-btn">&times;</button>
-                <h2>${maskUsername(details.name)}</h2>
+                <h2>${renderPlayerBadge({ userId: details.userId, publicId: details.publicId })}</h2>
                 <div class="grid-stats">
                     <div><span>Total XP</span><strong>${details.totalXp.toLocaleString()}</strong></div>
                     <div><span>Pokémon Caught</span><strong>${details.pokemonCaught.toLocaleString()}</strong></div>
@@ -297,7 +315,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const recentBody = document.getElementById('recent-players-body');
         recentBody.innerHTML = rankings.recentPlayers.map(player => `
             <tr class="clickable-row" data-player-id="${player.publicId}">
-                <td><strong>${maskUsername(player.name)}</strong></td>
+                <td>${renderPlayerBadge(player)}</td>
                 <td>
                     ${player.buddy ? `<img src="${player.buddy.sprite}" alt="${player.buddy.name}" title="${player.buddy.name}">` : 'N/A'}
                 </td>
@@ -316,7 +334,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <img src="${p.sprite}" alt="${p.name}">
                 </td>
                 <td><strong>${p.cp.toLocaleString()}</strong></td>
-                <td class="hide-on-mobile">${maskUsername(p.owner)}</td>
+                <td class="hide-on-mobile">${renderPlayerBadge({ userId: p.userId, publicId: p.ownerPublicId })}</td>
             </tr>
         `).join('');
 
@@ -332,7 +350,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td class="badges-cell">
                     ${generateBadges(p)}
                 </td>
-                <td class="hide-on-mobile">${maskUsername(p.owner)}</td>
+                <td class="hide-on-mobile">${renderPlayerBadge({ userId: p.userId, publicId: p.ownerPublicId })}</td>
             </tr>
         `).join('');
 

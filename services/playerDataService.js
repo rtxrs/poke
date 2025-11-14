@@ -128,7 +128,7 @@ const playerDataService = {
         }
     },
 
-    async _calculatePokemonRankings(playerFiles) {
+    async _calculatePokemonRankings(playerFiles, playerIdToUserId) {
         let allPokemon = [];
         const getPokedexEntry = (p) => {
             if (!pokedexService.pokedex || !pokedexService.pokedex[p.pokemonId]) return null;
@@ -178,6 +178,8 @@ const playerDataService = {
             const playerName = content.account.name;
             const playerId = content.account.playerSupportId;
             const publicId = await this.generatePublicId(playerId);
+            const userId = playerIdToUserId.get(playerId);
+
 
             content.pokemons.forEach(p => {
                 if (!p.isEgg && p.pokemonDisplay) {
@@ -265,7 +267,7 @@ const playerDataService = {
 
                     rarity.score = rarity.breakdown.iv.value * rarity.breakdown.shiny.value * rarity.breakdown.lucky.value;
 
-                    allPokemon.push({ ...p, owner: playerName, ownerId: playerId, ownerPublicId: publicId, rarity: rarity });
+                    allPokemon.push({ ...p, owner: playerName, ownerId: playerId, ownerPublicId: publicId, rarity: rarity, userId: userId });
                 }
             });
         }
@@ -280,6 +282,7 @@ const playerDataService = {
                 owner: p.owner,
                 ownerId: p.ownerId,
                 ownerPublicId: p.ownerPublicId,
+                userId: p.userId,
                 iv: {
                     attack: p.individualAttack,
                     defense: p.individualDefense,
@@ -310,6 +313,7 @@ const playerDataService = {
                 owner: p.owner,
                 ownerId: p.ownerId,
                 ownerPublicId: p.ownerPublicId,
+                userId: p.userId,
                 pokemonDisplay: p.pokemonDisplay,
                 isShiny: p.pokemonDisplay.shiny,
                 isLucky: p.isLucky,
@@ -341,6 +345,9 @@ const playerDataService = {
                 return emptyRankings;
             }
 
+            const users = await readUsers();
+            const playerIdToUserId = new Map(users.map((user, index) => [user.playerId, (index + 1).toString().padStart(3, '0')]));
+
             let recentPlayers = [];
             for (const file of playerFiles) {
                 const filePath = path.join(DATA_PATH, file);
@@ -352,12 +359,15 @@ const playerDataService = {
                 const playerName = content.account.name;
                 const playerId = content.account.playerSupportId;
                 const publicId = await this.generatePublicId(playerId); // Generate public ID
+                const userId = playerIdToUserId.get(playerId);
+
 
                 const buddy = content.pokemons.find(p => p.id === content.account.buddyPokemonProto?.buddyPokemonId);
                 recentPlayers.push({
                     name: playerName,
                     playerId: playerId,
                     publicId: publicId, // Include public ID
+                    userId: userId,
                     buddy: buddy && buddy.pokemonDisplay ? {
                         name: pokedexService.getPokemonName(buddy.pokemonId, buddy.pokemonDisplay.formName),
                         sprite: pokedexService.getPokemonSprite(buddy)
@@ -372,7 +382,7 @@ const playerDataService = {
                 .sort((a, b) => b.lastUpdate - a.lastUpdate)
                 .slice(0, 50);
 
-            const { strongestPokemon, rarestPokemon } = await this._calculatePokemonRankings(playerFiles);
+            const { strongestPokemon, rarestPokemon } = await this._calculatePokemonRankings(playerFiles, playerIdToUserId);
 
             const rankings = { recentPlayers: sortedRecentPlayers, strongestPokemon, rarestPokemon };
             await fs.writeFile(RANKINGS_FILE, JSON.stringify(rankings, null, 2));
@@ -390,6 +400,10 @@ const playerDataService = {
         const playerId = playerData.account.playerSupportId;
         const playerName = playerData.account.name;
         const publicId = await this.generatePublicId(playerId); // Generate public ID
+
+        const users = await readUsers();
+        const playerIdToUserId = new Map(users.map((user, index) => [user.playerId, (index + 1).toString().padStart(3, '0')]));
+        const userId = playerIdToUserId.get(playerId);
 
         let rankings = { recentPlayers: [], strongestPokemon: [], rarestPokemon: [] };
         try {
@@ -411,6 +425,7 @@ const playerDataService = {
             name: playerName,
             playerId: playerId,
             publicId: publicId, // Include public ID
+            userId: userId,
             buddy: playerData.pokemons.find(p => p.id === playerData.account.buddyPokemonProto?.buddyPokemonId) && playerData.pokemons.find(p => p.id === playerData.account.buddyPokemonProto?.buddyPokemonId).pokemonDisplay ? {
                 name: pokedexService.getPokemonName(playerData.pokemons.find(p => p.id === playerData.account.buddyPokemonProto?.buddyPokemonId).pokemonId, playerData.pokemons.find(p => p.id === playerData.account.buddyPokemonProto?.buddyPokemonId).pokemonDisplay.formName),
                 sprite: pokedexService.getPokemonSprite(playerData.pokemons.find(p => p.id === playerData.account.buddyPokemonProto?.buddyPokemonId))
@@ -433,7 +448,7 @@ const playerDataService = {
         // --- Re-generate Strongest and Rarest Pokemon ---
         const files = await fs.readdir(DATA_PATH);
         const playerFiles = files.filter(f => f.endsWith('.json') && f !== 'PGSStats.json');
-        const { strongestPokemon, rarestPokemon } = await this._calculatePokemonRankings(playerFiles);
+        const { strongestPokemon, rarestPokemon } = await this._calculatePokemonRankings(playerFiles, playerIdToUserId);
         
         rankings.strongestPokemon = strongestPokemon;
         rankings.rarestPokemon = rarestPokemon;
@@ -509,6 +524,11 @@ const playerDataService = {
             const fileContent = await fs.readFile(filePath, 'utf-8');
             const content = JSON.parse(fileContent);
 
+            const users = await readUsers();
+            const user = users.find(u => u.playerId === playerId);
+            const userId = user ? (users.indexOf(user) + 1).toString().padStart(3, '0') : null;
+            const publicId = await this.generatePublicId(playerId);
+
             const allPokemon = content.pokemons.filter(p => !p.isEgg);
 
             const highlights = [];
@@ -547,6 +567,8 @@ const playerDataService = {
 
             return {
                 name: content.account.name,
+                userId: userId, // Add userId
+                publicId: publicId, // Add publicId
                 startDate: new Date(content.account.creationTimeMs).toLocaleDateString(),
                 totalXp: content.player.experience,
                 pokemonCaught: content.player.numPokemonCaptured,
