@@ -82,6 +82,7 @@ const GridComponent = {
             const badges = [];
             if (!p || !p.pokemonDisplay) return name;
 
+            if (p.pokemonDisplay.isStrongPokemon) badges.push('<span class="badge mighty-badge">Mighty</span>');
             if (p.pokemonDisplay.shiny) badges.push('<span class="badge shiny-badge">Shiny</span>');
             if (p.isLucky) {
                 badges.push('<span class="badge lucky-badge">Lucky</span>');
@@ -866,6 +867,7 @@ pokemons.sort((a, b) => {
             const badges = [];
             if (!p || !p.pokemonDisplay) return name;
 
+            if (p.pokemonDisplay.isStrongPokemon) badges.push('<span class="badge mighty-badge">Mighty</span>');
             if (p.pokemonDisplay.shiny) badges.push('<span class="badge shiny-badge">Shiny</span>');
             if (p.isLucky) {
                 badges.push('<span class="badge lucky-badge">Lucky</span>');
