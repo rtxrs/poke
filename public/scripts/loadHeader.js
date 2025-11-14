@@ -97,26 +97,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             if (path.includes('health-check.html')) {
-                mainTitle.textContent = 'Service Health';
+                if (mainTitle) mainTitle.textContent = 'Service Health';
                 setLinkVisibility(true, false, false, false, false); // Home only
                 if (subheaderPlaceholder) {
                     subheaderPlaceholder.remove();
                 }
             } else if (path === '/' || path.includes('index.html')) {
-                mainTitle.textContent = 'Pokémon GO Player Dashboard';
                 if (authStatus.loggedIn) {
                     setLinkVisibility(false, false, false, true, true); // Dashboard, Logout
                 } else {
                     setLinkVisibility(false, true, true, false, false); // Login, Register
                 }
             } else if (path.includes('login.html')) {
-                mainTitle.textContent = 'Login';
+                if (mainTitle) mainTitle.textContent = 'Login';
                 setLinkVisibility(true, false, true, false, false); // Home, Register
             } else if (path.includes('register.html')) {
-                mainTitle.textContent = 'Register';
+                if (mainTitle) mainTitle.textContent = 'Register';
                 setLinkVisibility(true, true, false, false, false); // Home, Login
             } else if (path.includes('/me') || path.includes('private.html')) {
-                mainTitle.textContent = authStatus.loggedIn ? authStatus.username : 'My Profile';
                 setLinkVisibility(true, false, false, false, true); // Home, Logout
             }
 

@@ -4,6 +4,24 @@
 
 const { createApp, ref, computed, onMounted, watch, watchEffect } = Vue;
 
+function stringToHslColor(str, s, l) {
+    if (!str) return `hsl(0, 0%, 80%)`;
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const h = hash % 360;
+    return `hsl(${h}, ${s}%, ${l}%)`;
+}
+
+function generateGradient(id) {
+    if (!id) return 'background: #eee;';
+    const color1 = stringToHslColor(id, 80, 75);
+    const color2 = stringToHslColor(id.split('').reverse().join(''), 90, 70);
+    const color3 = stringToHslColor(id, 70, 80);
+    return `background: linear-gradient(135deg, ${color1}, ${color2}, ${color3});`;
+}
+
 // --- CPM Table for Level Calculation ---
 const cpmTable = { 1: 0.094, 1.5: 0.13513743, 2: 0.16639787, 2.5: 0.19265091, 3: 0.21573247, 3.5: 0.23657266, 4: 0.25572005, 4.5: 0.27353038, 5: 0.29024988, 5.5: 0.30605737, 6: 0.3210876, 6.5: 0.33544503, 7: 0.34921268, 7.5: 0.36245775, 8: 0.3752356, 8.5: 0.38759241, 9: 0.39956728, 9.5: 0.41119355, 10: 0.4225, 10.5: 0.4329264, 11: 0.44310755, 11.5: 0.45305995, 12: 0.4627984, 12.5: 0.47233609, 13: 0.48168495, 13.5: 0.4908558, 14: 0.49985844, 14.5: 0.50870176, 15: 0.51739395, 15.5: 0.52594251, 16: 0.5343543, 16.5: 0.54263573, 17: 0.5507927, 17.5: 0.55883058, 18: 0.5667545, 18.5: 0.57456913, 19: 0.5822789, 19.5: 0.5898879, 20: 0.5974, 20.5: 0.60482366, 21: 0.6121573, 21.5: 0.61940412, 22: 0.6265671, 22.5: 0.63364914, 23: 0.64065295, 23.5: 0.64758096, 24: 0.65443563, 24.5: 0.66121925, 25: 0.667934, 25.5: 0.67458189, 26: 0.6811649, 26.5: 0.6876849, 27: 0.69414365, 27.5: 0.70054287, 28: 0.7068842, 28.5: 0.7131691, 29: 0.7193991, 29.5: 0.72557561, 30: 0.7317, 30.5: 0.734741, 31: 0.73776948, 31.5: 0.7407895, 32: 0.74378943, 32.5: 0.74677015, 33: 0.7497256, 33.5: 0.75266097, 34: 0.75557274, 34.5: 0.75847129, 35: 0.76138438, 35.5: 0.76418652, 36: 0.76698068, 36.5: 0.76975685, 37: 0.7725421, 37.5: 0.77529827, 38: 0.77803515, 38.5: 0.78076949, 39: 0.7835, 39.5: 0.78623275, 40: 0.7903, 40.5: 0.7928, 41: 0.7953, 41.5: 0.7978, 42: 0.8003, 42.5: 0.8028, 43: 0.8053, 43.5: 0.8078, 44: 0.8103, 44.5: 0.8128, 45: 0.8153, 45.5: 0.8178, 46: 0.8203, 46.5: 0.8228, 47: 0.8253, 47.5: 0.8278, 48: 0.8303, 48.5: 0.8328, 49: 0.8353, 49.5: 0.8378, 50: 0.8403, 50.5: 0.8428, 51: 0.8453 };
 function getLevelFromCpm(cpm) {
@@ -1123,10 +1141,23 @@ pokemons.sort((a, b) => {
                     allPokedex.value = await pokedexResponse.json();
                 }
 
-                // Update the main title with the player's name
-                const mainTitleElement = document.getElementById('main-title');
-                if (mainTitleElement && account.value.name) {
-                    mainTitleElement.textContent = `${account.value.name}'s Profile`;
+                // Update the main title with the player's name and userId
+                const mainTitle = document.getElementById('main-title');
+                if (account.value.name && account.value.userId) {
+                    document.title = `Pokemon GO | ${account.value.name} #${account.value.userId}`;
+                    if (mainTitle) {
+                        mainTitle.innerHTML = `${account.value.name} <span class="player-badge" style="${generateGradient(account.value.publicId)}">#${account.value.userId}</span>`;
+                    }
+                } else if (account.value.name) {
+                    document.title = `Pokemon GO | ${account.value.name}'s Profile`;
+                    if (mainTitle) {
+                        mainTitle.textContent = `${account.value.name}'s Profile`;
+                    }
+                } else {
+                    document.title = `Pokemon GO | My Profile`;
+                    if (mainTitle) {
+                        mainTitle.textContent = 'My Profile';
+                    }
                 }
 
                 // Set up tab navigation

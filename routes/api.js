@@ -80,10 +80,12 @@ router.get('/check-auth-status', async (req, res) => {
         try {
             const privateData = await playerDataService.getPrivatePlayerData(req.session.user.playerId);
             const team = privateData?.playerData?.account?.team;
-            res.json({ loggedIn: true, username: req.session.user.username, team: team });
+            const userId = privateData?.playerData?.account?.userId; // Get userId
+            const publicId = privateData?.playerData?.account?.publicId; // Get publicId
+            res.json({ loggedIn: true, username: req.session.user.username, team: team, userId: userId, publicId: publicId }); // Return userId and publicId
         } catch (error) {
             console.error("Error fetching private data for auth status check:", error);
-            res.json({ loggedIn: true, username: req.session.user.username, team: null }); // Return logged in but no team on error
+            res.json({ loggedIn: true, username: req.session.user.username, team: null, userId: null, publicId: null }); // Return logged in but no team, userId or publicId on error
         }
     } else {
         res.json({ loggedIn: false });

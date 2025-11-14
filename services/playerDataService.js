@@ -699,6 +699,15 @@ const playerDataService = {
                 };
             });
             
+            const users = await readUsers();
+            const user = users.find(u => u.playerId === playerId);
+            const userId = user ? (users.indexOf(user) + 1).toString().padStart(3, '0') : null;
+            const publicId = await this.generatePublicId(playerId);
+
+            // Add userId and publicId to account object
+            data.account.userId = userId;
+            data.account.publicId = publicId;
+            
             return {
                 playerData: data,
                 pokedexService: {

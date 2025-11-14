@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return `<span class="player-badge" style="background: #eee; color: #333;">${player.name || 'N/A'}</span>`;
         }
         const gradient = generateGradient(player.publicId);
-        return `<span class="player-badge" style="background: ${gradient};">${player.userId}</span>`;
+        return `<span class="player-badge" style="background: ${gradient};">#${player.userId}</span>`;
     }
 
 
@@ -311,6 +311,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!response.ok) throw new Error('Failed to load rankings from the server.');
         const rankings = await response.json();
 
+        const authResponse = await fetch('/api/check-auth-status');
+        const authStatus = await authResponse.json();
+
+        const mainTitle = document.getElementById('main-title');
+
+        if (authStatus.loggedIn && authStatus.userId) {
+            document.title = `Pokemon GO | #${authStatus.userId}`;
+            if (mainTitle) {
+                mainTitle.innerHTML = renderPlayerBadge({ userId: authStatus.userId, publicId: authStatus.publicId });
+            }
+        } else {
+            document.title = `Pokemon GO | Dashboard`;
+            if (mainTitle) {
+                mainTitle.textContent = 'Pokémon GO Player Dashboard';
+            }
+        }
+
         // 1. Populate "Recent Player Activity" Table
         const recentBody = document.getElementById('recent-players-body');
         recentBody.innerHTML = rankings.recentPlayers.map(player => `
@@ -401,6 +418,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (error) {
         console.error('Failed to initialize public dashboard:', error);
         loadingOverlay.innerHTML = '<p>Could not load ranking data. Please try again later.</p>';
+        document.title = `Pokemon GO | Dashboard`; // Fallback title on error
     }
 
     // Add a single event listener to the modal backdrop to handle closing
