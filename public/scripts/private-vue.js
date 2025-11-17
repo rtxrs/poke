@@ -18,7 +18,7 @@ function generateGradient(id) {
     if (!id) return 'background: #eee;';
     const color1 = stringToHslColor(id, 80, 75);
     const color2 = stringToHslColor(id.split('').reverse().join(''), 90, 70);
-    const color3 = stringToHslColor(id, 70, 80);
+    const color3 = stringToHslColor(id + '-v2', 70, 80);
     return `background: linear-gradient(135deg, ${color1}, ${color2}, ${color3});`;
 }
 
@@ -500,7 +500,12 @@ createApp({
 
             let match = false;
 
-            if (searchTerm.startsWith('@')) {
+            if (searchTerm.startsWith('#')) {
+                const tagName = searchTerm.substring(1).toLowerCase();
+                if (tagName === 'mighty') {
+                    match = p.pokemonDisplay.isStrongPokemon;
+                }
+            } else if (searchTerm.startsWith('@')) {
                 const moveSearch = searchTerm.substring(1).toLowerCase();
                 const move1 = moveMap.value[p.move1]?.name.toLowerCase();
                 const move2 = moveMap.value[p.move2]?.name.toLowerCase();
@@ -581,14 +586,14 @@ createApp({
                 return pokemons;
             }
 
-            const tokens = query.toLowerCase().match(/(\d+\*)|(!?@?\w+(-\w*)*)|(\d+-\d*)|(-\d+)|(\+?\w+)|([,&;:])|(\w+)/g) || [];
+            const tokens = query.toLowerCase().match(/(\d+\*)|(!?#\w+(-\w*)*)|(!?@?\w+(-\w*)*)|(\d+-\d*)|(-\d+)|(\+?\w+)|([,&;:])|(\w+)/g) || [];
 
             const outputQueue = [];
             const operatorStack = [];
             const precedence = { '&': 2, ',': 1, ';': 1, ':': 1 };
 
             tokens.forEach(token => {
-                if (token.match(/(\d+\*)|(!?@?\w+(-\w*)*)|(\d+-\d*)|(-\d+)|(\+?\w+)/)) {
+                if (token.match(/(\d+\*)|(!?#\w+(-\w*)*)|(!?@?\w+(-\w*)*)|(\d+-\d*)|(-\d+)|(\+?\w+)/)) {
                     outputQueue.push(token);
                 } else if (token === '&' || token === ',' || token === ';' || token === ':') {
                     while (operatorStack.length > 0 && precedence[operatorStack[operatorStack.length - 1]] >= precedence[token]) {

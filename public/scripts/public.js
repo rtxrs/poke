@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function generateGradient(id) {
         const color1 = stringToHslColor(id, 80, 75);
         const color2 = stringToHslColor(id.split('').reverse().join(''), 90, 70);
-        const color3 = stringToHslColor(id, 70, 80);
+        const color3 = stringToHslColor(id + '-v2', 70, 80);
         return `linear-gradient(135deg, ${color1}, ${color2}, ${color3})`;
     }
 
