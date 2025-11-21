@@ -9,6 +9,7 @@ const authRoutes = require('./routes/auth').router;
 const apiRoutes = require('./routes/api');
 
 const app = express();
+app.set('trust proxy', 1);
 
 // --- Middleware ---
 app.use(express.json({ limit: '10mb' }));
