@@ -1,6 +1,7 @@
 const express = require('express');
 const playerDataService = require('../services/playerDataService');
 const pokedexService = require('../services/pokedexService');
+const { saveDataLimiter } = require('../middlewares/rateLimiter');
 const { isAuthenticated } = require('./auth');
 
 const router = express.Router();
@@ -50,7 +51,7 @@ router.get('/player-detail/:publicId', async (req, res) => {
     }
 });
 
-router.post('/save-data', express.json({ limit: '10mb' }), async (req, res) => {
+router.post('/save-data', saveDataLimiter, express.json({ limit: '10mb' }), async (req, res) => {
     // console.log('Received call to /api/save-data. Request Headers:', req.headers);
     try {
         if (req.body.pokemon && req.body.pokemon.length > 10500) {
