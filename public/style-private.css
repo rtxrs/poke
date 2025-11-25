@@ -1146,7 +1146,7 @@ body.dashboard-private, body:not([class]) {
 .pvp-badge.rank-1 {
     background-color: #d4af37 !important; /* Gold */
     border-color: #b38f00 !important;
-    color: #000 !important;
+    color: white !important; /* Changed to white */
     box-shadow: 0 0 5px #ffd700;
 }
 .pvp-badge.rank-good {
