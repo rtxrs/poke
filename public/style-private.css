@@ -1128,16 +1128,18 @@ body.dashboard-private, body:not([class]) {
     color: white;
 }
 .pvp-badge.great {
-    background-color: #2E8B57; /* SeaGreen */
-    border: 1px solid #1e5b39;
+    background: linear-gradient(135deg, #3B4CCA 0%, #3B4CCA 60%, #E3350D 60%, #E3350D 100%); /* Blue to Red (Great Ball) */
+    border: 1px solid #2a3b9e;
 }
 .pvp-badge.ultra {
-    background-color: #4B0082; /* Indigo */
-    border: 1px solid #2e0050;
+    background: linear-gradient(135deg, #2C3E50 0%, #2C3E50 60%, #F1C40F 60%, #F1C40F 100%); /* Black to Yellow (Ultra Ball) */
+    border: 1px solid #1a252f;
+    color: white;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8); /* Ensure text pop on yellow */
 }
 .pvp-badge.master {
-    background-color: #c0392b; /* Red */
-    border: 1px solid #962e22;
+    background: linear-gradient(135deg, #6A0DAD 0%, #6A0DAD 60%, #C2185B 60%, #C2185B 100%); /* Purple to Pink (Master Ball) */
+    border: 1px solid #4b0082;
 }
 
 /* Special Rank Colors */
