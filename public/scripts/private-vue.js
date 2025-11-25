@@ -23,7 +23,9 @@ function generateGradient(id) {
 }
 
 // --- CPM Table for Level Calculation ---
-const cpmTable = { 1: 0.094, 1.5: 0.13513743, 2: 0.16639787, 2.5: 0.19265091, 3: 0.21573247, 3.5: 0.23657266, 4: 0.25572005, 4.5: 0.27353038, 5: 0.29024988, 5.5: 0.30605737, 6: 0.3210876, 6.5: 0.33544503, 7: 0.34921268, 7.5: 0.36245775, 8: 0.3752356, 8.5: 0.38759241, 9: 0.39956728, 9.5: 0.41119355, 10: 0.4225, 10.5: 0.4329264, 11: 0.44310755, 11.5: 0.45305995, 12: 0.4627984, 12.5: 0.47233609, 13: 0.48168495, 13.5: 0.4908558, 14: 0.49985844, 14.5: 0.50870176, 15: 0.51739395, 15.5: 0.52594251, 16: 0.5343543, 16.5: 0.54263573, 17: 0.5507927, 17.5: 0.55883058, 18: 0.5667545, 18.5: 0.57456913, 19: 0.5822789, 19.5: 0.5898879, 20: 0.5974, 20.5: 0.60482366, 21: 0.6121573, 21.5: 0.61940412, 22: 0.6265671, 22.5: 0.63364914, 23: 0.64065295, 23.5: 0.64758096, 24: 0.65443563, 24.5: 0.66121925, 25: 0.667934, 25.5: 0.67458189, 26: 0.6811649, 26.5: 0.6876849, 27: 0.69414365, 27.5: 0.70054287, 28: 0.7068842, 28.5: 0.7131691, 29: 0.7193991, 29.5: 0.72557561, 30: 0.7317, 30.5: 0.734741, 31: 0.73776948, 31.5: 0.7407895, 32: 0.74378943, 32.5: 0.74677015, 33: 0.7497256, 33.5: 0.75266097, 34: 0.75557274, 34.5: 0.75847129, 35: 0.76138438, 35.5: 0.76418652, 36: 0.76698068, 36.5: 0.76975685, 37: 0.7725421, 37.5: 0.77529827, 38: 0.77803515, 38.5: 0.78076949, 39: 0.7835, 39.5: 0.78623275, 40: 0.7903, 40.5: 0.7928, 41: 0.7953, 41.5: 0.7978, 42: 0.8003, 42.5: 0.8028, 43: 0.8053, 43.5: 0.8078, 44: 0.8103, 44.5: 0.8128, 45: 0.8153, 45.5: 0.8178, 46: 0.8203, 46.5: 0.8228, 47: 0.8253, 47.5: 0.8278, 48: 0.8303, 48.5: 0.8328, 49: 0.8353, 49.5: 0.8378, 50: 0.8403, 50.5: 0.8428, 51: 0.8453 };
+const cpmTable = {
+    1: 0.094, 1.5: 0.1351374318, 2: 0.16639787, 2.5: 0.192650919, 3: 0.21573247, 3.5: 0.2365726613, 4: 0.25572005, 4.5: 0.2735303812, 5: 0.29024988, 5.5: 0.3060573775, 6: 0.3210876, 6.5: 0.3354450362, 7: 0.34921268, 7.5: 0.3624577511, 8: 0.3752356, 8.5: 0.387592416, 9: 0.39956728, 9.5: 0.4111935514, 10: 0.4225, 10.5: 0.4329264091, 11: 0.44310755, 11.5: 0.4530599591, 12: 0.4627984, 12.5: 0.472336093, 13: 0.48168495, 13.5: 0.4908558003, 14: 0.49985844, 14.5: 0.508701765, 15: 0.51739395, 15.5: 0.5259425113, 16: 0.5343543, 16.5: 0.5426357375, 17: 0.5507927, 17.5: 0.5588305862, 18: 0.5667545, 18.5: 0.5745691333, 19: 0.5822789, 19.5: 0.5898879072, 20: 0.5974, 20.5: 0.6048236651, 21: 0.6121573, 21.5: 0.6194041216, 22: 0.6265671, 22.5: 0.6336491432, 23: 0.64065295, 23.5: 0.6475809666, 24: 0.65443563, 24.5: 0.6612192524, 25: 0.667934, 25.5: 0.6745818959, 26: 0.6811649, 26.5: 0.6876849038, 27: 0.69414365, 27.5: 0.70054287, 28: 0.7068842, 28.5: 0.7131691091, 29: 0.7193991, 29.5: 0.7255756136, 30: 0.7317, 30.5: 0.7377694897, 31: 0.7437366, 31.5: 0.749609799, 32: 0.7553897, 32.5: 0.761080073, 33: 0.7666845, 33.5: 0.772199568, 34: 0.7776309, 34.5: 0.782983635, 35: 0.7882599, 35.5: 0.793460966, 36: 0.7985881, 36.5: 0.803645071, 37: 0.8086304, 37.5: 0.813544863, 38: 0.8183946, 38.5: 0.823179625, 39: 0.7846369743347168, 39.5: 0.7874736085132754, 40: 0.7903000116348267, 40.5: 0.792803968023538, 41: 0.7953000068664551, 41.5: 0.7978038983716224, 42: 0.8003000020980835, 42.5: 0.8028038718775964, 43: 0.8052999973297119, 43.5: 0.8078038508470536, 44: 0.8102999925613403, 44.5: 0.812803835179168, 45: 0.8152999877929688, 45.5: 0.8178037928037928, 46: 0.8203000020980835, 46.5: 0.822803776019539, 47: 0.825300009250640, 47.5: 0.827803755931569, 48: 0.830300023555755, 48.5: 0.832803729034748, 49: 0.835300018787384, 49.5: 0.837803755931569, 50: 0.840300023555755, 50.5: 0.842803729034748, 51: 0.845300018787384, 51.5: 0.847803702398935, 52: 0.850300014019012, 52.5: 0.852803676019539, 53: 0.855300009250640, 53.5: 0.857803649892077, 54: 0.860300004482269, 54.5: 0.862803624012168, 55: 0.865299999713897
+};
 function getLevelFromCpm(cpm) {
     let closestLevel = null;
     let minDifference = Infinity;
@@ -85,6 +87,11 @@ const GridComponent = {
                 </div>
                 <p class="pokemon-name" v-html="getBadges(p, displayName(p))"></p>
                 <p class="pokemon-cp">CP {{ p.cp }}</p>
+                <div class="pvp-ranks">
+                    <span v-if="p.rankGreat && p.rankGreat <= 100" :class="['pvp-badge', 'great', { 'rank-1': p.rankGreat === 1, 'rank-good': p.rankGreat <= 25 }]">GL #{{ p.rankGreat }}</span>
+                    <span v-if="p.rankUltra && p.rankUltra <= 100" :class="['pvp-badge', 'ultra', { 'rank-1': p.rankUltra === 1, 'rank-good': p.rankUltra <= 25 }]">UL #{{ p.rankUltra }}</span>
+                    <span v-if="p.rankMaster && p.rankMaster <= 100" :class="['pvp-badge', 'master', { 'rank-1': p.rankMaster === 1, 'rank-good': p.rankMaster <= 25 }]">ML #{{ p.rankMaster }}</span>
+                </div>
                 <p v-if="p.score" class="pokemon-score">Score: {{ p.score.toFixed(2) }}</p>
                 <div class="iv-bar-container">
                     <div class="iv-bar" :style="{ width: getIvPercent(p) + '%', backgroundColor: getIvColor(getIvPercent(p)) }"></div>
@@ -1082,6 +1089,8 @@ pokemons.sort((a, b) => {
         };
 
 
+        const pvpProgress = ref(-1); // Progress -1 (Hidden), 0-100 (Visible)
+
         // --- Lifecycle Hook ---
         onMounted(async () => {
             try {
@@ -1144,6 +1153,83 @@ pokemons.sort((a, b) => {
                 const pokedexResponse = await fetch('/data/pokedex_modified.json');
                 if (pokedexResponse.ok) {
                     allPokedex.value = await pokedexResponse.json();
+
+                    // --- Initialize PvP Worker ---
+                    if (allPokemons.value && allPokemons.value.length > 0 && window.Worker && pokedexService.value.pokedex) {
+                        console.log("Starting PvP Worker...");
+                        const pvpWorker = new Worker('/scripts/pvp-worker.js');
+                        pvpProgress.value = 0; // Reset progress start
+                        
+                        // Reset DOM
+                        const pvpContainer = document.getElementById('pvp-progress-container');
+                        const pvpBar = document.getElementById('pvp-progress-bar');
+                        const pvpText = document.getElementById('pvp-progress-text');
+                        if (pvpContainer) pvpContainer.style.display = 'block';
+                        if (pvpBar) pvpBar.style.width = '0%';
+                        if (pvpText) {
+                            pvpText.textContent = '0%';
+                            pvpText.style.display = 'none';
+                        }
+
+                        pvpWorker.postMessage({
+                            pokemons: JSON.parse(JSON.stringify(allPokemons.value)),
+                            pokedex: JSON.parse(JSON.stringify(pokedexService.value.pokedex))
+                        });
+
+                        pvpWorker.onmessage = (e) => {
+                            const msg = e.data;
+                            if (msg.type === 'progress') {
+                                // Direct DOM update for performance
+                                const bar = document.getElementById('pvp-progress-bar');
+                                const text = document.getElementById('pvp-progress-text');
+                                const container = document.getElementById('pvp-progress-container');
+                                
+                                if (container) container.style.display = 'block';
+                                if (bar) bar.style.width = msg.value + '%';
+                                if (text) {
+                                    text.textContent = msg.value + '%';
+                                    text.style.display = msg.value > 5 ? 'block' : 'none';
+                                }
+
+                                pvpProgress.value = msg.value;
+                            } else if (msg.type === 'result') {
+                                const ranks = msg.data;
+                                
+                                // Direct DOM completion
+                                const bar = document.getElementById('pvp-progress-bar');
+                                const container = document.getElementById('pvp-progress-container');
+                                if (bar) bar.style.width = '100%';
+                                
+                                pvpProgress.value = 100; // Visual completion
+
+                                // Yield to UI thread to render the 100% bar before freezing for data update
+                                setTimeout(() => {
+                                    console.log("PvP Worker finished. Updating Pokemons...");
+                                    
+                                    allPokemons.value.forEach(p => {
+                                        if (ranks[p.id]) {
+                                            p.rankGreat = ranks[p.id].rankGreat;
+                                            p.rankGreatPercent = ranks[p.id].rankGreatPercent;
+                                            p.rankUltra = ranks[p.id].rankUltra;
+                                            p.rankUltraPercent = ranks[p.id].rankUltraPercent;
+                                            p.rankMaster = ranks[p.id].rankMaster;
+                                            p.rankMasterPercent = ranks[p.id].rankMasterPercent;
+                                        }
+                                    });
+                                    // Force reactivity update
+                                    allPokemons.value = [...allPokemons.value];
+                                    
+                                    setTimeout(() => { 
+                                        pvpProgress.value = -1; 
+                                        if (container) container.style.display = 'none';
+                                    }, 1000); // Hide after 1s
+                                    
+                                    console.log("PvP Ranks updated in UI.");
+                                    pvpWorker.terminate();
+                                }, 50);
+                            }
+                        };
+                    }
                 }
 
                 // Update the main title with the player's name and userId
@@ -1188,6 +1274,7 @@ pokemons.sort((a, b) => {
             showTeamBuilderModal, openTeamBuilderModal, closeTeamBuilderModal, selectedRaidBoss, raidBosses,
             teamBuilderMode, customEnemies, activeTeamBuilderTab, allPokedex, allPokedexNames, activeTabSuggestions, addCustomEnemy, removeCustomEnemy,             customEnemyInput, battleMode,
             getMoveTypeIconUrl,
+            pvpProgress,
 
             // Statistics
             stats_shinyRate,

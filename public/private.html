@@ -490,6 +490,11 @@
         </div>
     </div>
 
+    <!-- PvP Progress Bar -->
+    <div id="pvp-progress-container" v-show="pvpProgress >= 0" class="floating-footer-progress" :class="{ 'fading-out': pvpProgress === 100 }">
+        <div id="pvp-progress-bar" class="progress-bar" :style="{ width: pvpProgress + '%' }"></div>
+    </div>
+
     <!-- 2. Link to the external Vue Application Logic -->
     <script src="/scripts/private-vue.js"></script>
     <script src="/scripts/loadHeader.js"></script>

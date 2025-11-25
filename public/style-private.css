@@ -1113,3 +1113,78 @@ body.dashboard-private, body:not([class]) {
     line-height: 1;
 }
 
+/* PvP Badges */
+.pvp-ranks {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    margin-bottom: 4px;
+}
+.pvp-badge {
+    font-size: 0.75em;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: bold;
+    color: white;
+}
+.pvp-badge.great {
+    background-color: #2E8B57; /* SeaGreen */
+    border: 1px solid #1e5b39;
+}
+.pvp-badge.ultra {
+    background-color: #4B0082; /* Indigo */
+    border: 1px solid #2e0050;
+}
+.pvp-badge.master {
+    background-color: #c0392b; /* Red */
+    border: 1px solid #962e22;
+}
+
+/* Special Rank Colors */
+.pvp-badge.rank-1 {
+    background-color: #d4af37 !important; /* Gold */
+    border-color: #b38f00 !important;
+    color: #000 !important;
+    box-shadow: 0 0 5px #ffd700;
+}
+.pvp-badge.rank-good {
+    border-width: 2px;
+}
+
+/* Floating Footer Progress Bar */
+.floating-footer-progress {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 4px; /* Very thin, ~1% of screen height mostly */
+    background-color: rgba(0, 0, 0, 0.1);
+    z-index: 9999;
+}
+
+.floating-footer-progress .progress-bar {
+    height: 100%;
+    background-color: #3498db; /* Blue loading bar */
+    transition: width 0.2s ease;
+}
+
+/* Fade out effect for progress bar */
+.floating-footer-progress {
+    transition: opacity 0.5s ease-out;
+    opacity: 1;
+}
+.floating-footer-progress.fading-out {
+    opacity: 0;
+}
+
+.progress-text {
+    position: absolute;
+    right: 10px;
+    top: -25px; /* Float above the bar */
+    background: rgba(0,0,0,0.7);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-weight: bold;
+}
