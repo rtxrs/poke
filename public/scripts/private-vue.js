@@ -88,8 +88,8 @@ const GridComponent = {
                 <p class="pokemon-name" v-html="getBadges(p, displayName(p))"></p>
                 <p class="pokemon-cp">CP {{ p.cp }}</p>
                 <div class="pvp-ranks">
-                    <span v-if="p.rankGreat && p.rankGreat <= 100" :class="['pvp-badge', 'great', { 'rank-1': p.rankGreat <= 10, 'rank-good': p.rankGreat > 10 && p.rankGreat <= 25 }]">GL #{{ p.rankGreat }}</span>
-                    <span v-if="p.rankUltra && p.rankUltra <= 100" :class="['pvp-badge', 'ultra', { 'rank-1': p.rankUltra <= 10, 'rank-good': p.rankUltra > 10 && p.rankUltra <= 25 }]">UL #{{ p.rankUltra }}</span>
+                    <span v-if="p.rankGreat && p.rankGreat <= 100 && p.cp <= 1500" :class="['pvp-badge', 'great', { 'rank-1': p.rankGreat <= 10, 'rank-good': p.rankGreat > 10 && p.rankGreat <= 25 }]">GL #{{ p.rankGreat }}</span>
+                    <span v-if="p.rankUltra && p.rankUltra <= 100 && p.cp <= 2500" :class="['pvp-badge', 'ultra', { 'rank-1': p.rankUltra <= 10, 'rank-good': p.rankUltra > 10 && p.rankUltra <= 25 }]">UL #{{ p.rankUltra }}</span>
                     <span v-if="p.rankMaster && p.rankMaster <= 100" :class="['pvp-badge', 'master', { 'rank-1': p.rankMaster <= 10, 'rank-good': p.rankMaster > 10 && p.rankMaster <= 25 }]">ML #{{ p.rankMaster }}</span>
                 </div>
                 <p v-if="p.score" class="pokemon-score">Score: {{ p.score.toFixed(2) }}</p>
