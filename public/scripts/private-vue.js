@@ -583,6 +583,32 @@ createApp({
                     const days = (Date.now() - p.creationTimeMs) / (1000 * 60 * 60 * 24);
                     if (days <= age) match = true;
                 }
+                // PvP Search Terms
+                else if (searchTerm.match(/^(gl|ul|ml)(\d+)$/)) {
+                    const parts = searchTerm.match(/^(gl|ul|ml)(\d+)$/);
+                    const league = parts[1]; // gl, ul, ml
+                    const rank = parseInt(parts[2]);
+                    
+                    if (league === 'gl' && p.rankGreat === rank) match = true;
+                    else if (league === 'ul' && p.rankUltra === rank) match = true;
+                    else if (league === 'ml' && p.rankMaster === rank) match = true;
+                }
+                else if (searchTerm.match(/^(gl|ul|ml)-(\d+)$/)) {
+                    const parts = searchTerm.match(/^(gl|ul|ml)-(\d+)$/);
+                    const league = parts[1];
+                    const maxRank = parseInt(parts[2]);
+
+                    if (league === 'gl' && p.rankGreat && p.rankGreat <= maxRank) match = true;
+                    else if (league === 'ul' && p.rankUltra && p.rankUltra <= maxRank) match = true;
+                    else if (league === 'ml' && p.rankMaster && p.rankMaster <= maxRank) match = true;
+                }
+                else if (searchTerm === 'pvp') {
+                    if ((p.rankGreat && p.rankGreat <= 100) || 
+                        (p.rankUltra && p.rankUltra <= 100) || 
+                        (p.rankMaster && p.rankMaster <= 100)) {
+                        match = true;
+                    }
+                }
             }
 
             return isNegated ? !match : match;
