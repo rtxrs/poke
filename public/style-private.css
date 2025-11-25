@@ -1188,3 +1188,15 @@ body.dashboard-private, body:not([class]) {
     font-size: 0.8em;
     font-weight: bold;
 }
+
+/* PvP Ranks in Modal */
+.modal-ranks {
+    display: inline-flex;
+    gap: 5px;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+.modal-ranks .pvp-badge {
+    font-size: 0.6em; /* Slightly smaller to fit in header */
+    padding: 2px 5px;
+}
