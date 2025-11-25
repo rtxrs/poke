@@ -1182,56 +1182,28 @@ pokemons.sort((a, b) => {
 
                     // --- Initialize PvP Worker ---
                     if (allPokemons.value && allPokemons.value.length > 0 && window.Worker && pokedexService.value.pokedex) {
-                        console.log("Starting PvP Worker...");
-                        const pvpWorker = new Worker('/scripts/pvp-worker.js');
-                        pvpProgress.value = 0; // Reset progress start
                         
-                        // Reset DOM
-                        const pvpContainer = document.getElementById('pvp-progress-container');
-                        const pvpBar = document.getElementById('pvp-progress-bar');
-                        const pvpText = document.getElementById('pvp-progress-text');
-                        if (pvpContainer) pvpContainer.style.display = 'block';
-                        if (pvpBar) pvpBar.style.width = '0%';
-                        if (pvpText) {
-                            pvpText.textContent = '0%';
-                            pvpText.style.display = 'none';
-                        }
+                        // --- Cache Logic ---
+                        const generateCacheKey = (pokemons) => {
+                            let sumTime = 0;
+                            // Sum creation times to detect changes (simple but effective for this dataset)
+                            // Using a simple loop for performance
+                            for (let i = 0; i < pokemons.length; i++) {
+                                sumTime += (pokemons[i].creationTimeMs || 0);
+                            }
+                            return `pvp_v1_${pokemons.length}_${sumTime}`;
+                        };
 
-                        pvpWorker.postMessage({
-                            pokemons: JSON.parse(JSON.stringify(allPokemons.value)),
-                            pokedex: JSON.parse(JSON.stringify(pokedexService.value.pokedex))
-                        });
+                        const cacheKey = generateCacheKey(allPokemons.value);
+                        const cachedDataRaw = localStorage.getItem('pvp_cache');
+                        let loadedFromCache = false;
 
-                        pvpWorker.onmessage = (e) => {
-                            const msg = e.data;
-                            if (msg.type === 'progress') {
-                                // Direct DOM update for performance
-                                const bar = document.getElementById('pvp-progress-bar');
-                                const text = document.getElementById('pvp-progress-text');
-                                const container = document.getElementById('pvp-progress-container');
-                                
-                                if (container) container.style.display = 'block';
-                                if (bar) bar.style.width = msg.value + '%';
-                                if (text) {
-                                    text.textContent = msg.value + '%';
-                                    text.style.display = msg.value > 5 ? 'block' : 'none';
-                                }
-
-                                pvpProgress.value = msg.value;
-                            } else if (msg.type === 'result') {
-                                const ranks = msg.data;
-                                
-                                // Direct DOM completion
-                                const bar = document.getElementById('pvp-progress-bar');
-                                const container = document.getElementById('pvp-progress-container');
-                                if (bar) bar.style.width = '100%';
-                                
-                                pvpProgress.value = 100; // Visual completion
-
-                                // Yield to UI thread to render the 100% bar before freezing for data update
-                                setTimeout(() => {
-                                    console.log("PvP Worker finished. Updating Pokemons...");
-                                    
+                        if (cachedDataRaw) {
+                            try {
+                                const cachedData = JSON.parse(cachedDataRaw);
+                                if (cachedData.key === cacheKey) {
+                                    console.log("Loading PvP Ranks from Cache...");
+                                    const ranks = cachedData.results;
                                     allPokemons.value.forEach(p => {
                                         if (ranks[p.id]) {
                                             p.rankGreat = ranks[p.id].rankGreat;
@@ -1242,19 +1214,101 @@ pokemons.sort((a, b) => {
                                             p.rankMasterPercent = ranks[p.id].rankMasterPercent;
                                         }
                                     });
-                                    // Force reactivity update
-                                    allPokemons.value = [...allPokemons.value];
-                                    
-                                    setTimeout(() => { 
-                                        pvpProgress.value = -1; 
-                                        if (container) container.style.display = 'none';
-                                    }, 1000); // Hide after 1s
-                                    
-                                    console.log("PvP Ranks updated in UI.");
-                                    pvpWorker.terminate();
-                                }, 50);
+                                    allPokemons.value = [...allPokemons.value]; // Force reactivity
+                                    loadedFromCache = true;
+                                    console.log("PvP Ranks loaded from Cache.");
+                                }
+                            } catch (e) {
+                                console.warn("Error loading PvP cache:", e);
+                                localStorage.removeItem('pvp_cache');
                             }
-                        };
+                        }
+
+                        if (!loadedFromCache) {
+                            console.log("Starting PvP Worker...");
+                            const pvpWorker = new Worker('/scripts/pvp-worker.js');
+                            pvpProgress.value = 0; // Reset progress start
+                            
+                            // Reset DOM
+                            const pvpContainer = document.getElementById('pvp-progress-container');
+                            const pvpBar = document.getElementById('pvp-progress-bar');
+                            const pvpText = document.getElementById('pvp-progress-text');
+                            if (pvpContainer) pvpContainer.style.display = 'block';
+                            if (pvpBar) pvpBar.style.width = '0%';
+                            if (pvpText) {
+                                pvpText.textContent = '0%';
+                                pvpText.style.display = 'none';
+                            }
+
+                            pvpWorker.postMessage({
+                                pokemons: JSON.parse(JSON.stringify(allPokemons.value)),
+                                pokedex: JSON.parse(JSON.stringify(pokedexService.value.pokedex))
+                            });
+
+                            pvpWorker.onmessage = (e) => {
+                                const msg = e.data;
+                                if (msg.type === 'progress') {
+                                    // Direct DOM update for performance
+                                    const bar = document.getElementById('pvp-progress-bar');
+                                    const text = document.getElementById('pvp-progress-text');
+                                    const container = document.getElementById('pvp-progress-container');
+                                    
+                                    if (container) container.style.display = 'block';
+                                    if (bar) bar.style.width = msg.value + '%';
+                                    if (text) {
+                                        text.textContent = msg.value + '%';
+                                        text.style.display = msg.value > 5 ? 'block' : 'none';
+                                    }
+
+                                    pvpProgress.value = msg.value;
+                                } else if (msg.type === 'result') {
+                                    const ranks = msg.data;
+                                    
+                                    // Save to Cache
+                                    try {
+                                        localStorage.setItem('pvp_cache', JSON.stringify({
+                                            key: cacheKey,
+                                            results: ranks
+                                        }));
+                                    } catch (e) {
+                                        console.warn("Failed to save PvP cache (likely quota exceeded):", e);
+                                    }
+
+                                    // Direct DOM completion
+                                    const bar = document.getElementById('pvp-progress-bar');
+                                    const container = document.getElementById('pvp-progress-container');
+                                    if (bar) bar.style.width = '100%';
+                                    
+                                    pvpProgress.value = 100; // Visual completion
+
+                                    // Yield to UI thread to render the 100% bar before freezing for data update
+                                    setTimeout(() => {
+                                        console.log("PvP Worker finished. Updating Pokemons...");
+                                        
+                                        allPokemons.value.forEach(p => {
+                                            if (ranks[p.id]) {
+                                                p.rankGreat = ranks[p.id].rankGreat;
+                                                p.rankGreatPercent = ranks[p.id].rankGreatPercent;
+                                                p.rankUltra = ranks[p.id].rankUltra;
+                                                p.rankUltraPercent = ranks[p.id].rankUltraPercent;
+                                                p.rankMaster = ranks[p.id].rankMaster;
+                                                p.rankMasterPercent = ranks[p.id].rankMasterPercent;
+                                            }
+                                        });
+                                        // Force reactivity update
+                                        allPokemons.value = [...allPokemons.value];
+                                        
+                                        setTimeout(() => { 
+                                            pvpProgress.value = -1; 
+                                            if (container) container.style.display = 'none';
+                                        }, 1000); // Hide after 1s
+                                        
+                                        console.log("PvP Ranks updated in UI.");
+                                        pvpWorker.terminate();
+                                    }, 50);
+                                }
+                            };
+                        }
                     }
                 }
 
