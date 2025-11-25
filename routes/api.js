@@ -1,10 +1,22 @@
 const express = require('express');
+const fs = require('fs').promises;
+const path = require('path');
 const playerDataService = require('../services/playerDataService');
 const pokedexService = require('../services/pokedexService');
 const { saveDataLimiter } = require('../middlewares/rateLimiter');
 const { isAuthenticated } = require('./auth');
 
 const router = express.Router();
+
+router.get('/combat-moves', async (req, res) => {
+    try {
+        const fastMoves = JSON.parse(await fs.readFile(path.join(__dirname, '../data/fast_moves.json'), 'utf-8'));
+        const chargedMoves = JSON.parse(await fs.readFile(path.join(__dirname, '../data/charged_moves.json'), 'utf-8'));
+        res.json({ fastMoves, chargedMoves });
+    } catch (error) {
+        res.status(500).json({ message: "Error loading combat moves: " + error.message });
+    }
+});
 
 router.get('/health-check', async (req, res) => {
     try {

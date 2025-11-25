@@ -464,12 +464,81 @@ createApp({
             if (p.pokemonDisplay.locationCard) score += 20;
             if (p.pokemonDisplay?.alignment === 1) score += 15;
             if (p.pokemonClass === 'POKEMON_CLASS_MYTHIC') score += 15;
-            if (p.isLucky) score += 10;
-            if (p.pokemonClass === 'POKEMON_CLASS_LEGENDARY') score += 15;
-            if (p.pokemonDisplay?.costume > 0) score += 10;
-            if (p.pokemonDisplay.breadModeEnum === 1 || p.pokemonDisplay.breadModeEnum === 2) score += 5;
-            
             return score;
+        };
+
+        // --- Comprehensive DPS Calculation ---
+        const calculateDps = (p) => {
+            if (!p || !combatMoves.value || !pokedexService.value.pokedex) {
+                // console.log("DPS Calc Skipped: Missing Data", !!p, !!combatMoves.value, !!pokedexService.value.pokedex);
+                return null;
+            }
+            
+            const pokedexEntry = getPokedexEntry(p);
+            if (!pokedexEntry || !pokedexEntry.stats) return null;
+
+            // 1. Calculate True Attack
+            const cpm = p.cpMultiplier + (p.additionalCpMultiplier || 0);
+            const trueAttack = (pokedexEntry.stats.attack + p.individualAttack) * cpm;
+
+            // 2. Identify Types for STAB
+            const pTypes = [];
+            if (pokedexEntry.primaryType?.type) pTypes.push(pokedexEntry.primaryType.type.replace('POKEMON_TYPE_', '').toLowerCase());
+            if (pokedexEntry.secondaryType?.type) pTypes.push(pokedexEntry.secondaryType.type.replace('POKEMON_TYPE_', '').toLowerCase());
+
+            const getMoveStats = (moveId, isCharged) => {
+                const list = isCharged ? combatMoves.value.chargedMoves : combatMoves.value.fastMoves;
+                // move_id in file is number, p.move1 might be number.
+                const found = list.find(m => m.move_id == moveId); // Loose equality just in case
+                return found;
+            };
+
+            const fastMove = getMoveStats(p.move1, false);
+            if (!fastMove) {
+                // console.log("Fast Move not found:", p.move1);
+                return null;
+            }
+
+            const results = {};
+
+            // Helper to calculate DPS for one charged move
+            const calcSingleDps = (chargedMoveId) => {
+                const chargedMove = getMoveStats(chargedMoveId, true);
+                if (!chargedMove) return 0;
+
+                // STAB Multipliers
+                const fastStab = pTypes.includes(fastMove.type.toLowerCase()) ? 1.2 : 1.0;
+                const chargedStab = pTypes.includes(chargedMove.type.toLowerCase()) ? 1.2 : 1.0;
+
+                // Cycle Calculation
+                const energyNeeded = Math.abs(chargedMove.energy_delta); // Cost is negative
+                const energyPerFast = fastMove.energy_delta;
+                
+                // Avoid infinite loops if energyPerFast is 0 (e.g. Transform? Splash has energy)
+                if (energyPerFast <= 0) return 0;
+
+                const numFastMoves = Math.ceil(energyNeeded / energyPerFast);
+                
+                // Total Cycle Damage
+                const fastDamage = fastMove.power * fastStab * numFastMoves;
+                const chargedDamage = chargedMove.power * chargedStab;
+                const totalCycleDamage = fastDamage + chargedDamage;
+
+                // Total Cycle Duration (ms)
+                const fastDuration = fastMove.duration * numFastMoves;
+                const chargedDuration = chargedMove.duration;
+                const totalCycleDuration = fastDuration + chargedDuration;
+
+                // Base Cycle DPS (Power per second)
+                const baseDps = totalCycleDamage / (totalCycleDuration / 1000);
+                
+                return (trueAttack / 200) * baseDps; 
+            };
+
+            if (p.move2) results.move2 = calcSingleDps(p.move2);
+            if (p.move3) results.move3 = calcSingleDps(p.move3);
+
+            return results;
         };
 
         const highlights = computed(() => {
@@ -1116,10 +1185,20 @@ pokemons.sort((a, b) => {
 
 
         const pvpProgress = ref(-1); // Progress -1 (Hidden), 0-100 (Visible)
+        const combatMoves = ref(null); // Stores full stats for moves (power, energy, duration)
 
         // --- Lifecycle Hook ---
         onMounted(async () => {
             try {
+                // Fetch comprehensive move data for DPS calculation
+                const combatMovesResponse = await fetch('/api/combat-moves');
+                if (combatMovesResponse.ok) {
+                    combatMoves.value = await combatMovesResponse.json();
+                    console.log("Combat Moves loaded:", combatMoves.value ? "Success" : "Empty");
+                } else {
+                    console.error("Failed to load combat moves:", combatMovesResponse.status);
+                }
+
                 // Fetch primary player data
                 const response = await fetch('/api/private-data');
                 if (!response.ok) throw new Error((await response.json()).message || 'Could not load data.');
@@ -1341,6 +1420,8 @@ pokemons.sort((a, b) => {
             teamBuilderMode, customEnemies, activeTeamBuilderTab, allPokedex, allPokedexNames, activeTabSuggestions, addCustomEnemy, removeCustomEnemy,             customEnemyInput, battleMode,
             getMoveTypeIconUrl,
             pvpProgress,
+            combatMoves,
+            calculateDps,
 
             // Statistics
             stats_shinyRate,
