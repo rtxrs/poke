@@ -212,11 +212,15 @@ self.onmessage = function(e) {
         const mlRank = mlEntry ? getRank(rankTables.master, mlEntry.statProduct) : null;
         const mlPercent = mlEntry ? (mlEntry.statProduct / rankTables.master[0].statProduct) * 100 : 0;
 
+        // CP Eligibility Check
+        const isGlEligible = p.cp <= 1500;
+        const isUlEligible = p.cp <= 2500;
+
         results[p.id] = {
-            rankGreat: glRank,
-            rankGreatPercent: glPercent,
-            rankUltra: ulRank,
-            rankUltraPercent: ulPercent,
+            rankGreat: isGlEligible ? glRank : null,
+            rankGreatPercent: isGlEligible ? glPercent : null,
+            rankUltra: isUlEligible ? ulRank : null,
+            rankUltraPercent: isUlEligible ? ulPercent : null,
             rankMaster: mlRank,
             rankMasterPercent: mlPercent
         };
