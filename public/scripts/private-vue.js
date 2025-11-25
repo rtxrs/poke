@@ -1227,10 +1227,12 @@ pokemons.sort((a, b) => {
                         if (!loadedFromCache) {
                             console.log("Starting PvP Worker...");
                             const pvpWorker = new Worker('/scripts/pvp-worker.js');
-                            pvpProgress.value = 0; // Reset progress start (Adds .active class)
+                            pvpProgress.value = 0; // Reset progress start
                             
-                            // Reset DOM Width immediately
+                            // Reset DOM Width immediately & Force Active Class
                             const pvpBar = document.getElementById('pvp-progress-bar');
+                            const pvpContainer = document.getElementById('pvp-progress-container');
+                            if (pvpContainer) pvpContainer.classList.add('active');
                             if (pvpBar) pvpBar.style.width = '0%';
 
                             pvpWorker.postMessage({
@@ -1279,15 +1281,17 @@ pokemons.sort((a, b) => {
                                                 p.rankMasterPercent = ranks[p.id].rankMasterPercent;
                                             }
                                         });
-                                                                            // Force reactivity update
-                                                                            allPokemons.value = [...allPokemons.value];
-                                                                            
-                                                                            setTimeout(() => { 
-                                                                                pvpProgress.value = -1; // Removes .active class -> fade out
-                                                                            }, 1000); // Hide after 1s
-                                                                            
-                                                                            console.log("PvP Ranks updated in UI.");
-                                                                            pvpWorker.terminate();                                    }, 50);
+                                                                                                                // Force reactivity update
+                                                                                                                allPokemons.value = [...allPokemons.value];
+                                                                                                                
+                                                                                                                setTimeout(() => { 
+                                                                                                                    pvpProgress.value = -1;
+                                                                                                                    const pvpContainer = document.getElementById('pvp-progress-container');
+                                                                                                                    if (pvpContainer) pvpContainer.classList.remove('active');
+                                                                                                                }, 1000); // Hide after 1s
+                                                                                                                
+                                                                                                                console.log("PvP Ranks updated in UI.");
+                                                                                                                pvpWorker.terminate();                                    }, 50);
                                 }
                             };
                         }
