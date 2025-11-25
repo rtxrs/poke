@@ -2,7 +2,7 @@
  * This script contains the complete Vue.js application logic for the private dashboard.
  */
 
-const { createApp, ref, computed, onMounted, watch, watchEffect } = Vue;
+const { createApp, ref, computed, onMounted, watch, watchEffect, nextTick } = Vue;
 
 function stringToHslColor(str, s, l) {
     if (!str) return `hsl(0, 0%, 80%)`;
@@ -1227,18 +1227,11 @@ pokemons.sort((a, b) => {
                         if (!loadedFromCache) {
                             console.log("Starting PvP Worker...");
                             const pvpWorker = new Worker('/scripts/pvp-worker.js');
-                            pvpProgress.value = 0; // Reset progress start
+                            pvpProgress.value = 0; // Reset progress start (Adds .active class)
                             
-                            // Reset DOM
-                            const pvpContainer = document.getElementById('pvp-progress-container');
+                            // Reset DOM Width immediately
                             const pvpBar = document.getElementById('pvp-progress-bar');
-                            const pvpText = document.getElementById('pvp-progress-text');
-                            if (pvpContainer) pvpContainer.style.display = 'block';
                             if (pvpBar) pvpBar.style.width = '0%';
-                            if (pvpText) {
-                                pvpText.textContent = '0%';
-                                pvpText.style.display = 'none';
-                            }
 
                             pvpWorker.postMessage({
                                 pokemons: JSON.parse(JSON.stringify(allPokemons.value)),
@@ -1250,15 +1243,7 @@ pokemons.sort((a, b) => {
                                 if (msg.type === 'progress') {
                                     // Direct DOM update for performance
                                     const bar = document.getElementById('pvp-progress-bar');
-                                    const text = document.getElementById('pvp-progress-text');
-                                    const container = document.getElementById('pvp-progress-container');
-                                    
-                                    if (container) container.style.display = 'block';
                                     if (bar) bar.style.width = msg.value + '%';
-                                    if (text) {
-                                        text.textContent = msg.value + '%';
-                                        text.style.display = msg.value > 5 ? 'block' : 'none';
-                                    }
 
                                     pvpProgress.value = msg.value;
                                 } else if (msg.type === 'result') {
@@ -1276,7 +1261,6 @@ pokemons.sort((a, b) => {
 
                                     // Direct DOM completion
                                     const bar = document.getElementById('pvp-progress-bar');
-                                    const container = document.getElementById('pvp-progress-container');
                                     if (bar) bar.style.width = '100%';
                                     
                                     pvpProgress.value = 100; // Visual completion
@@ -1295,17 +1279,15 @@ pokemons.sort((a, b) => {
                                                 p.rankMasterPercent = ranks[p.id].rankMasterPercent;
                                             }
                                         });
-                                        // Force reactivity update
-                                        allPokemons.value = [...allPokemons.value];
-                                        
-                                        setTimeout(() => { 
-                                            pvpProgress.value = -1; 
-                                            if (container) container.style.display = 'none';
-                                        }, 1000); // Hide after 1s
-                                        
-                                        console.log("PvP Ranks updated in UI.");
-                                        pvpWorker.terminate();
-                                    }, 50);
+                                                                            // Force reactivity update
+                                                                            allPokemons.value = [...allPokemons.value];
+                                                                            
+                                                                            setTimeout(() => { 
+                                                                                pvpProgress.value = -1; // Removes .active class -> fade out
+                                                                            }, 1000); // Hide after 1s
+                                                                            
+                                                                            console.log("PvP Ranks updated in UI.");
+                                                                            pvpWorker.terminate();                                    }, 50);
                                 }
                             };
                         }

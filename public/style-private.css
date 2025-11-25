@@ -1159,24 +1159,22 @@ body.dashboard-private, body:not([class]) {
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 4px; /* Very thin, ~1% of screen height mostly */
+    height: 4px; /* Very thin */
     background-color: rgba(0, 0, 0, 0.1);
     z-index: 9999;
+    opacity: 0; /* Hidden by default */
+    pointer-events: none; /* Allow clicks to pass through */
+    transition: opacity 0.3s ease;
+}
+
+.floating-footer-progress.active {
+    opacity: 1;
 }
 
 .floating-footer-progress .progress-bar {
     height: 100%;
     background-color: #3498db; /* Blue loading bar */
-    transition: width 0.2s ease;
-}
-
-/* Fade out effect for progress bar */
-.floating-footer-progress {
-    transition: opacity 0.5s ease-out;
-    opacity: 1;
-}
-.floating-footer-progress.fading-out {
-    opacity: 0;
+    transition: width 0.2s linear; /* Linear for smoother continuous updates */
 }
 
 .progress-text {
