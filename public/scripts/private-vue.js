@@ -1270,7 +1270,8 @@ pokemons.sort((a, b) => {
                             for (let i = 0; i < pokemons.length; i++) {
                                 sumTime += (pokemons[i].creationTimeMs || 0);
                             }
-                            return `pvp_v1_${pokemons.length}_${sumTime}`;
+                            // Version bumped to v5 to apply Legendary Level Floor (20) logic
+                            return `pvp_v5_${pokemons.length}_${sumTime}`;
                         };
 
                         const cacheKey = generateCacheKey(allPokemons.value);
