@@ -479,7 +479,12 @@ createApp({
 
             // 1. Calculate True Attack
             const cpm = p.cpMultiplier + (p.additionalCpMultiplier || 0);
-            const trueAttack = (pokedexEntry.stats.attack + p.individualAttack) * cpm;
+            let trueAttack = (pokedexEntry.stats.attack + p.individualAttack) * cpm;
+            
+            // Apply Shadow bonus (20% increased damage)
+            if (p.pokemonDisplay.alignment === 1) {
+                trueAttack *= 1.2;
+            }
 
             // 2. Identify Types for STAB
             const pTypes = [];
