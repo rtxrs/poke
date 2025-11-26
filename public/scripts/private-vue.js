@@ -1201,12 +1201,9 @@ pokemons.sort((a, b) => {
                                             }
                                             return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${dexNr}.png`;
                                         };                
-                            // Debug Logs
-                            console.log(`[Pokedex Debug] Pokemons: ${allPokemons.value.length}, Pokedex: ${allPokedex.value.length}`);
-                            console.log(`[Pokedex Debug] CostumeMap Size: ${costumeIdMap.value ? Object.keys(costumeIdMap.value).length : 'null'}`);
-                
-                            const displayList = [];
-                            const userPokemonMap = new Set();
+                                        // Debug Logs
+                            
+                                        const displayList = [];                            const userPokemonMap = new Set();
                 
                             // Pre-calculate species names for stripping prefix from form names
                             const speciesNameMap = {};
@@ -1264,11 +1261,7 @@ pokemons.sort((a, b) => {
                                 });
                             });
                 
-                            // Debug: Log samples
-                            console.log(`[Pokedex Debug] UserMap Keys: ${userPokemonMap.size}`);
-                            const sampleKeys = Array.from(userPokemonMap).slice(0, 5);
-                            console.log('[Pokedex Debug] Sample Keys:', sampleKeys);
-                
+                                        // Debug: Log samples                
                 
                                 // --- 2. Build Display List ---
                                 allPokedex.value.forEach(species => {
@@ -1418,7 +1411,6 @@ pokemons.sort((a, b) => {
                 const combatMovesResponse = await fetch('/api/combat-moves');
                 if (combatMovesResponse.ok) {
                     combatMoves.value = await combatMovesResponse.json();
-                    console.log("Combat Moves loaded:", combatMoves.value ? "Success" : "Empty");
                 } else {
                     console.error("Failed to load combat moves:", combatMovesResponse.status);
                 }
@@ -1511,7 +1503,6 @@ pokemons.sort((a, b) => {
                             try {
                                 const cachedData = JSON.parse(cachedDataRaw);
                                 if (cachedData.key === cacheKey) {
-                                    console.log("Loading PvP Ranks from Cache...");
                                     const ranks = cachedData.results;
                                     allPokemons.value.forEach(p => {
                                         if (ranks[p.id]) {
@@ -1525,7 +1516,6 @@ pokemons.sort((a, b) => {
                                     });
                                     allPokemons.value = [...allPokemons.value]; // Force reactivity
                                     loadedFromCache = true;
-                                    console.log("PvP Ranks loaded from Cache.");
                                 }
                             } catch (e) {
                                 console.warn("Error loading PvP cache:", e);
@@ -1534,7 +1524,6 @@ pokemons.sort((a, b) => {
                         }
 
                         if (!loadedFromCache) {
-                            console.log("Starting PvP Worker...");
                             const pvpWorker = new Worker('/scripts/pvp-worker.js');
                             pvpProgress.value = 0; // Reset progress start
                             
@@ -1578,7 +1567,6 @@ pokemons.sort((a, b) => {
 
                                     // Yield to UI thread to render the 100% bar before freezing for data update
                                     setTimeout(() => {
-                                        console.log("PvP Worker finished. Updating Pokemons...");
                                         
                                         allPokemons.value.forEach(p => {
                                             if (ranks[p.id]) {
@@ -1599,7 +1587,6 @@ pokemons.sort((a, b) => {
                                                                                                                     if (pvpContainer) pvpContainer.classList.remove('active');
                                                                                                                 }, 1000); // Hide after 1s
                                                                                                                 
-                                                                                                                console.log("PvP Ranks updated in UI.");
                                                                                                                 pvpWorker.terminate();                                    }, 50);
                                 }
                             };

@@ -165,7 +165,6 @@ self.onmessage = function(e) {
     const results = {}; // Map: pokemonInstanceId -> { rankGreat, rankUltra }
     const speciesCache = {}; // Map: speciesKey -> { great: [sorted], ultra: [sorted] }
 
-    console.log(`Worker: Starting PvP calculation for ${pokemons.length} Pokémon...`);
     const start = performance.now();
 
     const total = pokemons.length;
@@ -247,7 +246,6 @@ self.onmessage = function(e) {
     });
 
     const end = performance.now();
-    console.log(`Worker: PvP calculation finished in ${(end - start).toFixed(2)}ms.`);
 
     // Send results back to main thread
     self.postMessage({ type: 'result', data: results });

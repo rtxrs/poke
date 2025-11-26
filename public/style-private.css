@@ -1235,6 +1235,15 @@ body.dashboard-private, body:not([class]) {
     color: #999;
 }
 
+.pokedex-card .pokemon-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%; /* Ensure it respects parent width */
+    font-size: 0.9em; /* Adjust font size slightly if needed */
+    margin-top: 5px; /* Add some space from image */
+}
+
 .pokedex-card .dex-nr {
     font-size: 0.75em;
     color: #666;
