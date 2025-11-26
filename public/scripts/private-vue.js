@@ -1191,218 +1191,223 @@ pokemons.sort((a, b) => {
         // --- Pokedex Logic ---
         const pokedexMode = ref('normal'); // 'normal' or 'completionist'
 
-                const pokedexDisplayData = computed(() => {
-                    if (!allPokedex.value || !allPokemons.value) return [];
-        
-                    // Debug Logs
-                    console.log(`[Pokedex Debug] Pokemons: ${allPokemons.value.length}, Pokedex: ${allPokedex.value.length}`);
-                    console.log(`[Pokedex Debug] CostumeMap Size: ${costumeIdMap.value ? Object.keys(costumeIdMap.value).length : 'null'}`);
-        
-                    const displayList = [];
-                    const userPokemonMap = new Set();
-        
-                    // Pre-calculate species names for stripping prefix from form names
-                    const speciesNameMap = {};
-                    allPokedex.value.forEach(p => {
-                        if (p.names && p.names.English) {
-                            speciesNameMap[p.dexNr] = p.names.English.toUpperCase().replace(/_/g, '').replace(/-/g, '').replace(/\s/g, '');
-                        }
-                    });
-
-                    // --- 1. Build User Inventory Map ---
-                    allPokemons.value.forEach(p => {
-                        const suffixes = [''];
-                        if (p.pokemonDisplay.shiny) {
-                            suffixes.push('_SHINY');
-                        }
-
-                        suffixes.forEach(suffix => {
-                            // A. Species-level key (for Normal mode)
-                            userPokemonMap.add(`${p.pokemonId}_ANY${suffix}`);
-            
-                            // B. Multi-Key Generation for Completionist Mode
-                            // 1. Raw Form Name (e.g. "PIKACHU_LIBRE" -> "LIBRE")
-                            let rawForm = p.pokemonDisplay.formName || 'NORMAL';
-                            if (rawForm === 'UNSET') rawForm = 'NORMAL';
-                            const cleanForm = rawForm.toUpperCase().replace(/_/g, '').replace(/-/g, '').replace(/\s/g, '');
-                            
-                            // 2. Costume ID Mapping
-                            let cleanCostume = 'NONE';
-                            if (p.pokemonDisplay.costume && p.pokemonDisplay.costume > 0) {
-                                const mappedCostume = costumeIdMap.value && costumeIdMap.value[p.pokemonDisplay.costume.toString()];
-                                if (mappedCostume) {
-                                    cleanCostume = mappedCostume.toUpperCase().replace(/_/g, '').replace(/-/g, '').replace(/\s/g, '');
-                                } else {
-                                    // console.warn('Unmapped Costume ID:', p.pokemonDisplay.costume);
-                                    cleanCostume = `ID_${p.pokemonDisplay.costume}`;
+                        const pokedexDisplayData = computed(() => {
+                            if (!allPokedex.value || !allPokemons.value) return [];
+                
+                            // Helper for fallback images
+                                        const getFallbackImage = (dexNr, type = 'Normal') => {
+                                            if (type === 'Shiny') {
+                                                return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/${dexNr}.png`;
+                                            }
+                                            return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${dexNr}.png`;
+                                        };                
+                            // Debug Logs
+                            console.log(`[Pokedex Debug] Pokemons: ${allPokemons.value.length}, Pokedex: ${allPokedex.value.length}`);
+                            console.log(`[Pokedex Debug] CostumeMap Size: ${costumeIdMap.value ? Object.keys(costumeIdMap.value).length : 'null'}`);
+                
+                            const displayList = [];
+                            const userPokemonMap = new Set();
+                
+                            // Pre-calculate species names for stripping prefix from form names
+                            const speciesNameMap = {};
+                            allPokedex.value.forEach(p => {
+                                if (p.names && p.names.English) {
+                                    speciesNameMap[p.dexNr] = p.names.English.toUpperCase().replace(/_/g, '').replace(/-/g, '').replace(/\s/g, '');
                                 }
-                            }
-            
-                            // Generate Permutations
-                            userPokemonMap.add(`${p.pokemonId}_FORM_${cleanForm}_COSTUME_${cleanCostume}${suffix}`);
-                            userPokemonMap.add(`${p.pokemonId}_FORM_${cleanForm}${suffix}`);
-
-                            // Fix for redundant species name in form (e.g. PIKACHU_LIBRE -> LIBRE)
-                            const speciesName = speciesNameMap[p.pokemonId];
-                            if (speciesName && cleanForm.startsWith(speciesName) && cleanForm.length > speciesName.length) {
-                                const strippedForm = cleanForm.substring(speciesName.length);
-                                userPokemonMap.add(`${p.pokemonId}_FORM_${strippedForm}_COSTUME_${cleanCostume}${suffix}`);
-                                userPokemonMap.add(`${p.pokemonId}_FORM_${strippedForm}${suffix}`);
-                            }
-
-                            if (cleanCostume !== 'NONE') {
-                                userPokemonMap.add(`${p.pokemonId}_COSTUME_${cleanCostume}${suffix}`);
-                                userPokemonMap.add(`${p.pokemonId}_FORM_NORMAL_COSTUME_${cleanCostume}${suffix}`);
-                            }
-                        });
-                    });
-        
-                    // Debug: Log samples
-                    console.log(`[Pokedex Debug] UserMap Keys: ${userPokemonMap.size}`);
-                    const sampleKeys = Array.from(userPokemonMap).slice(0, 5);
-                    console.log('[Pokedex Debug] Sample Keys:', sampleKeys);
-        
-        
-                        // --- 2. Build Display List ---
-                        allPokedex.value.forEach(species => {
-                            if (pokedexMode.value === 'normal') {
-                                // ... (Normal Mode Logic Unchanged) ...
-                                // Find best image (Standard form, no costume)
-                                let displayAsset = null;
-                                if (species.assetForms) {
-                                    displayAsset = species.assetForms.find(f => 
-                                        (!f.form || f.form === 'NORMAL') && 
-                                        (!f.costume || f.costume === 'NONE')
-                                    );
-                                    // If no strict standard form, take the first one available
-                                    if (!displayAsset) displayAsset = species.assetForms[0];
+                            });
+                
+                            // --- 1. Build User Inventory Map ---
+                            allPokemons.value.forEach(p => {
+                                const suffixes = [''];
+                                if (p.pokemonDisplay.shiny) {
+                                    suffixes.push('_SHINY');
                                 }
-            
-                                const isCaught = userPokemonMap.has(`${species.dexNr}_ANY`);
-                                const spriteUrl = displayAsset ? displayAsset.image : (species.assets?.image || '');
-            
-                                displayList.push({
-                                    uniqueId: `${species.dexNr}_NORMAL`,
-                                    dexNr: species.dexNr,
-                                    name: species.names.English,
-                                    sprite: spriteUrl,
-                                    isCaught: isCaught
+                
+                                suffixes.forEach(suffix => {
+                                    // A. Species-level key (for Normal mode)
+                                    userPokemonMap.add(`${p.pokemonId}_ANY${suffix}`);
+                    
+                                    // B. Multi-Key Generation for Completionist Mode
+                                    // 1. Raw Form Name (e.g. "PIKACHU_LIBRE" -> "LIBRE")
+                                    let rawForm = p.pokemonDisplay.formName || 'NORMAL';
+                                    if (rawForm === 'UNSET') rawForm = 'NORMAL';
+                                    const cleanForm = rawForm.toUpperCase().replace(/_/g, '').replace(/-/g, '').replace(/\s/g, '');
+                                    
+                                    // 2. Costume ID Mapping
+                                    let cleanCostume = 'NONE';
+                                    if (p.pokemonDisplay.costume && p.pokemonDisplay.costume > 0) {
+                                        const mappedCostume = costumeIdMap.value && costumeIdMap.value[p.pokemonDisplay.costume.toString()];
+                                        if (mappedCostume) {
+                                            cleanCostume = mappedCostume.toUpperCase().replace(/_/g, '').replace(/-/g, '').replace(/\s/g, '');
+                                        } else {
+                                            // console.warn('Unmapped Costume ID:', p.pokemonDisplay.costume);
+                                            cleanCostume = `ID_${p.pokemonDisplay.costume}`;
+                                        }
+                                    }
+                    
+                                    // Generate Permutations
+                                    userPokemonMap.add(`${p.pokemonId}_FORM_${cleanForm}_COSTUME_${cleanCostume}${suffix}`);
+                                    userPokemonMap.add(`${p.pokemonId}_FORM_${cleanForm}${suffix}`);
+                
+                                    // Fix for redundant species name in form (e.g. PIKACHU_LIBRE -> LIBRE)
+                                    const speciesName = speciesNameMap[p.pokemonId];
+                                    if (speciesName && cleanForm.startsWith(speciesName) && cleanForm.length > speciesName.length) {
+                                        const strippedForm = cleanForm.substring(speciesName.length);
+                                        userPokemonMap.add(`${p.pokemonId}_FORM_${strippedForm}_COSTUME_${cleanCostume}${suffix}`);
+                                        userPokemonMap.add(`${p.pokemonId}_FORM_${strippedForm}${suffix}`);
+                                    }
+                
+                                    if (cleanCostume !== 'NONE') {
+                                        userPokemonMap.add(`${p.pokemonId}_COSTUME_${cleanCostume}${suffix}`);
+                                        userPokemonMap.add(`${p.pokemonId}_FORM_NORMAL_COSTUME_${cleanCostume}${suffix}`);
+                                    }
                                 });
-            
-                            } else {
-                                // --- Completionist Mode ---
-                                if (species.assetForms) {
-                                    const processedForms = new Set(); // To deduplicate Gender variants (Male/Female)
-
-                                    species.assetForms.forEach((formEntry, index) => {
-                                        // 1. Skip "Technical" duplicates (forms starting with PM + digits)
-                                        if (formEntry.form && formEntry.form.match(/^PM\d+/)) {
-                                            return;
+                            });
+                
+                            // Debug: Log samples
+                            console.log(`[Pokedex Debug] UserMap Keys: ${userPokemonMap.size}`);
+                            const sampleKeys = Array.from(userPokemonMap).slice(0, 5);
+                            console.log('[Pokedex Debug] Sample Keys:', sampleKeys);
+                
+                
+                                // --- 2. Build Display List ---
+                                allPokedex.value.forEach(species => {
+                                    if (pokedexMode.value === 'normal') {
+                                        // ... (Normal Mode Logic Unchanged) ...
+                                        // Find best image (Standard form, no costume)
+                                        let displayAsset = null;
+                                        if (species.assetForms) {
+                                            displayAsset = species.assetForms.find(f => 
+                                                (!f.form || f.form === 'NORMAL') && 
+                                                (!f.costume || f.costume === 'NONE')
+                                            );
+                                            // If no strict standard form, take the first one available
+                                            if (!displayAsset) displayAsset = species.assetForms[0];
                                         }
-
-                                        // Prepare Keys for Matching
-                                        let matchForm = formEntry.form ? formEntry.form.toUpperCase() : 'NORMAL';
-                                        matchForm = matchForm.replace(/_/g, '').replace(/-/g, '').replace(/\s/g, '');
-            
-                                        let matchCostume = formEntry.costume ? formEntry.costume.toUpperCase() : 'NONE';
-                                        matchCostume = matchCostume.replace(/_/g, '').replace(/-/g, '').replace(/\s/g, '');
-
-                                        // 2. Deduplicate based on Form + Costume (collapses Gender variants)
-                                        const uniqueKey = `${matchForm}_${matchCostume}`;
-                                        if (processedForms.has(uniqueKey)) {
-                                            return;
-                                        }
-                                        processedForms.add(uniqueKey);
-            
-                                        // Prepare Display Name
-                                        let fullName = species.names.English;
-                                        if (formEntry.form && formEntry.form !== 'NORMAL') {
-                                            fullName += ` (${formEntry.form})`;
-                                        }
-                                        if (formEntry.costume) {
-                                            fullName += ` [${formEntry.costume}]`;
-                                        }
-            
-                                        // Strategy: Try to match any of the generated user keys
-                                        let isCaught = false;
-            
-                                        // Try 1: Exact Match
-                                        if (userPokemonMap.has(`${species.dexNr}_FORM_${matchForm}_COSTUME_${matchCostume}`)) {
-                                            isCaught = true;
-                                        }
-                                        // Try 2: If Pokedex asks for Form but No Costume, match strict Form
-                                        else if (matchCostume === 'NONE' && userPokemonMap.has(`${species.dexNr}_FORM_${matchForm}`)) {
-                                            isCaught = true;
-                                        }
-                                        // Try 3: If Pokedex asks for Costume, match strict Costume (ignoring form usually implies Normal)
-                                        else if (matchCostume !== 'NONE' && userPokemonMap.has(`${species.dexNr}_COSTUME_${matchCostume}`)) {
-                                            isCaught = true;
-                                        }
-                                        // Try 4: If Pokedex asks for Costume, try matching it against User's Form Name (sometimes merged)
-                                        // e.g. User has "PIKACHU_LIBRE", Pokedex wants Costume "LIBRE"
-                                        else if (matchCostume !== 'NONE' && userPokemonMap.has(`${species.dexNr}_FORM_${matchCostume}`)) {
-                                            isCaught = true;
-                                        }
-            
-                                        // Image Fallback
-                                        const spriteUrl = formEntry.image || species.assets?.image || '';
-
+                    
+                                        const isCaught = userPokemonMap.has(`${species.dexNr}_ANY`);
+                                        const spriteUrl = displayAsset ? displayAsset.image : (species.assets?.image || getFallbackImage(species.dexNr, 'Normal'));
+                    
                                         displayList.push({
-                                            uniqueId: `${species.dexNr}_${index}_NORMAL`,
+                                            uniqueId: `${species.dexNr}_NORMAL`,
                                             dexNr: species.dexNr,
-                                            name: fullName,
+                                            name: species.names.English,
                                             sprite: spriteUrl,
                                             isCaught: isCaught
                                         });
-
-                                        // --- Shiny Entry ---
-                                        if (formEntry.shinyImage) {
-                                            let isCaughtShiny = false;
-                                            const suffix = '_SHINY';
-
-                                            // Try 1: Exact Match
-                                            if (userPokemonMap.has(`${species.dexNr}_FORM_${matchForm}_COSTUME_${matchCostume}${suffix}`)) {
-                                                isCaughtShiny = true;
-                                            }
-                                            // Try 2: Strict Form
-                                            else if (matchCostume === 'NONE' && userPokemonMap.has(`${species.dexNr}_FORM_${matchForm}${suffix}`)) {
-                                                isCaughtShiny = true;
-                                            }
-                                            // Try 3: Strict Costume
-                                            else if (matchCostume !== 'NONE' && userPokemonMap.has(`${species.dexNr}_COSTUME_${matchCostume}${suffix}`)) {
-                                                isCaughtShiny = true;
-                                            }
-                                            // Try 4: Costume in Form Name
-                                            else if (matchCostume !== 'NONE' && userPokemonMap.has(`${species.dexNr}_FORM_${matchCostume}${suffix}`)) {
-                                                isCaughtShiny = true;
-                                            }
-
-                                            displayList.push({
-                                                uniqueId: `${species.dexNr}_${index}_SHINY`,
-                                                dexNr: species.dexNr,
-                                                name: `${fullName} ✨`,
-                                                sprite: formEntry.shinyImage,
-                                                isCaught: isCaughtShiny
+                    
+                                    } else {
+                                        // --- Completionist Mode ---
+                                        if (species.assetForms) {
+                                            const processedForms = new Set(); // To deduplicate Gender variants (Male/Female)
+                
+                                            species.assetForms.forEach((formEntry, index) => {
+                                                // 1. Skip "Technical" duplicates (forms starting with PM + digits)
+                                                if (formEntry.form && formEntry.form.match(/^PM\d+/)) {
+                                                    return;
+                                                }
+                
+                                                // Prepare Keys for Matching
+                                                let matchForm = formEntry.form ? formEntry.form.toUpperCase() : 'NORMAL';
+                                                matchForm = matchForm.replace(/_/g, '').replace(/-/g, '').replace(/\s/g, '');
+                    
+                                                let matchCostume = formEntry.costume ? formEntry.costume.toUpperCase() : 'NONE';
+                                                matchCostume = matchCostume.replace(/_/g, '').replace(/-/g, '').replace(/\s/g, '');
+                
+                                                // 2. Deduplicate based on Form + Costume (collapses Gender variants)
+                                                const uniqueKey = `${matchForm}_${matchCostume}`;
+                                                if (processedForms.has(uniqueKey)) {
+                                                    return;
+                                                }
+                                                processedForms.add(uniqueKey);
+                    
+                                                // Prepare Display Name
+                                                let fullName = species.names.English;
+                                                if (formEntry.form && formEntry.form !== 'NORMAL') {
+                                                    fullName += ` (${formEntry.form})`;
+                                                }
+                                                if (formEntry.costume) {
+                                                    fullName += ` [${formEntry.costume}]`;
+                                                }
+                    
+                                                // Strategy: Try to match any of the generated user keys
+                                                let isCaught = false;
+                    
+                                                // Try 1: Exact Match
+                                                if (userPokemonMap.has(`${species.dexNr}_FORM_${matchForm}_COSTUME_${matchCostume}`)) {
+                                                    isCaught = true;
+                                                }
+                                                // Try 2: If Pokedex asks for Form but No Costume, match strict Form
+                                                else if (matchCostume === 'NONE' && userPokemonMap.has(`${species.dexNr}_FORM_${matchForm}`)) {
+                                                    isCaught = true;
+                                                }
+                                                // Try 3: If Pokedex asks for Costume, match strict Costume (ignoring form usually implies Normal)
+                                                else if (matchCostume !== 'NONE' && userPokemonMap.has(`${species.dexNr}_COSTUME_${matchCostume}`)) {
+                                                    isCaught = true;
+                                                }
+                                                // Try 4: If Pokedex asks for Costume, try matching it against User's Form Name (sometimes merged)
+                                                // e.g. User has "PIKACHU_LIBRE", Pokedex wants Costume "LIBRE"
+                                                else if (matchCostume !== 'NONE' && userPokemonMap.has(`${species.dexNr}_FORM_${matchCostume}`)) {
+                                                    isCaught = true;
+                                                }
+                    
+                                                // Image Fallback
+                                                const spriteUrl = formEntry.image || species.assets?.image || getFallbackImage(species.dexNr, 'Normal');
+                
+                                                displayList.push({
+                                                    uniqueId: `${species.dexNr}_${index}_NORMAL`,
+                                                    dexNr: species.dexNr,
+                                                    name: fullName,
+                                                    sprite: spriteUrl,
+                                                    isCaught: isCaught
+                                                });
+                
+                                                // --- Shiny Entry ---
+                                                if (formEntry.shinyImage) {
+                                                    let isCaughtShiny = false;
+                                                    const suffix = '_SHINY';
+                
+                                                    // Try 1: Exact Match
+                                                    if (userPokemonMap.has(`${species.dexNr}_FORM_${matchForm}_COSTUME_${matchCostume}${suffix}`)) {
+                                                        isCaughtShiny = true;
+                                                    }
+                                                    // Try 2: Strict Form
+                                                    else if (matchCostume === 'NONE' && userPokemonMap.has(`${species.dexNr}_FORM_${matchForm}${suffix}`)) {
+                                                        isCaughtShiny = true;
+                                                    }
+                                                    // Try 3: Strict Costume
+                                                    else if (matchCostume !== 'NONE' && userPokemonMap.has(`${species.dexNr}_COSTUME_${matchCostume}${suffix}`)) {
+                                                        isCaughtShiny = true;
+                                                    }
+                                                    // Try 4: Costume in Form Name
+                                                    else if (matchCostume !== 'NONE' && userPokemonMap.has(`${species.dexNr}_FORM_${matchCostume}${suffix}`)) {
+                                                        isCaughtShiny = true;
+                                                    }
+                
+                                                                                                displayList.push({
+                                                                                                    uniqueId: `${species.dexNr}_${index}_SHINY`,
+                                                                                                    dexNr: species.dexNr,
+                                                                                                    name: `${fullName} ✨`,
+                                                                                                    sprite: formEntry.shinyImage || getFallbackImage(species.dexNr, 'Shiny'),
+                                                                                                    isCaught: isCaughtShiny
+                                                                                                });                                                }
                                             });
-                                        }
-                                    });
-                                } else {
-                        // Fallback if species has no assetForms list
-                        const isCaught = userPokemonMap.has(`${species.dexNr}_ANY`);
-                        displayList.push({
-                            uniqueId: `${species.dexNr}_BASIC`,
-                            dexNr: species.dexNr,
-                            name: species.names.English,
-                            sprite: species.assets?.image || '',
-                            isCaught: isCaught
+                                        } else {
+                                        // Fallback if species has no assetForms list
+                                        const isCaught = userPokemonMap.has(`${species.dexNr}_ANY`);
+                                        displayList.push({
+                                            uniqueId: `${species.dexNr}_BASIC`,
+                                            dexNr: species.dexNr,
+                                            name: species.names.English,
+                                            sprite: species.assets?.image || getFallbackImage(species.dexNr, 'Normal'),
+                                            isCaught: isCaught
+                                        });
+                                    }
+                                }
+                            });
+                
+                            return displayList;
                         });
-                    }
-                }
-            });
-
-            return displayList;
-        });
-
         const pvpProgress = ref(-1); // Progress -1 (Hidden), 0-100 (Visible)
         const combatMoves = ref(null); // Stores full stats for moves (power, energy, duration)
 
