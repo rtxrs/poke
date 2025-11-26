@@ -92,8 +92,8 @@ function generateRankTable(entry) {
     };
 
     // Enforce Level 20 Floor for Legendaries/Mythicals
-    // This aligns with standard availability (Raids/GBL Rewards) and filters out "impossible" low-level ranks
-    const minLevel = (entry.pokemonClass === 'POKEMON_CLASS_LEGENDARY' || entry.pokemonClass === 'POKEMON_CLASS_MYTHIC') ? 20 : 1;
+    // Reverted to standard 1 for all per user request (Pure Stats ranking)
+    const minLevel = 1;
 
     // Generate all 4096 IV combinations (0-15)
     for (let atk = 0; atk <= 15; atk++) {

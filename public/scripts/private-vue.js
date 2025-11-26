@@ -1262,16 +1262,21 @@ pokemons.sort((a, b) => {
                     // --- Initialize PvP Worker ---
                     if (allPokemons.value && allPokemons.value.length > 0 && window.Worker && pokedexService.value.pokedex) {
                         
-                        // --- Cache Logic ---
                         const generateCacheKey = (pokemons) => {
                             let sumTime = 0;
-                            // Sum creation times to detect changes (simple but effective for this dataset)
                             // Using a simple loop for performance
                             for (let i = 0; i < pokemons.length; i++) {
                                 sumTime += (pokemons[i].creationTimeMs || 0);
                             }
-                            // Version bumped to v5 to apply Legendary Level Floor (20) logic
-                            return `pvp_v5_${pokemons.length}_${sumTime}`;
+                            
+                            const now = new Date();
+                            const year = now.getFullYear();
+                            const month = (now.getMonth() + 1).toString().padStart(2, '0'); // Months are 0-indexed
+                            const day = now.getDate().toString().padStart(2, '0');
+                            const hour = now.getHours().toString().padStart(2, '0');
+                            
+                            // Include YYYY_MM_DD_hh to force hourly refresh
+                            return `pvp_${pokemons.length}_${sumTime}_${year}_${month}_${day}_${hour}`;
                         };
 
                         const cacheKey = generateCacheKey(allPokemons.value);
