@@ -306,9 +306,16 @@ const pokedexService = {
             this.healthStatus.cron.status = 'Running';
 
             try {
+                // Sequence updates with delays to avoid bottlenecks
                 const pokedexUpdated = await this.checkForPokedexUpdates();
+                await new Promise(resolve => setTimeout(resolve, 2000)); // 2s delay
+
                 const movesUpdated = await this.checkForMoveUpdates();
+                await new Promise(resolve => setTimeout(resolve, 2000)); // 2s delay
+
                 await this.checkForTypeEffectivenessUpdate();
+                await new Promise(resolve => setTimeout(resolve, 2000)); // 2s delay
+
                 await raidBossService.updateRaidBosses();
 
                 if (pokedexUpdated || movesUpdated) {
