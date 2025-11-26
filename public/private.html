@@ -305,6 +305,27 @@
                 <grid-component :pokemons="filteredPokemon" @pokemon-clicked="openPokemonModal($event)"></grid-component>
             </section>
 
+            <!-- Pokedex Tab -->
+            <section id="pokedex-section" v-show="activeTab === 'pokedex'" class="card">
+                <div class="summary-header">
+                    <h2>Pokédex</h2>
+                    <div class="segmented-control">
+                        <button :class="{ active: pokedexMode === 'normal' }" @click="pokedexMode = 'normal'">Normal</button>
+                        <button :class="{ active: pokedexMode === 'completionist' }" @click="pokedexMode = 'completionist'">Completionist</button>
+                    </div>
+                </div>
+                
+                <div class="pokedex-grid">
+                    <div v-for="entry in pokedexDisplayData" :key="entry.uniqueId" class="pokedex-card" :class="{ 'caught': entry.isCaught, 'uncaught': !entry.isCaught }">
+                        <div class="pokemon-image-container">
+                            <img :src="entry.sprite" :alt="entry.name" loading="lazy">
+                        </div>
+                        <p class="pokemon-name">{{ entry.name }}</p>
+                        <small class="dex-nr">#{{ entry.dexNr }}</small>
+                    </div>
+                </div>
+            </section>
+
             <!-- Statistics Tab -->
             <section id="statistics-section" v-show="activeTab === 'statistics'">
                 <div class="stats-grid">

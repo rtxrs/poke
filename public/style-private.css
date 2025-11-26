@@ -1200,3 +1200,55 @@ body.dashboard-private, body:not([class]) {
     font-size: 0.6em; /* Slightly smaller to fit in header */
     padding: 2px 5px;
 }
+
+/* Pokedex Tab Styles */
+.pokedex-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 15px;
+    padding: 10px 0;
+}
+
+.pokedex-card {
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+    border: 1px solid #dee2e6;
+    transition: transform 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.pokedex-card:hover {
+    transform: translateY(-2px);
+}
+
+.pokedex-card.uncaught .pokemon-image-container img {
+    filter: grayscale(100%);
+    opacity: 0.5;
+}
+
+.pokedex-card.uncaught .pokemon-name {
+    color: #999;
+}
+
+.pokedex-card .dex-nr {
+    font-size: 0.75em;
+    color: #666;
+    margin-top: 5px;
+    display: block;
+}
+
+/* Reuse segmented-control styles but ensure they fit here */
+#pokedex-section .segmented-control {
+    margin-left: auto; /* Push to right if flex */
+}
+
+#pokedex-section .summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
