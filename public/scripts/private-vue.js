@@ -468,7 +468,7 @@ createApp({
         };
 
         // --- Comprehensive DPS Calculation ---
-        const calculateDps = (p) => {
+        const calculateDps = (p, targetTypes = []) => {
             if (!p || !combatMoves.value || !pokedexService.value.pokedex) {
                 // console.log("DPS Calc Skipped: Missing Data", !!p, !!combatMoves.value, !!pokedexService.value.pokedex);
                 return null;
@@ -504,6 +504,25 @@ createApp({
                 return null;
             }
 
+            // Helper for Type Effectiveness
+            const getEffectiveness = (moveType) => {
+                if (!targetTypes || targetTypes.length === 0 || !typeEffectiveness.value) return 1.0;
+                let mult = 1.0;
+                
+                // Normalize move type to match typeEffectiveness keys (usually Capitalized)
+                const moveTypeCap = moveType.charAt(0).toUpperCase() + moveType.slice(1).toLowerCase();
+
+                targetTypes.forEach(tType => {
+                    // Normalize target type
+                    const tTypeCap = tType.charAt(0).toUpperCase() + tType.slice(1).toLowerCase();
+                    
+                    if (typeEffectiveness.value[moveTypeCap] && typeEffectiveness.value[moveTypeCap][tTypeCap]) {
+                        mult *= typeEffectiveness.value[moveTypeCap][tTypeCap];
+                    }
+                });
+                return mult;
+            };
+
             const results = {};
 
             // Helper to calculate DPS for one charged move
@@ -515,6 +534,10 @@ createApp({
                 const fastStab = pTypes.includes(fastMove.type.toLowerCase()) ? 1.2 : 1.0;
                 const chargedStab = pTypes.includes(chargedMove.type.toLowerCase()) ? 1.2 : 1.0;
 
+                // Effectiveness Multipliers
+                const fastEff = getEffectiveness(fastMove.type);
+                const chargedEff = getEffectiveness(chargedMove.type);
+
                 // Cycle Calculation
                 const energyNeeded = Math.abs(chargedMove.energy_delta); // Cost is negative
                 const energyPerFast = fastMove.energy_delta;
@@ -525,8 +548,8 @@ createApp({
                 const numFastMoves = Math.ceil(energyNeeded / energyPerFast);
                 
                 // Total Cycle Damage
-                const fastDamage = fastMove.power * fastStab * numFastMoves;
-                const chargedDamage = chargedMove.power * chargedStab;
+                const fastDamage = fastMove.power * fastStab * fastEff * numFastMoves;
+                const chargedDamage = chargedMove.power * chargedStab * chargedEff;
                 const totalCycleDamage = fastDamage + chargedDamage;
 
                 // Total Cycle Duration (ms)
@@ -871,61 +894,57 @@ pokemons.sort((a, b) => {
         const closeTeamBuilderModal = () => { showTeamBuilderModal.value = false; };
 
         const calculateEffectivenessScore = (pokemon, bossTypes) => {
-            const pokemonInfo = getPokedexEntry(pokemon);
-            if (!pokemonInfo) return 0;
+            // Use the new DPS calculation with target types
+            const dpsResults = calculateDps(pokemon, bossTypes);
+            if (!dpsResults) return 0;
 
-            const pokemonTypes = [pokemonInfo.primaryType.names.English];
-            if (pokemonInfo.secondaryType) {
-                pokemonTypes.push(pokemonInfo.secondaryType.names.English);
-            }
+            // Take the best DPS from available charged moves
+            const bestDps = Math.max(
+                dpsResults.move2 || 0, 
+                dpsResults.move3 || 0
+            );
 
-            // Offensive score
-            let fastMoveScore = 1;
-            const move1Type = moveMap.value[pokemon.move1]?.type;
+            if (bestDps === 0) return 0;
+
+            // Calculate Bulk (Defense * Stamina)
+            const entry = getPokedexEntry(pokemon);
+            if (!entry || !entry.stats) return 0;
+
+            const cpm = pokemon.cpMultiplier + (pokemon.additionalCpMultiplier || 0);
+            const trueDef = (entry.stats.defense + pokemon.individualDefense) * cpm;
+            const trueSta = (entry.stats.stamina + pokemon.individualStamina) * cpm;
+
+            // Calculate Incoming Damage Multiplier (Defense Score)
+            let incomingDamageMultiplier = 1.0;
             
-            if (move1Type) {
-                let move1Multiplier = 1;
+            // My Types
+            const myTypes = [];
+            if (entry.primaryType?.names?.English) myTypes.push(entry.primaryType.names.English);
+            if (entry.secondaryType?.names?.English) myTypes.push(entry.secondaryType.names.English);
+
+            // Check effectiveness of Boss Types attacking My Types
+            // We assume the boss attacks with moves matching its own types
+            if (typeEffectiveness.value) {
                 bossTypes.forEach(bossType => {
-                    move1Multiplier *= typeEffectiveness.value[move1Type][bossType] || 1;
+                    const bossTypeCap = bossType.charAt(0).toUpperCase() + bossType.slice(1).toLowerCase();
+                    myTypes.forEach(myType => {
+                        const myTypeCap = myType.charAt(0).toUpperCase() + myType.slice(1).toLowerCase();
+                         if (typeEffectiveness.value[bossTypeCap] && typeEffectiveness.value[bossTypeCap][myTypeCap]) {
+                             incomingDamageMultiplier *= typeEffectiveness.value[bossTypeCap][myTypeCap];
+                         }
+                    });
                 });
-                fastMoveScore = move1Multiplier;
             }
 
-            const move2Type = moveMap.value[pokemon.move2]?.type;
-            const move3Type = moveMap.value[pokemon.move3]?.type;
+            // Effective Bulk = Raw Bulk / Incoming Multiplier
+            // If incoming is 2.0 (Super Eff), bulk is halved.
+            const effectiveBulk = (trueDef * trueSta) / incomingDamageMultiplier;
 
-            let bestChargedMoveScore = 1;
-            if (move2Type) {
-                let move2Multiplier = 1;
-                bossTypes.forEach(bossType => {
-                    move2Multiplier *= typeEffectiveness.value[move2Type][bossType] || 1;
-                });
-                bestChargedMoveScore = move2Multiplier;
-            }
+            // Final Combat Score: DPS is king, but dead DPS is 0.
+            // Formula: (DPS^1.5 * EffectiveBulk) / Constant
+            const score = (Math.pow(bestDps, 1.5) * effectiveBulk) / 100000;
 
-            if (move3Type) {
-                let move3Multiplier = 1;
-                bossTypes.forEach(bossType => {
-                    move3Multiplier *= typeEffectiveness.value[move3Type][bossType] || 1;
-                });
-                bestChargedMoveScore = Math.max(bestChargedMoveScore, move3Multiplier);
-            }
-            
-            const offensiveScore = (fastMoveScore + bestChargedMoveScore) / 2;
-            
-            // Defensive score
-            let defensiveScore = 1;
-            bossTypes.forEach(bossType => {
-                pokemonTypes.forEach(pokemonType => {
-                    defensiveScore *= typeEffectiveness.value[bossType][pokemonType] || 1;
-                });
-            });
-
-            // CP Score
-            const cpScore = pokemon.cp / 3000;
-
-            // Combine scores
-            return (offensiveScore / (defensiveScore ** 0.5)) * cpScore;
+            return score;
         };
 
         const generateSuggestions = () => {
