@@ -11,7 +11,7 @@ const CPM_TABLE = {
 
 const SORTED_LEVELS = Object.entries(CPM_TABLE)
     .map(([lvl, cpm]) => [parseFloat(lvl), cpm])
-    .filter(([lvl]) => lvl <= 50) // Enforce Level 50 Cap (No Best Buddy)
+    .filter(([lvl]) => lvl <= 50) // Enforce Level 50 Cap
     .sort((a, b) => a[0] - b[0]);
 
 const LEAGUES = {
@@ -91,20 +91,19 @@ function main() {
         const pokedex = JSON.parse(fs.readFileSync(POKEDEX_PATH, 'utf8'));
         // Pokedex is an Array of Pokemon objects
         
-        const outputData = {};
+        // Open Write Stream for efficient memory usage
+        const writeStream = fs.createWriteStream(OUTPUT_PATH);
+        writeStream.write('{\n');
 
-        console.log("Generating PvP Ranks (this may take a moment)...");
+        console.log("Generating PvP Ranks (Stream Mode)...");
         let count = 0;
         const total = pokedex.length;
+        let isFirstSpecies = true;
+        const writtenIds = new Set();
 
-        const processEntry = (entry) => {
-            if (!entry || !entry.stats) return;
+        const processEntry = (entry, speciesResult) => {
+            if (!entry || !entry.stats) return; 
             
-            // Ensure species object exists
-            if (!outputData[entry.id]) {
-                outputData[entry.id] = {};
-            }
-
             const formKey = entry.formId || 'NORMAL';
             
             try {
@@ -112,7 +111,7 @@ function main() {
                 const ulRanks = generateRankList(entry.stats, LEAGUES.ULTRA);
                 const mlRanks = generateRankList(entry.stats, LEAGUES.MASTER);
 
-                outputData[entry.id][formKey] = {
+                speciesResult[formKey] = {
                     gl: glRanks,
                     ul: ulRanks,
                     ml: mlRanks
@@ -126,25 +125,46 @@ function main() {
             count++;
             if (count % 50 === 0) console.log(`Processing ${count}/${total}...`);
             
+            // We group by Species ID (e.g. "BULBASAUR")
+            // We need to make sure we haven't written this ID before (unlikely in this list structure but good to be safe)
+            if (writtenIds.has(speciesData.id)) return; 
+            
+            const speciesResult = {};
+
             // 1. Process the base entry
-            processEntry(speciesData);
+            processEntry(speciesData, speciesResult);
 
             // 2. Process regionForms
             if (speciesData.regionForms) {
-                Object.values(speciesData.regionForms).forEach(form => processEntry(form));
+                Object.values(speciesData.regionForms).forEach(form => processEntry(form, speciesResult));
             }
 
             // 3. Process megaEvolutions
             if (speciesData.megaEvolutions) {
-                Object.values(speciesData.megaEvolutions).forEach(mega => processEntry(mega));
+                Object.values(speciesData.megaEvolutions).forEach(mega => processEntry(mega, speciesResult));
+            }
+
+            // Write to stream
+            if (Object.keys(speciesResult).length > 0) {
+                if (!isFirstSpecies) {
+                    writeStream.write(',\n');
+                }
+                writeStream.write(`  "${speciesData.id}": ${JSON.stringify(speciesResult)}`);
+                isFirstSpecies = false;
+                writtenIds.add(speciesData.id);
             }
         });
 
-        console.log("Writing output file...");
-        fs.writeFileSync(OUTPUT_PATH, JSON.stringify(outputData));
-        console.log(`Done! Saved to ${OUTPUT_PATH}`);
-        const stats = fs.statSync(OUTPUT_PATH);
-        console.log(`File size: ${(stats.size / 1024 / 1024).toFixed(2)} MB`);
+        // Close JSON object
+        writeStream.write('\n}');
+        writeStream.end();
+
+        writeStream.on('finish', () => {
+            console.log(`Done! Saved to ${OUTPUT_PATH}`);
+            const stats = fs.statSync(OUTPUT_PATH);
+            console.log(`File size: ${(stats.size / 1024 / 1024).toFixed(2)} MB`);
+        });
+
     } catch (error) {
         console.error("Error:", error.message);
         console.error(error.stack);
