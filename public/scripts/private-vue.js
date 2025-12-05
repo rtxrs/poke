@@ -92,7 +92,7 @@ const GridComponent = {
                     <span v-if="p.rankUltra && p.rankUltra <= 100 && p.cp <= 2500" :class="['pvp-badge', 'ultra', { 'rank-1': p.rankUltra <= 10, 'rank-good': p.rankUltra > 10 && p.rankUltra <= 25 }]">UL #{{ p.rankUltra }}</span>
                     <span v-if="p.rankMaster && p.rankMaster <= 100" :class="['pvp-badge', 'master', { 'rank-1': p.rankMaster <= 10, 'rank-good': p.rankMaster > 10 && p.rankMaster <= 25 }]">ML #{{ p.rankMaster }}</span>
                 </div>
-                <p v-if="p.score" class="pokemon-score">Score: {{ p.score.toFixed(2) }}</p>
+                <p v-if="p.score" class="pokemon-score">{{ p.scoreLabel || 'Score' }}: {{ p.score.toFixed(2) }}</p>
                 <div class="iv-bar-container">
                     <div class="iv-bar" :style="{ width: getIvPercent(p) + '%', backgroundColor: getIvColor(getIvPercent(p)) }"></div>
                 </div>
@@ -893,6 +893,36 @@ pokemons.sort((a, b) => {
         const openTeamBuilderModal = () => { showTeamBuilderModal.value = true; };
         const closeTeamBuilderModal = () => { showTeamBuilderModal.value = false; };
 
+        // Calculate Effective Bulk (Defense * Stamina / Incoming Damage)
+        const calculateBulk = (pokemon, bossTypes) => {
+            const entry = getPokedexEntry(pokemon);
+            if (!entry || !entry.stats) return 0;
+
+            const cpm = pokemon.cpMultiplier + (pokemon.additionalCpMultiplier || 0);
+            const trueDef = (entry.stats.defense + pokemon.individualDefense) * cpm;
+            const trueSta = (entry.stats.stamina + pokemon.individualStamina) * cpm;
+
+            let incomingDamageMultiplier = 1.0;
+            
+            const myTypes = [];
+            if (entry.primaryType?.names?.English) myTypes.push(entry.primaryType.names.English);
+            if (entry.secondaryType?.names?.English) myTypes.push(entry.secondaryType.names.English);
+
+            if (typeEffectiveness.value && bossTypes) {
+                bossTypes.forEach(bossType => {
+                    const bossTypeCap = bossType.charAt(0).toUpperCase() + bossType.slice(1).toLowerCase();
+                    myTypes.forEach(myType => {
+                        const myTypeCap = myType.charAt(0).toUpperCase() + myType.slice(1).toLowerCase();
+                         if (typeEffectiveness.value[bossTypeCap] && typeEffectiveness.value[bossTypeCap][myTypeCap]) {
+                             incomingDamageMultiplier *= typeEffectiveness.value[bossTypeCap][myTypeCap];
+                         }
+                    });
+                });
+            }
+
+            return (trueDef * trueSta) / incomingDamageMultiplier;
+        };
+
         const calculateEffectivenessScore = (pokemon, bossTypes) => {
             // Use the new DPS calculation with target types
             const dpsResults = calculateDps(pokemon, bossTypes);
@@ -906,39 +936,7 @@ pokemons.sort((a, b) => {
 
             if (bestDps === 0) return 0;
 
-            // Calculate Bulk (Defense * Stamina)
-            const entry = getPokedexEntry(pokemon);
-            if (!entry || !entry.stats) return 0;
-
-            const cpm = pokemon.cpMultiplier + (pokemon.additionalCpMultiplier || 0);
-            const trueDef = (entry.stats.defense + pokemon.individualDefense) * cpm;
-            const trueSta = (entry.stats.stamina + pokemon.individualStamina) * cpm;
-
-            // Calculate Incoming Damage Multiplier (Defense Score)
-            let incomingDamageMultiplier = 1.0;
-            
-            // My Types
-            const myTypes = [];
-            if (entry.primaryType?.names?.English) myTypes.push(entry.primaryType.names.English);
-            if (entry.secondaryType?.names?.English) myTypes.push(entry.secondaryType.names.English);
-
-            // Check effectiveness of Boss Types attacking My Types
-            // We assume the boss attacks with moves matching its own types
-            if (typeEffectiveness.value) {
-                bossTypes.forEach(bossType => {
-                    const bossTypeCap = bossType.charAt(0).toUpperCase() + bossType.slice(1).toLowerCase();
-                    myTypes.forEach(myType => {
-                        const myTypeCap = myType.charAt(0).toUpperCase() + myType.slice(1).toLowerCase();
-                         if (typeEffectiveness.value[bossTypeCap] && typeEffectiveness.value[bossTypeCap][myTypeCap]) {
-                             incomingDamageMultiplier *= typeEffectiveness.value[bossTypeCap][myTypeCap];
-                         }
-                    });
-                });
-            }
-
-            // Effective Bulk = Raw Bulk / Incoming Multiplier
-            // If incoming is 2.0 (Super Eff), bulk is halved.
-            const effectiveBulk = (trueDef * trueSta) / incomingDamageMultiplier;
+            const effectiveBulk = calculateBulk(pokemon, bossTypes);
 
             // Final Combat Score: DPS is king, but dead DPS is 0.
             // Formula: (DPS^1.5 * EffectiveBulk) / Constant
@@ -980,13 +978,71 @@ pokemons.sort((a, b) => {
                     return;
                 }
 
-                const rankedPokemon = pokemonPool.map(pokemon => {
-                    const score = calculateEffectivenessScore(pokemon, enemyTypes);
-                    overallScores[pokemon.id].score += score;
-                    return { ...pokemon, score };
-                }).sort((a, b) => b.score - a.score);
+                if (battleMode.value === 'max') {
+                    // MAX Battle Logic: 6 Best Attackers (DPS) + 6 Best Tanks (Bulk)
+                    
+                    // Calculate Metrics
+                    const evaluatedPool = pokemonPool.map(p => {
+                        const dpsObj = calculateDps(p, enemyTypes);
+                        const dps = dpsObj ? Math.max(dpsObj.move2 || 0, dpsObj.move3 || 0) : 0;
+                        const bulk = calculateBulk(p, enemyTypes);
+                        // Calculate standard score for Overall ranking
+                        const score = (Math.pow(dps, 1.5) * bulk) / 100000;
+                        overallScores[p.id].score += score;
+                        
+                        return { ...p, dps, bulk, score };
+                    });
 
-                suggestions[enemy.names.English] = rankedPokemon.slice(0, 12);
+                    // Top 6 Attackers (DPS)
+                    const attackers = [...evaluatedPool]
+                        .sort((a, b) => b.dps - a.dps)
+                        .slice(0, 6)
+                        .map(p => ({ ...p, score: p.dps, scoreLabel: 'DPS' }));
+
+                    // Top 6 Tankers (Bulk)
+                    const tanks = [...evaluatedPool]
+                        .sort((a, b) => b.bulk - a.bulk)
+                        .slice(0, 6)
+                        .map(p => ({ ...p, score: p.bulk, scoreLabel: 'Bulk' }));
+
+                    // Combine (Allow duplicates if they are good at both, or filter unique?)
+                    // User asked for "6 best attackers and 6 best tankers".
+                    // We will display them in that order: Attackers first, then Tanks.
+                    // If a pokemon is in both, it will appear twice, which highlights its versatility,
+                    // but might be confusing. Let's dedup by ID, prioritizing the Attacker role.
+                    
+                    const uniqueSuggestions = [];
+                    const addedIds = new Set();
+
+                    attackers.forEach(p => {
+                        uniqueSuggestions.push(p);
+                        addedIds.add(p.id);
+                    });
+
+                    tanks.forEach(p => {
+                        // If we want to show it strictly as a Tank even if it was an Attacker...
+                        // But usually we just want 12 suggestions.
+                        // If we dedup, we might end up with < 12 items.
+                        // Let's NOT dedup for now, so the user explicitly sees the "Tank" list starting after "Attackers".
+                        // Actually, deduping is cleaner UI. 
+                        if (!addedIds.has(p.id)) {
+                            uniqueSuggestions.push(p);
+                            addedIds.add(p.id);
+                        }
+                    });
+
+                    suggestions[enemy.names.English] = uniqueSuggestions;
+
+                } else {
+                    // Standard Logic
+                    const rankedPokemon = pokemonPool.map(pokemon => {
+                        const score = calculateEffectivenessScore(pokemon, enemyTypes);
+                        overallScores[pokemon.id].score += score;
+                        return { ...pokemon, score }; // Default label is "Score"
+                    }).sort((a, b) => b.score - a.score);
+
+                    suggestions[enemy.names.English] = rankedPokemon.slice(0, 12);
+                }
             });
 
             const overallRanked = Object.values(overallScores).sort((a, b) => b.score - a.score);
