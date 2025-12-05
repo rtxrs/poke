@@ -1479,6 +1479,131 @@ pokemons.sort((a, b) => {
         const pvpProgress = ref(-1); // Progress -1 (Hidden), 0-100 (Visible)
         const combatMoves = ref(null); // Stores full stats for moves (power, energy, duration)
 
+        // --- Trash String Generator ---
+        const showTrashModal = ref(false);
+        const trashConfig = ref({
+            keepShiny: true,
+            keepLucky: true,
+            keepShadow: true,
+            keepPurified: false,
+            keepLegendary: true,
+            keepCostume: true,
+            keepFavorite: true,
+            keepBackground: true,
+            keepXXSXXL: true,
+            keep4Star: true,
+            keepNundo: true,
+            useMinIv: true,
+            minIvPercent: 90,
+            useRankGL: true,
+            keepRankGL: 50,
+            useRankUL: true,
+            keepRankUL: 50,
+            useRankML: true,
+            keepRankML: 50
+        });
+        const generatedTrashStrings = ref([]);
+
+        const generateTrashString = () => {
+            const config = trashConfig.value;
+            const groups = {};
+            
+            // Group by Dex Number (pokemonId)
+            allPokemons.value.forEach(p => {
+                if (!groups[p.pokemonId]) groups[p.pokemonId] = [];
+                groups[p.pokemonId].push(p);
+            });
+
+            const speciesToDeleteIds = [];
+            const selectiveStrings = [];
+            let totalCovered = 0;
+
+            Object.entries(groups).forEach(([dexNr, pokemons]) => {
+                const keepers = [];
+                const trash = [];
+
+                pokemons.forEach(p => {
+                    let keep = false;
+                    const iv = getIvPercentAsNumber(p);
+
+                    if (config.keepShiny && p.pokemonDisplay.shiny) keep = true;
+                    else if (config.keepLucky && p.isLucky) keep = true;
+                    else if (config.keepShadow && p.pokemonDisplay.alignment === 1) keep = true;
+                    else if (config.keepPurified && p.pokemonDisplay.alignment === 2) keep = true;
+                    else if (config.keepLegendary && (p.pokemonClass === 'POKEMON_CLASS_LEGENDARY' || p.pokemonClass === 'POKEMON_CLASS_MYTHIC')) keep = true;
+                    else if (config.keepCostume && p.pokemonDisplay.costume > 0) keep = true;
+                    else if (config.keepFavorite && p.favorite) keep = true;
+                    else if (config.keepBackground && p.pokemonDisplay.locationCard) keep = true;
+                    else if (config.keepXXSXXL && (p.size === 1 || p.size === 5)) keep = true;
+                    else if (config.keep4Star && iv === 100) keep = true;
+                    else if (config.keepNundo && iv === 0) keep = true;
+                    else if (config.useMinIv && iv >= config.minIvPercent) keep = true;
+                    
+                    // PvP Ranks
+                    if (!keep) {
+                        if (config.useRankGL && p.rankGreat && p.rankGreat <= config.keepRankGL && p.cp <= 1500) keep = true;
+                        else if (config.useRankUL && p.rankUltra && p.rankUltra <= config.keepRankUL && p.cp <= 2500) keep = true;
+                        else if (config.useRankML && p.rankMaster && p.rankMaster <= config.keepRankML) keep = true;
+                    }
+
+                    if (keep) keepers.push(p);
+                    else trash.push(p);
+                });
+
+                if (keepers.length === 0 && trash.length > 0) {
+                    speciesToDeleteIds.push(dexNr);
+                    totalCovered += trash.length;
+                } else if (trash.length > 0) {
+                    // Mixed Species
+                    const keeperCps = [...new Set(keepers.map(k => k.cp))];
+                    
+                    // Exclude all Keeper CPs. 
+                    // Any trash with same CP as a keeper is SAVED (False Negative) to be safe.
+                    if (keeperCps.length > 0) {
+                        const cpExclusions = keeperCps.map(cp => `!cp${cp}`).join('&');
+                        selectiveStrings.push(`${dexNr}&${cpExclusions}`);
+                    } else {
+                        speciesToDeleteIds.push(dexNr);
+                    }
+                    totalCovered += trash.length;
+                }
+            });
+
+            const results = [];
+            
+            if (speciesToDeleteIds.length > 0) {
+                results.push({
+                    desc: 'Safe Species (Transfer All)',
+                    text: speciesToDeleteIds.join(','),
+                    count: speciesToDeleteIds.length + ' species'
+                });
+            }
+
+            if (selectiveStrings.length > 0) {
+                results.push({
+                    desc: 'Selective Trash (Excludes Keepers)',
+                    text: selectiveStrings.join(','),
+                    count: selectiveStrings.length + ' filter rules'
+                });
+            }
+
+            if (results.length === 0) {
+                results.push({
+                    desc: 'Result',
+                    text: 'No trash found based on current criteria.',
+                    count: 0
+                });
+            }
+
+            generatedTrashStrings.value = results;
+        };
+
+        const copyToClipboard = (text) => {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Copied to clipboard!');
+            });
+        };
+
         // --- Lifecycle Hook ---
         onMounted(async () => {
             try {
@@ -1715,7 +1840,14 @@ pokemons.sort((a, b) => {
             stats_cpDistribution,
             stats_captureByYear,
             stats_mostCommon,
-            stats_acquisitionType
+            stats_acquisitionType,
+
+            // Trash String
+            showTrashModal,
+            trashConfig,
+            generatedTrashStrings,
+            generateTrashString,
+            copyToClipboard
         };
     }
 }).mount('#app');

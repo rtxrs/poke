@@ -203,6 +203,132 @@
             </div>
         </div>
 
+        <!-- Trash String Generator Modal -->
+        <div id="trash-modal-backdrop" v-if="showTrashModal" @click.self="showTrashModal = false">
+            <div id="trash-modal-content" class="card trash-modal-redesign">
+                <!-- Header -->
+                <div class="modal-header">
+                    <h2>Trash String Generator</h2>
+                    <button class="close-btn" @click="showTrashModal = false">&times;</button>
+                </div>
+                
+                <div class="modal-body">
+                    <p class="description">
+                        Define what you want to <strong>KEEP</strong>. The generated string will select everything else (Trash).
+                    </p>
+
+                    <!-- Section 1: Attributes (Checkboxes) -->
+                    <div class="config-section">
+                        <h3>Attributes</h3>
+                        <div class="checkbox-grid">
+                            <label class="checkbox-card" :class="{ active: trashConfig.keepShiny }">
+                                <input type="checkbox" v-model="trashConfig.keepShiny"> <span>Shiny</span>
+                            </label>
+                            <label class="checkbox-card" :class="{ active: trashConfig.keepLucky }">
+                                <input type="checkbox" v-model="trashConfig.keepLucky"> <span>Lucky</span>
+                            </label>
+                            <label class="checkbox-card" :class="{ active: trashConfig.keepShadow }">
+                                <input type="checkbox" v-model="trashConfig.keepShadow"> <span>Shadow</span>
+                            </label>
+                            <label class="checkbox-card" :class="{ active: trashConfig.keepPurified }">
+                                <input type="checkbox" v-model="trashConfig.keepPurified"> <span>Purified</span>
+                            </label>
+                            <label class="checkbox-card" :class="{ active: trashConfig.keepLegendary }">
+                                <input type="checkbox" v-model="trashConfig.keepLegendary"> <span>Legendary</span>
+                            </label>
+                            <label class="checkbox-card" :class="{ active: trashConfig.keepCostume }">
+                                <input type="checkbox" v-model="trashConfig.keepCostume"> <span>Costume</span>
+                            </label>
+                            <label class="checkbox-card" :class="{ active: trashConfig.keepFavorite }">
+                                <input type="checkbox" v-model="trashConfig.keepFavorite"> <span>Favorite</span>
+                            </label>
+                            <label class="checkbox-card" :class="{ active: trashConfig.keepBackground }">
+                                <input type="checkbox" v-model="trashConfig.keepBackground"> <span>Background</span>
+                            </label>
+                            <label class="checkbox-card" :class="{ active: trashConfig.keepXXSXXL }">
+                                <input type="checkbox" v-model="trashConfig.keepXXSXXL"> <span>XXS / XXL</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Stats & IVs -->
+                    <div class="config-section">
+                        <h3>IV Stats</h3>
+                        <div class="stats-row">
+                            <label class="checkbox-card wide" :class="{ active: trashConfig.keep4Star }">
+                                <input type="checkbox" v-model="trashConfig.keep4Star"> <span>Keep 100% IV (4*)</span>
+                            </label>
+                            <label class="checkbox-card wide" :class="{ active: trashConfig.keepNundo }">
+                                <input type="checkbox" v-model="trashConfig.keepNundo"> <span>Keep 0% IV (Nundo)</span>
+                            </label>
+                        </div>
+                        <div class="input-group with-check">
+                            <label class="checkbox-card input-check" :class="{ active: trashConfig.useMinIv }">
+                                <input type="checkbox" v-model="trashConfig.useMinIv"> <span>Keep IV >=</span>
+                            </label>
+                            <div class="number-input-wrapper" :class="{ disabled: !trashConfig.useMinIv }">
+                                <input type="number" v-model.number="trashConfig.minIvPercent" min="0" max="100" :disabled="!trashConfig.useMinIv">
+                                <span class="suffix">%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: PvP Ranks -->
+                    <div class="config-section">
+                        <h3>PvP Ranks (Keep Top X)</h3>
+                        <div class="rank-inputs">
+                            <div class="input-group with-check">
+                                <label class="rank-label gl checkbox-card rank-check" :class="{ active: trashConfig.useRankGL }">
+                                    <input type="checkbox" v-model="trashConfig.useRankGL"> Great League
+                                </label>
+                                <div class="number-input-wrapper" :class="{ disabled: !trashConfig.useRankGL }">
+                                    <span class="prefix">#</span>
+                                    <input type="number" v-model.number="trashConfig.keepRankGL" min="1" max="4096" :disabled="!trashConfig.useRankGL">
+                                </div>
+                            </div>
+                            <div class="input-group with-check">
+                                <label class="rank-label ul checkbox-card rank-check" :class="{ active: trashConfig.useRankUL }">
+                                    <input type="checkbox" v-model="trashConfig.useRankUL"> Ultra League
+                                </label>
+                                <div class="number-input-wrapper" :class="{ disabled: !trashConfig.useRankUL }">
+                                    <span class="prefix">#</span>
+                                    <input type="number" v-model.number="trashConfig.keepRankUL" min="1" max="4096" :disabled="!trashConfig.useRankUL">
+                                </div>
+                            </div>
+                            <div class="input-group with-check">
+                                <label class="rank-label ml checkbox-card rank-check" :class="{ active: trashConfig.useRankML }">
+                                    <input type="checkbox" v-model="trashConfig.useRankML"> Master League
+                                </label>
+                                <div class="number-input-wrapper" :class="{ disabled: !trashConfig.useRankML }">
+                                    <span class="prefix">#</span>
+                                    <input type="number" v-model.number="trashConfig.keepRankML" min="1" max="4096" :disabled="!trashConfig.useRankML">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="trash-actions">
+                        <button class="btn-primary large" @click="generateTrashString">Generate Search Strings</button>
+                    </div>
+
+                    <!-- Results -->
+                    <div v-if="generatedTrashStrings.length > 0" class="trash-results">
+                        <div v-for="(str, index) in generatedTrashStrings" :key="index" class="string-block">
+                            <div class="string-header">
+                                <span class="badge-type">{{ str.desc }}</span>
+                                <span class="count-badge">{{ str.count }}</span>
+                            </div>
+                            <div class="string-content">
+                                <textarea readonly :value="str.text" rows="2" @click="$event.target.select()"></textarea>
+                                <button class="btn-copy" @click="copyToClipboard(str.text)">Copy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div v-if="loading" class="loading-overlay">
             <div class="loading-spinner"></div>
             <p class="loading-message">Loading player data...</p>
@@ -448,6 +574,7 @@
             <section id="tools-section" v-show="activeTab === 'tools'">
                 <div class="tools-container">
                     <button class="btn-primary" @click="openCleanupModal()">Pokemon Cleanup</button>
+                    <button class="btn-primary" @click="showTrashModal = true">Trash String Generator</button>
                     <button class="btn-primary" @click="openTeamBuilderModal()">Raid Team Builder</button>
                     <!-- Content for Pokemon Cleanup will go here -->
                 </div>
