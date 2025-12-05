@@ -16,6 +16,7 @@ data/pokedex_modified.json
 data/pokedex.json
 data/publicIdMap.json
 data/rankings.json
+data/pvp_ranks.json
 data/charged_moves.json
 data/fast_moves.json
 data/raidboss.json

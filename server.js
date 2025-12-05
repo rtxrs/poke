@@ -33,6 +33,49 @@ app.use('/api', apiRoutes);
 (async () => {
     try {
         await pokedexService.initialize();
+        
+        // --- PvP Ranks Auto-Generation Check ---
+        const fsPromises = require('fs').promises;
+        const { exec } = require('child_process');
+        // Compare against RAW pokedex.json because pokedex_modified.json is rewritten on every boot
+        const pokedexPath = path.join(__dirname, 'data/pokedex.json'); 
+        const ranksPath = path.join(__dirname, 'data/pvp_ranks.json');
+        
+        let runGen = false;
+        try {
+            await fsPromises.access(ranksPath);
+            const pokedexStats = await fsPromises.stat(pokedexPath);
+            const ranksStats = await fsPromises.stat(ranksPath);
+            if (ranksStats.mtime < pokedexStats.mtime) {
+                console.log('⚠️ PvP Ranks file is older than Pokedex source. Regenerating...');
+                runGen = true;
+            }
+        } catch (e) {
+            console.log('⚠️ PvP Ranks file not found. Generating...');
+            runGen = true;
+        }
+
+        if (runGen) {
+            await new Promise((resolve, reject) => {
+                const child = exec('node scripts/generate_pvp_ranks.js', { cwd: __dirname });
+                
+                child.stdout.on('data', (data) => process.stdout.write(data)); // Stream output
+                child.stderr.on('data', (data) => process.stderr.write(data));
+
+                child.on('close', (code) => {
+                    if (code !== 0) {
+                        console.error(`PvP Generation script exited with code ${code}`);
+                        reject(new Error('PvP Generation Failed'));
+                    } else {
+                        resolve();
+                    }
+                });
+            });
+        } else {
+            console.log('✅ PvP Ranks are up to date.');
+        }
+        // ---------------------------------------
+
         await playerDataService.init();
         await playerDataService.initializeRankings();
         app.listen(config.PORT, () => console.log(`🚀 Server running at http://localhost:${config.PORT}`));

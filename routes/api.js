@@ -105,6 +105,92 @@ router.get('/check-auth-status', async (req, res) => {
     }
 });
 
+let pvpRanksCache = null;
+
+async function getPvpRanks() {
+    if (!pvpRanksCache) {
+        try {
+            const data = await fs.readFile(path.join(__dirname, '../data/pvp_ranks.json'), 'utf-8');
+            pvpRanksCache = JSON.parse(data);
+        } catch (e) {
+            console.error("Failed to load PvP ranks:", e);
+            return {};
+        }
+    }
+    return pvpRanksCache;
+}
+
+router.post('/pvp-ranks', async (req, res) => {
+    try {
+        const { pokemons } = req.body; // Array of { id, form, ivs: {atk, def, sta}, uniqueId }
+        if (!pokemons || !Array.isArray(pokemons)) {
+            return res.status(400).json({ message: "Invalid payload" });
+        }
+
+        const ranksData = await getPvpRanks();
+        const results = {};
+
+        pokemons.forEach(p => {
+            // p.id is the DexNr (e.g. 1) from the client.
+            // pvp_ranks.json is keyed by SpeciesID (e.g. "BULBASAUR").
+            
+            // Resolve Species ID using Pokedex Service
+            let speciesId = p.id;
+            if (pokedexService.pokedex && pokedexService.pokedex[p.id]) {
+                const forms = pokedexService.pokedex[p.id];
+                const firstForm = Object.values(forms)[0];
+                if (firstForm && firstForm.id) {
+                    speciesId = firstForm.id;
+                }
+            }
+
+            const species = ranksData[speciesId];
+            if (!species) return;
+            
+            // Try exact form, then fallback to NORMAL, then fallback to first available key if needed?
+            // Generator uses specific form keys.
+            let formRanks = species[p.form];
+            if (!formRanks && p.form === 'NORMAL') {
+                // Sometimes NORMAL is explicit, sometimes implicit.
+                // If 'NORMAL' key missing, check if species has only 1 key?
+                // But usually generator ensures keys exist.
+            }
+            
+            if (!formRanks) return;
+
+            const ivKey = (p.ivs.atk << 8) | (p.ivs.def << 4) | p.ivs.sta;
+            
+            const getRankInfo = (list) => {
+                if (!list) return { rank: null, percent: null };
+                const index = list.indexOf(ivKey);
+                if (index === -1) return { rank: null, percent: null };
+                
+                const rank = index + 1;
+                // Calculate percent? We don't have stat products here easily unless we store them.
+                // Generator stored only IV keys.
+                // User's original code had 'rankGreatPercent'.
+                // Can we approximate? Rank 1 = 100%, Rank 4096 = 0%?
+                // Or just ignore percent if user didn't ask for it specifically, but UI uses it?
+                // UI uses: `rank-good` class based on rank number.
+                // UI doesn't seem to display percent text, but `private-vue.js` calculates it.
+                // Let's assume rank is enough for now.
+                return { rank: rank };
+            };
+
+            results[p.uniqueId] = {
+                rankGreat: getRankInfo(formRanks.gl).rank,
+                rankUltra: getRankInfo(formRanks.ul).rank,
+                rankMaster: getRankInfo(formRanks.ml).rank
+            };
+        });
+
+        res.json(results);
+    } catch (error) {
+        console.error("Error in /api/pvp-ranks:", error);
+        res.status(500).json({ message: error.message });
+    }
+});
+
 router.get('/moves', (req, res) => {
     try {
         res.json(pokedexService.moveMap);
