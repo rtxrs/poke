@@ -1,8 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 
-const POKEDEX_PATH = path.join(__dirname, '../data/pokedex_modified.json');
-const OUTPUT_PATH = path.join(__dirname, '../data/pvp_ranks.json');
+const POKEDEX_PATH = path.join(__dirname, '../data/user/pokedex_modified.json');
+const OUTPUT_PATH = path.join(__dirname, '../data/user/pvp_ranks.json');
 
 // --- Constants ---
 const CPM_TABLE = {

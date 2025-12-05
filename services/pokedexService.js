@@ -198,7 +198,7 @@ const pokedexService = {
     
     async getHealthCheckData() {
         try {
-            const raidBossStatusContent = await fs.readFile(path.join(__dirname, '../data/raidboss-update-status.json'), 'utf-8');
+            const raidBossStatusContent = await fs.readFile(path.join(__dirname, '../data/user/raidboss-update-status.json'), 'utf-8');
             const raidBossStatus = JSON.parse(raidBossStatusContent);
             this.healthStatus.raidboss = raidBossStatus.raidboss;
             this.healthStatus.cron = raidBossStatus.cron;

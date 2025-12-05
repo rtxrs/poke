@@ -4,8 +4,8 @@ const path = require('path');
 const crypto = require('crypto');
 
 const RAID_BOSS_URL = 'https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/raids.json';
-const RAID_BOSS_FILE = path.join(__dirname, '../data/raidboss.json');
-const STATUS_FILE = path.join(__dirname, '../data/raidboss-update-status.json');
+const RAID_BOSS_FILE = path.join(__dirname, '../data/public/raidboss.json');
+const STATUS_FILE = path.join(__dirname, '../data/user/raidboss-update-status.json');
 
 const raidBossService = {
     healthStatus: {

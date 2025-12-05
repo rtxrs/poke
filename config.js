@@ -1,16 +1,16 @@
 const path = require('path');
 
 const DATA_DIR = path.join(__dirname, 'data');
-const RANKINGS_FILE = path.join(DATA_DIR, 'rankings.json');
-const POKEDEX_FILE = path.join(DATA_DIR, 'pokedex_modified.json');
-const POKEDEX_RAW_FILE = path.join(DATA_DIR, 'pokedex.json');
-const COSTUME_ID_MAP_FILE = path.join(DATA_DIR, 'costumeIdMap.json');
-const PUBLIC_ID_MAP_FILE = path.join(DATA_DIR, 'publicIdMap.json');
-const SHINY_RATES_FILE = path.join(DATA_DIR, 'shinyRates.json');
+const RANKINGS_FILE = path.join(DATA_DIR, 'private/rankings.json');
+const POKEDEX_FILE = path.join(DATA_DIR, 'user/pokedex_modified.json');
+const POKEDEX_RAW_FILE = path.join(DATA_DIR, 'public/pokedex.json');
+const COSTUME_ID_MAP_FILE = path.join(DATA_DIR, 'user/costumeIdMap.json');
+const PUBLIC_ID_MAP_FILE = path.join(DATA_DIR, 'private/publicIdMap.json');
+const SHINY_RATES_FILE = path.join(DATA_DIR, 'user/shinyRates.json');
 const MOVE_ID_MAP_FILE = path.join(DATA_DIR, 'moveIdMap.json');
-const FAST_MOVES_FILE = path.join(DATA_DIR, 'fast_moves.json');
-const CHARGED_MOVES_FILE = path.join(DATA_DIR, 'charged_moves.json');
-const TYPE_EFFECTIVENESS_FILE = path.join(DATA_DIR, 'type_effectiveness.json');
+const FAST_MOVES_FILE = path.join(DATA_DIR, 'public/fast_moves.json');
+const CHARGED_MOVES_FILE = path.join(DATA_DIR, 'public/charged_moves.json');
+const TYPE_EFFECTIVENESS_FILE = path.join(DATA_DIR, 'public/type_effectiveness.json');
 const TYPE_EFFECTIVENESS_API_URL = 'https://pogoapi.net/api/v1/type_effectiveness.json';
 
 /**

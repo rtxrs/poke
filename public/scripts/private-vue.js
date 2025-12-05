@@ -1509,17 +1509,17 @@ pokemons.sort((a, b) => {
                     moveMap.value = await movesResponse.json();
                 }
 
-                const costumeResponse = await fetch('/data/costumeIdMap.json');
+                const costumeResponse = await fetch('/data/user/costumeIdMap.json');
                 if (costumeResponse.ok) {
                     costumeIdMap.value = await costumeResponse.json();
                 }
 
-                const typeEffectivenessResponse = await fetch('/data/type_effectiveness.json');
+                const typeEffectivenessResponse = await fetch('/data/public/type_effectiveness.json');
                 if (typeEffectivenessResponse.ok) {
                     typeEffectiveness.value = await typeEffectivenessResponse.json();
                 }
 
-                const raidBossesResponse = await fetch('/data/raidboss.json');
+                const raidBossesResponse = await fetch('/data/public/raidboss.json');
                 if (raidBossesResponse.ok) {
                     const raidBossData = await raidBossesResponse.json();
                     const currentBosses = Object.values(raidBossData.currentList).flat();
@@ -1546,7 +1546,7 @@ pokemons.sort((a, b) => {
                     }
                 }
 
-                const pokedexResponse = await fetch('/data/pokedex_modified.json');
+                const pokedexResponse = await fetch('/data/user/pokedex_modified.json');
                 if (pokedexResponse.ok) {
                     allPokedex.value = await pokedexResponse.json();
 
