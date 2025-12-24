@@ -86,6 +86,16 @@ function generateRankList(baseStats, cap) {
 }
 
 function main() {
+    if (fs.existsSync(OUTPUT_PATH) && fs.existsSync(POKEDEX_PATH)) {
+        const pokedexStats = fs.statSync(POKEDEX_PATH);
+        const outputStats = fs.statSync(OUTPUT_PATH);
+        
+        if (outputStats.mtime > pokedexStats.mtime) {
+            console.log("PvP ranks are up to date. Skipping generation.");
+            return;
+        }
+    }
+
     console.log("Loading Pokedex...");
     try {
         const pokedex = JSON.parse(fs.readFileSync(POKEDEX_PATH, 'utf8'));
