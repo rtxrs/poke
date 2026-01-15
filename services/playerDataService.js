@@ -342,6 +342,7 @@ const playerDataService = {
                 const emptyRankings = { recentPlayers: [], strongestPokemon: [], rarestPokemon: [] };
                 await fs.writeFile(RANKINGS_FILE, JSON.stringify(emptyRankings, null, 2));
                 await this.savePublicIdMap(); // Save map after generating new ID
+                this.rankingsCache = emptyRankings;
                 return emptyRankings;
             }
 
@@ -387,6 +388,7 @@ const playerDataService = {
             const rankings = { recentPlayers: sortedRecentPlayers, strongestPokemon, rarestPokemon };
             await fs.writeFile(RANKINGS_FILE, JSON.stringify(rankings, null, 2));
             await this.savePublicIdMap(); // Save map after generating new ID
+            this.rankingsCache = rankings;
             return rankings;
 
         } catch (error) {
@@ -454,14 +456,21 @@ const playerDataService = {
         rankings.rarestPokemon = rarestPokemon;
 
         await fs.writeFile(RANKINGS_FILE, JSON.stringify(rankings, null, 2));
+        this.rankingsCache = rankings;
     },
 
     async getRankings() {
         await this.init(); // Ensure uuidv4 and publicIdMap are loaded
         await this.initializeRankings(); // Ensure rankings.json exists
+        
+        if (this.rankingsCache) {
+            return this.rankingsCache;
+        }
+
         try {
             const rankingsContent = await fs.readFile(RANKINGS_FILE, 'utf-8');
-            return JSON.parse(rankingsContent);
+            this.rankingsCache = JSON.parse(rankingsContent);
+            return this.rankingsCache;
         } catch (error) {
             console.error("Error reading rankings.json:", error);
             throw new Error('Server error retrieving rankings.');
