@@ -2,7 +2,6 @@ const fs = require('fs');
 const path = require('path');
 const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
 const os = require('os');
-const pvpService = require('../services/pvpService');
 
 const POKEDEX_PATH = path.join(__dirname, '../data/user/pokedex_modified.json');
 
@@ -121,6 +120,8 @@ if (!isMainThread) {
 // --- Main Thread Logic ---
 else {
     (async () => {
+        console.log("Starting PvP Rank Generation Script...");
+        const pvpService = require('../services/pvpService');
         console.log("Loading Pokedex...");
         
         try {
@@ -170,7 +171,7 @@ else {
             
             // Database Batch Buffer
             let dbBuffer = [];
-            const DB_BATCH_SIZE = 5000;
+            const DB_BATCH_SIZE = 1000;
 
             const flushBuffer = () => {
                 if (dbBuffer.length > 0) {
@@ -218,7 +219,9 @@ else {
 
                 // Start first task
                 if (currentTaskIndex < totalTasks) {
-                    worker.postMessage(tasks[currentTaskIndex++]);
+                    const task = tasks[currentTaskIndex++];
+                    if (currentTaskIndex <= 5) console.log(`[Main] Dispatching task ${task.id} (${task.form}) to worker ${workerId}`);
+                    worker.postMessage(task);
                 } else {
                     worker.terminate();
                     activeWorkers--;

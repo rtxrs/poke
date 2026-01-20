@@ -47,7 +47,13 @@ app.use('/api', apiRoutes);
             await fsPromises.access(ranksPath);
             const pokedexStats = await fsPromises.stat(pokedexPath);
             const ranksStats = await fsPromises.stat(ranksPath);
-            if (ranksStats.mtime < pokedexStats.mtime) {
+            
+            // Check if DB is empty
+            const rowCount = pvpService.getRowCount();
+            if (rowCount === 0) {
+                console.log('⚠️ PvP Ranks database is empty. Generating...');
+                runGen = true;
+            } else if (ranksStats.mtime < pokedexStats.mtime) {
                 console.log('⚠️ PvP Ranks file is older than Pokedex source. Regenerating...');
                 runGen = true;
             }

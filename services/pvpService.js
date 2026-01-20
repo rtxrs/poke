@@ -49,7 +49,7 @@ function init() {
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
-    insertTransaction = db.transaction((rows) => {
+    const tx = db.transaction((rows) => {
         for (const row of rows) {
             insertStmt.run(
                 row.pokemon_id,
@@ -66,6 +66,7 @@ function init() {
             );
         }
     });
+    insertTransaction = tx.immediate;
 }
 
 function insertMany(rows) {
@@ -97,10 +98,21 @@ function getRank(pokemonId, form, league, ivAttack, ivDefense, ivStamina) {
     return stmt.get(pokemonId, form, league, ivAttack, ivDefense, ivStamina);
 }
 
+function getRowCount() {
+    try {
+        const stmt = db.prepare('SELECT count(*) as count FROM pvp_ranks');
+        const result = stmt.get();
+        return result ? result.count : 0;
+    } catch (e) {
+        return 0;
+    }
+}
+
 module.exports = {
     init,
     insertMany,
     getRanks,
     getRank,
+    getRowCount,
     db
 };
