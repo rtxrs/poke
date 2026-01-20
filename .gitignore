@@ -14,6 +14,7 @@ pgsharp_player_data/*
 users.json
 data/user/pokedex_modified.json
 data/user/pvp_ranks.json
+data/user/pvp_ranks.db
 data/user/raidboss-update-status.json
 data/public/*
 data/private/*
