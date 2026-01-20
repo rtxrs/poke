@@ -3,7 +3,7 @@ const fs = require('fs').promises;
 const path = require('path');
 const crypto = require('crypto');
 
-const RAID_BOSS_URL = 'https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/raids.json';
+const RAID_BOSS_URL = 'https://pokemon-go-api.github.io/pokemon-go-api/api/raidboss.json';
 const RAID_BOSS_FILE = path.join(__dirname, '../data/public/raidboss.json');
 const STATUS_FILE = path.join(__dirname, '../data/user/raidboss-update-status.json');
 
@@ -18,39 +18,34 @@ const raidBossService = {
             currentList: {}
         };
 
-        const tierToLevelMap = {
-            "Tier 1": "lvl1",
-            "Tier 3": "lvl3",
-            "Tier 5": "lvl5",
-            "Mega": "mega",
-            "Shadow Tier 1": "shadow_lvl1",
-            "Shadow Tier 3": "shadow_lvl3",
-            "Shadow Tier 5": "shadow_lvl5"
-        };
+        if (!data || !data.currentList) {
+             console.error('Unexpected raid boss data format');
+             return transformedData;
+        }
 
-        data.forEach(boss => {
-            const level = tierToLevelMap[boss.tier];
-            if (!level) {
-                console.warn(`Unknown tier: ${boss.tier} for boss: ${boss.name}`);
-                return;
-            }
+        const sourceList = data.currentList;
 
-            const transformedBoss = {
-                id: boss.name.toUpperCase().replace(/ /g, '_').replace(/[()]/g, ''),
-                names: {
-                    English: boss.name
-                },
-                level: level,
-                types: boss.types.map(t => t.name.charAt(0).toUpperCase() + t.name.slice(1)),
-                assets: {
-                    image: boss.image
-                }
-            };
-
-            if (!transformedData.currentList[level]) {
+        Object.keys(sourceList).forEach(level => {
+             const bosses = sourceList[level];
+             if (!transformedData.currentList[level]) {
                 transformedData.currentList[level] = [];
             }
-            transformedData.currentList[level].push(transformedBoss);
+            
+            bosses.forEach(boss => {
+                 const englishName = boss.names.English;
+                 const transformedBoss = {
+                    id: englishName.toUpperCase().replace(/ /g, '_').replace(/[()]/g, ''),
+                    names: {
+                        English: englishName
+                    },
+                    level: level,
+                    types: boss.types,
+                    assets: {
+                        image: boss.assets.image
+                    }
+                };
+                transformedData.currentList[level].push(transformedBoss);
+            });
         });
 
         return transformedData;
