@@ -17,6 +17,8 @@ let insertStmt;
 let insertTransaction;
 
 function init() {
+    db.pragma('journal_mode = WAL');
+
     db.exec(`
         CREATE TABLE IF NOT EXISTS pvp_ranks (
             pokemon_id TEXT,

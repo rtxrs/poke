@@ -57,20 +57,20 @@ app.use('/api', apiRoutes);
         }
 
         if (runGen) {
-            await new Promise((resolve, reject) => {
-                const child = exec('node scripts/generate_pvp_ranks.js', { cwd: __dirname });
-                
-                child.stdout.on('data', (data) => process.stdout.write(data)); // Stream output
-                child.stderr.on('data', (data) => process.stderr.write(data));
+            console.log('⚠️ PvP Ranks file is older/missing. Starting background generation...');
+            // Start generation in background
+            const child = exec('node scripts/generate_pvp_ranks.js', { cwd: __dirname });
+            
+            // Optional: Pipe output if you want to see progress in server logs
+            child.stdout.on('data', (data) => process.stdout.write(data));
+            child.stderr.on('data', (data) => process.stderr.write(data));
 
-                child.on('close', (code) => {
-                    if (code !== 0) {
-                        console.error(`PvP Generation script exited with code ${code}`);
-                        reject(new Error('PvP Generation Failed'));
-                    } else {
-                        resolve();
-                    }
-                });
+            child.on('close', (code) => {
+                if (code !== 0) {
+                    console.error(`\n❌ PvP Generation script exited with code ${code}`);
+                } else {
+                    console.log('\n✅ PvP Ranks generation complete.');
+                }
             });
         } else {
             console.log('✅ PvP Ranks are up to date.');
