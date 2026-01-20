@@ -40,7 +40,7 @@ app.use('/api', apiRoutes);
         const { exec } = require('child_process');
         // Compare against RAW pokedex.json because pokedex_modified.json is rewritten on every boot
         const pokedexPath = path.join(__dirname, 'data/public/pokedex.json'); 
-        const ranksPath = path.join(__dirname, 'data/user/pvp_ranks.db');
+        const ranksPath = path.join(__dirname, 'data/user/generated/pvp_ranks.db');
         
         let runGen = false;
         try {

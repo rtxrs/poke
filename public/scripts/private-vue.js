@@ -1633,7 +1633,7 @@ pokemons.sort((a, b) => {
                     moveMap.value = await movesResponse.json();
                 }
 
-                const costumeResponse = await fetch('/data/user/costumeIdMap.json');
+                const costumeResponse = await fetch('/data/user/custom/costumeIdMap.json');
                 if (costumeResponse.ok) {
                     costumeIdMap.value = await costumeResponse.json();
                 }
@@ -1670,7 +1670,7 @@ pokemons.sort((a, b) => {
                     }
                 }
 
-                const pokedexResponse = await fetch('/data/user/pokedex_modified.json');
+                const pokedexResponse = await fetch('/data/user/generated/pokedex_modified.json');
                 if (pokedexResponse.ok) {
                     allPokedex.value = await pokedexResponse.json();
 

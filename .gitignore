@@ -13,11 +13,7 @@ pokedex.json
 pgsharp_player_data/*
 users.json
 data/user/pokedex_modified.json
-data/user/pvp_ranks.json
-data/user/pvp_ranks.db
-data/user/pvp_ranks.db-shm
-data/user/pvp_ranks.db-wal
-data/user/raidboss-update-status.json
+data/user/generated/*
 data/public/*
 data/private/*
 

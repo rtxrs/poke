@@ -1,7 +1,7 @@
 const Database = require('better-sqlite3');
 const path = require('path');
 
-const DB_PATH = path.join(__dirname, 'data/user/pvp_ranks.db');
+const DB_PATH = path.join(__dirname, 'data/user/generated/pvp_ranks.db');
 const db = new Database(DB_PATH);
 
 try {

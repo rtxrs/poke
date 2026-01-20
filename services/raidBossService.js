@@ -5,7 +5,7 @@ const crypto = require('crypto');
 
 const RAID_BOSS_URL = 'https://pokemon-go-api.github.io/pokemon-go-api/api/raidboss.json';
 const RAID_BOSS_FILE = path.join(__dirname, '../data/public/raidboss.json');
-const STATUS_FILE = path.join(__dirname, '../data/user/raidboss-update-status.json');
+const STATUS_FILE = path.join(__dirname, '../data/user/generated/raidboss-update-status.json');
 
 const raidBossService = {
     healthStatus: {

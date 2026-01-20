@@ -3,7 +3,7 @@ const path = require('path');
 const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
 const os = require('os');
 
-const POKEDEX_PATH = path.join(__dirname, '../data/user/pokedex_modified.json');
+const POKEDEX_PATH = path.join(__dirname, '../data/user/generated/pokedex_modified.json');
 
 // --- Constants (Shared) ---
 const CPM_TABLE = {
