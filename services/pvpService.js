@@ -35,6 +35,9 @@ function init() {
 
         CREATE INDEX IF NOT EXISTS idx_pokemon_lookup 
         ON pvp_ranks(pokemon_id, form, league);
+
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_pvp_lookup_ivs 
+        ON pvp_ranks(pokemon_id, form, league, iv_attack, iv_defense, iv_stamina);
     `);
 
     // Prepare the insert statement once for performance
@@ -82,9 +85,20 @@ function getRanks(pokemonId, form, league, limit = 100) {
     return stmt.all(pokemonId, form, league, limit);
 }
 
+function getRank(pokemonId, form, league, ivAttack, ivDefense, ivStamina) {
+    const stmt = db.prepare(`
+        SELECT rank, percentage, level, cp, stat_product
+        FROM pvp_ranks
+        WHERE pokemon_id = ? AND form = ? AND league = ? 
+        AND iv_attack = ? AND iv_defense = ? AND iv_stamina = ?
+    `);
+    return stmt.get(pokemonId, form, league, ivAttack, ivDefense, ivStamina);
+}
+
 module.exports = {
     init,
     insertMany,
     getRanks,
+    getRank,
     db
 };

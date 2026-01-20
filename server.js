@@ -5,6 +5,7 @@ const path = require('path');
 const config = require('./config');
 const pokedexService = require('./services/pokedexService');
 const playerDataService = require('./services/playerDataService');
+const pvpService = require('./services/pvpService');
 const authRoutes = require('./routes/auth').router;
 const apiRoutes = require('./routes/api');
 
@@ -39,7 +40,7 @@ app.use('/api', apiRoutes);
         const { exec } = require('child_process');
         // Compare against RAW pokedex.json because pokedex_modified.json is rewritten on every boot
         const pokedexPath = path.join(__dirname, 'data/public/pokedex.json'); 
-        const ranksPath = path.join(__dirname, 'data/user/pvp_ranks.json');
+        const ranksPath = path.join(__dirname, 'data/user/pvp_ranks.db');
         
         let runGen = false;
         try {
@@ -76,6 +77,7 @@ app.use('/api', apiRoutes);
         }
         // ---------------------------------------
 
+        pvpService.init();
         await playerDataService.init();
         await playerDataService.initializeRankings();
         app.listen(config.PORT, () => console.log(`🚀 Server running at http://localhost:${config.PORT}`));
