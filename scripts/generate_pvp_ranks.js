@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { exec } = require('child_process');
 
 const POKEDEX_PATH = path.join(__dirname, '../data/user/generated/pokedex_modified.json');
 const OUTPUT_PATH = path.join(__dirname, '../data/user/generated/pvp_ranks.json');
@@ -175,6 +176,15 @@ function main() {
             console.log(`Done! Saved to ${OUTPUT_PATH}`);
             const stats = fs.statSync(OUTPUT_PATH);
             console.log(`File size: ${(stats.size / 1024 / 1024).toFixed(2)} MB`);
+
+            console.log("Compiling binary ranks...");
+            exec('node scripts/compile_pvp_binary.js', { cwd: path.join(__dirname, '..') }, (err, stdout, stderr) => {
+                if (err) console.error("Binary compilation failed:", err);
+                else {
+                    console.log(stdout);
+                    if (stderr) console.error(stderr);
+                }
+            });
         });
 
     } catch (error) {
