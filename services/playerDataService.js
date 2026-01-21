@@ -143,6 +143,7 @@ const playerDataService = {
     },
 
     async _calculatePokemonRankings(playerFiles, playerIdToUserId) {
+        let totalPokemonEvaluated = 0;
         const getPokedexEntry = (p) => {
             if (!pokedexService.pokedex || !pokedexService.pokedex[p.pokemonId]) return null;
             const allFormsForPokemon = pokedexService.pokedex[p.pokemonId];
@@ -188,6 +189,7 @@ const playerDataService = {
 
                 content.pokemons.forEach(p => {
                     if (p.isEgg || !p.pokemonDisplay) return;
+                    totalPokemonEvaluated++;
 
                     const pokedexEntry = getPokedexEntry(p);
                     const shinyRate = pokedexService.getShinyRate(p.pokemonId, p.originDetail?.originDetailCase, pokedexEntry?.pokemonClass, p.originEvents);
@@ -242,11 +244,12 @@ const playerDataService = {
             }
         }
 
-        return { strongestPokemon: strongestCandidates, rarestPokemon: rarestCandidates };
+        return { strongestPokemon: strongestCandidates, rarestPokemon: rarestCandidates, totalPokemonEvaluated };
     },
 
     async generateAndSaveRankings() {
         await this.init();
+        const startTime = Date.now();
         try {
             const files = await fs.readdir(DATA_PATH);
             const playerFiles = files.filter(f => f.endsWith('.json') && f !== 'PGSStats.json');
@@ -285,12 +288,14 @@ const playerDataService = {
                 recentPlayers = recentPlayers.sort((a, b) => b.lastUpdate - a.lastUpdate).slice(0, 50);
             }
 
-            const { strongestPokemon, rarestPokemon } = await this._calculatePokemonRankings(playerFiles, playerIdToUserId);
+            const { strongestPokemon, rarestPokemon, totalPokemonEvaluated } = await this._calculatePokemonRankings(playerFiles, playerIdToUserId);
             const rankings = { recentPlayers, strongestPokemon, rarestPokemon };
             
             await fs.writeFile(RANKINGS_FILE, JSON.stringify(rankings));
             this.rankingsCache = rankings;
-            console.log('✅ Global rankings (Strongest/Rarest) updated successfully.');
+            
+            const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+            console.log(`✅ Global rankings updated: ${playerFiles.length} players, ${totalPokemonEvaluated.toLocaleString()} Pokémon evaluated in ${duration}s.`);
             return rankings;
         } catch (error) {
             console.error("Error in generateAndSaveRankings:", error);
