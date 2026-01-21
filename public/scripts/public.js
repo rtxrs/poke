@@ -230,6 +230,17 @@ document.addEventListener('DOMContentLoaded', async () => {
      * @param {string} playerId - The unique ID of the player to display.
      */
     async function openPlayerModal(playerId) {
+        // Show loading state immediately
+        modalContent.innerHTML = `
+            <button id="modal-close-btn">&times;</button>
+            <div style="padding: 40px; text-align: center;">
+                <div class="loading-spinner"></div>
+                <p>Loading player profile...</p>
+            </div>
+        `;
+        modalBackdrop.classList.remove('hidden');
+        document.getElementById('modal-close-btn').onclick = () => modalBackdrop.classList.add('hidden');
+
         try {
             const detailRes = await fetch(`/api/player-detail/${playerId}`);
             if (!detailRes.ok) throw new Error('Could not fetch player details.');
@@ -257,11 +268,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }).join('')}
                 </div>
             `;
-            modalBackdrop.classList.remove('hidden');
-            // Attach event listener to the new close button inside the modal
+            // Re-attach close button listener for the new content
             document.getElementById('modal-close-btn').onclick = () => modalBackdrop.classList.add('hidden');
         } catch (error) {
             console.error('Failed to open player modal:', error);
+            modalContent.innerHTML = `
+                <button id="modal-close-btn">&times;</button>
+                <p style="padding: 20px; color: #e74c3c;">Error: ${error.message}</p>
+            `;
+            document.getElementById('modal-close-btn').onclick = () => modalBackdrop.classList.add('hidden');
         }
     }
 

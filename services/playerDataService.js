@@ -460,36 +460,76 @@ const playerDataService = {
         await this.init();
         try {
             const content = JSON.parse(await fs.readFile(path.join(DATA_PATH, `${playerId}.json`), 'utf-8'));
+            const publicId = await this.generatePublicId(playerId);
+            
+            // Fast userId lookup
             const users = await readUsers();
             const user = users.find(u => u.playerId === playerId);
-            const publicId = await this.generatePublicId(playerId);
+            const userId = user ? (users.indexOf(user) + 1).toString().padStart(3, '0') : null;
 
             const allPokemon = content.pokemons.filter(p => !p.isEgg);
+            
+            // Efficient single-pass selection
+            let latestCaught = null;
+            let latestShiny = null;
+            const topStrongest = []; // We'll keep top 10 to pick 2
+
+            for (const p of allPokemon) {
+                // 1. Latest caught
+                if (!latestCaught || p.creationTimeMs > latestCaught.creationTimeMs) {
+                    latestCaught = p;
+                }
+                // 2. Latest shiny
+                if (p.pokemonDisplay?.shiny) {
+                    if (!latestShiny || p.creationTimeMs > latestShiny.creationTimeMs) {
+                        latestShiny = p;
+                    }
+                }
+                // 3. Keep top strongest candidates
+                topStrongest.push(p);
+                if (topStrongest.length > 20) {
+                    topStrongest.sort((a, b) => b.cp - a.cp);
+                    topStrongest.length = 10;
+                }
+            }
+            topStrongest.sort((a, b) => b.cp - a.cp);
+
             const highlights = [];
             const addedIds = new Set();
+            const pushH = (p) => {
+                if (p && !addedIds.has(p.id) && highlights.length < 4) {
+                    highlights.push(p);
+                    addedIds.add(p.id);
+                }
+            };
 
-            const pushP = (p) => { if (p && !addedIds.has(p.id) && highlights.length < 4) { highlights.push(p); addedIds.add(p.id); } };
-            pushP([...allPokemon].sort((a, b) => b.creationTimeMs - a.creationTimeMs)[0]);
-            pushP([...allPokemon].filter(p => p.pokemonDisplay?.shiny).sort((a, b) => b.creationTimeMs - a.creationTimeMs)[0]);
-            [...allPokemon].sort((a, b) => b.cp - a.cp).forEach(pushP);
+            pushH(latestCaught);
+            pushH(latestShiny);
+            topStrongest.forEach(pushH);
 
             return {
                 name: content.account.name,
-                userId: user ? (users.indexOf(user) + 1).toString().padStart(3, '0') : null,
+                userId,
                 publicId,
                 startDate: new Date(content.account.creationTimeMs).toLocaleDateString(),
                 totalXp: content.player.experience,
                 pokemonCaught: content.player.numPokemonCaptured,
                 pokestopsVisited: content.player.pokeStopVisits,
                 kmWalked: content.player.kmWalked,
-                highlights: highlights.map(p => ({
-                    cp: p.cp,
-                    name: pokedexService.getPokemonName(p.pokemonId, p.pokemonDisplay.formName),
-                    sprite: pokedexService.getPokemonSprite(p),
-                    typeColors: pokedexService.getPokemonTypeColors(Object.values(pokedexService.pokedex[p.pokemonId] || {})[0])
-                }))
+                highlights: highlights.map(p => {
+                    const pokedexEntry = Object.values(pokedexService.pokedex[p.pokemonId] || {})[0];
+                    return {
+                        cp: p.cp,
+                        name: pokedexService.getPokemonName(p.pokemonId, p.pokemonDisplay.formName),
+                        sprite: pokedexService.getPokemonSprite(p),
+                        typeColors: pokedexService.getPokemonTypeColors(pokedexEntry)
+                    };
+                })
             };
-        } catch (error) { throw new Error('Player data not found.'); }
+        } catch (error) { 
+            console.error("Error in getPlayerDetail:", error);
+            throw new Error('Player data not found.'); 
+        }
     },
 
     async getPrivatePlayerData(playerId) {
