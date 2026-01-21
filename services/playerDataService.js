@@ -1,5 +1,6 @@
 const fs = require('fs/promises');
 const path = require('path');
+const cron = require('node-cron');
 let uuidv4;
 
 const { DATA_PATH, DATA_FOLDER, RANKINGS_FILE, DATA_DIR, PUBLIC_ID_MAP_FILE } = require('../config');
@@ -66,17 +67,17 @@ const playerDataService = {
             }
         }
 
-        // Schedule background rankings update every 15 minutes
+        // Schedule background rankings update every 15 minutes of the hour
         this.scheduleRankingsUpdate();
     },
 
     scheduleRankingsUpdate() {
-        if (this._rankingsTimer) clearInterval(this._rankingsTimer);
-        this._rankingsTimer = setInterval(() => {
-            console.log('⏰ Running scheduled global rankings update...');
+        if (this._rankingsJob) this._rankingsJob.stop();
+        this._rankingsJob = cron.schedule('0,15,30,45 * * * *', () => {
+            console.log('⏰ Running scheduled global rankings update (Fixed Interval)...');
             this.generateAndSaveRankings().catch(err => console.error('Rankings update failed:', err));
-        }, 15 * 60 * 1000); // 15 mins
-        console.log('📅 Global rankings update scheduled (15 min intervals).');
+        });
+        console.log('📅 Global rankings update scheduled (Fixed intervals: :00, :15, :30, :45).');
     },
 
     async savePublicIdMap() {
