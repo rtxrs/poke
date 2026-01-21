@@ -720,6 +720,7 @@ const playerDataService = {
             
             return {
                 playerData: data,
+                pvpDataVersion: pvpService.getDataVersion(),
                 pokedexService: {
                     typeColorMap: pokedexService.typeColorMap,
                     // pokedex: pokedexService.pokedex // REMOVED to save egress bandwidth

@@ -423,6 +423,7 @@ createApp({
         const selectedPokemon = ref(null);
         const moveMap = ref({});
         const costumeIdMap = ref({});
+        const pvpDataVersion = ref(0);
 
         // --- Statistics Computed Properties ---
         const stats_shinyRate = computed(() => {
@@ -1739,6 +1740,7 @@ pokemons.sort((a, b) => {
                 items.value = responseData.playerData.items || [];
                 const rawPokemons = responseData.playerData.pokemons.filter(p => !p.isEgg && p.pokemonId !== 0);
                 pokedexService.value = responseData.pokedexService || { typeColorMap: {}, pokedex: null };
+                pvpDataVersion.value = responseData.pvpDataVersion || 0;
 
                 if (account.value.preferences && account.value.preferences.avatarId) {
                     currentAvatarId.value = account.value.preferences.avatarId;
@@ -1809,8 +1811,8 @@ pokemons.sort((a, b) => {
                             const day = now.getDate().toString().padStart(2, '0');
                             const hour = now.getHours().toString().padStart(2, '0');
                             
-                            // Include YYYY_MM_DD_hh to force hourly refresh
-                            return `pvp_${pokemons.length}_${sumTime}_${year}_${month}_${day}_${hour}`;
+                            // Include YYYY_MM_DD_hh to force hourly refresh + data version for background updates
+                            return `pvp_${pokemons.length}_${sumTime}_${year}_${month}_${day}_${hour}_v${pvpDataVersion.value}`;
                         };
 
                         const cacheKey = generateCacheKey(allPokemons.value);

@@ -11,11 +11,15 @@ const INDEX_ENTRY_SIZE = NAME_SIZE + NAME_SIZE + 4;
 
 let pvpBuffer = null;
 let pvpIndex = new Map(); // "SPECIES_FORM" -> offset
+let dataVersion = 0;
 
 async function init() {
     console.log('Initializing PvP Service (Loading Binary)...');
     try {
         if (fs.existsSync(BINARY_PATH)) {
+            const stats = await fs.promises.stat(BINARY_PATH);
+            dataVersion = stats.mtimeMs;
+
             const fullBuffer = await fs.promises.readFile(BINARY_PATH);
             
             const totalEntries = fullBuffer.readUInt32LE(0);
@@ -87,5 +91,6 @@ module.exports = {
     reload,
     getRank,
     getRanks,
-    getRowCount
+    getRowCount,
+    getDataVersion: () => dataVersion
 };
