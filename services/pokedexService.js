@@ -223,6 +223,22 @@ const pokedexService = {
             const rawData = JSON.parse(rawPokedexJson);
             
             const cleanedData = rawData.map(pokemon => {
+                // Keep ONLY English names to save RAM and Bandwidth
+                if (pokemon.names) {
+                    const engName = pokemon.names.English;
+                    pokemon.names = { English: engName };
+                }
+                
+                // Strip languages from types too
+                if (pokemon.primaryType?.names) {
+                    const engType = pokemon.primaryType.names.English;
+                    pokemon.primaryType.names = { English: engType };
+                }
+                if (pokemon.secondaryType?.names) {
+                    const engType = pokemon.secondaryType.names.English;
+                    pokemon.secondaryType.names = { English: engType };
+                }
+
                 let formKey = pokemon.formId;
                 const englishNameUpper = pokemon.names.English.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
                 if (formKey.toUpperCase().includes(englishNameUpper)) {

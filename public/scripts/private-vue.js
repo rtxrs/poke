@@ -416,6 +416,16 @@ createApp({
         const pokedexService = ref({ typeColorMap: {}, pokedex: null });
         const activeTab = ref('character'); // New state for active tab
         const searchQuery = ref('');
+        const debouncedSearchQuery = ref('');
+        let searchTimeout = null;
+
+        watch(searchQuery, (newVal) => {
+            if (searchTimeout) clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                debouncedSearchQuery.value = newVal;
+            }, 150); // 150ms debounce
+        });
+
         const sortKey = ref('caughtTime');
         const itemsExpanded = ref(false);
         const defaultSortDirections = { caughtTime: 'desc', cp: 'desc', pokedex: 'asc', name: 'asc' };
@@ -798,7 +808,7 @@ createApp({
 
 
         const filteredPokemon = computed(() => {
-            let pokemons = filterPokemon([...allPokemons.value], searchQuery.value, pokedexService, moveMap);
+            let pokemons = filterPokemon([...allPokemons.value], debouncedSearchQuery.value, pokedexService, moveMap);
             
 pokemons.sort((a, b) => {
                 let valA, valB;
