@@ -143,19 +143,19 @@ function getBadges(p, name) {
         let extraClass = '';
         if (p.rankGreat <= 10) extraClass = ' rank-1';
         else if (p.rankGreat <= 25) extraClass = ' rank-good';
-        badges.push(`<span class="badge pvp-badge great${extraClass}" title="Great League Rank #${p.rankGreat}"></span>`);
+        badges.push(`<span class="badge pvp-badge great${extraClass}" title="Great League Rank #${p.rankGreat}">#${p.rankGreat}</span>`);
     }
     if (p.rankUltra && p.rankUltra <= 100 && p.cp <= 2500) {
         let extraClass = '';
         if (p.rankUltra <= 10) extraClass = ' rank-1';
         else if (p.rankUltra <= 25) extraClass = ' rank-good';
-        badges.push(`<span class="badge pvp-badge ultra${extraClass}" title="Ultra League Rank #${p.rankUltra}"></span>`);
+        badges.push(`<span class="badge pvp-badge ultra${extraClass}" title="Ultra League Rank #${p.rankUltra}">#${p.rankUltra}</span>`);
     }
     if (p.rankMaster && p.rankMaster <= 100) {
         let extraClass = '';
         if (p.rankMaster <= 10) extraClass = ' rank-1';
         else if (p.rankMaster <= 25) extraClass = ' rank-good';
-        badges.push(`<span class="badge pvp-badge master${extraClass}" title="Master League Rank #${p.rankMaster}"></span>`);
+        badges.push(`<span class="badge pvp-badge master${extraClass}" title="Master League Rank #${p.rankMaster}">#${p.rankMaster}</span>`);
     }
 
     if (badges.length > 0) {
