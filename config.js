@@ -21,7 +21,7 @@ const TYPE_EFFECTIVENESS_API_URL = 'https://pogoapi.net/api/v1/type_effectivenes
 
 const PORT = 3000;
 const DATA_FOLDER = 'pgsharp_player_data';
-const USERS_FILE = path.join(__dirname, 'users.json');
+const USERS_FILE = path.join(DATA_DIR, 'private/users.json');
 const POKEDEX_API_URL = 'https://pokemon-go-api.github.io/pokemon-go-api/api/pokedex.json';
 const SALT_ROUNDS = 10;
 const SESSION_SECRET = 'your-secret-key-goes-here'; // IMPORTANT: In production, use an environment variable!
