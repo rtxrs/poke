@@ -102,9 +102,10 @@ function getCardClass(p) {
  * Generates the HTML badges string for a Pokemon card.
  * @param {Object} p - The Pokemon object.
  * @param {string} name - The display name of the Pokemon.
+ * @param {boolean} limitRank - Whether to limit PvP badges to top 100.
  * @returns {string} The HTML string containing the name and badges.
  */
-function getBadges(p, name) {
+function getBadges(p, name, limitRank = true) {
     const badges = [];
     if (!p || !p.pokemonDisplay) return name;
 
@@ -112,7 +113,8 @@ function getBadges(p, name) {
     if (p.pokemonDisplay.shiny) badges.push('<span class="badge shiny-badge">Shiny</span>');
     if (p.isLucky) {
         badges.push('<span class="badge lucky-badge">Lucky</span>');
-    } else if (p.tradedTimeMs > 0) {
+    }
+    else if (p.tradedTimeMs > 0) {
         badges.push('<span class="badge traded-badge">Traded</span>');
     }
     
@@ -139,19 +141,19 @@ function getBadges(p, name) {
     }
 
     // PvP Ranks as Markers
-    if (p.rankGreat && p.cp <= 1500) {
+    if (p.rankGreat && p.cp <= 1500 && (!limitRank || p.rankGreat <= 100)) {
         let extraClass = '';
         if (p.rankGreat <= 10) extraClass = ' rank-1';
         else if (p.rankGreat <= 25) extraClass = ' rank-good';
         badges.push(`<span class="badge pvp-badge great${extraClass}" title="Great League Rank #${p.rankGreat}">#${p.rankGreat}</span>`);
     }
-    if (p.rankUltra && p.cp <= 2500) {
+    if (p.rankUltra && p.cp <= 2500 && (!limitRank || p.rankUltra <= 100)) {
         let extraClass = '';
         if (p.rankUltra <= 10) extraClass = ' rank-1';
         else if (p.rankUltra <= 25) extraClass = ' rank-good';
         badges.push(`<span class="badge pvp-badge ultra${extraClass}" title="Ultra League Rank #${p.rankUltra}">#${p.rankUltra}</span>`);
     }
-    if (p.rankMaster) {
+    if (p.rankMaster && (!limitRank || p.rankMaster <= 100)) {
         let extraClass = '';
         if (p.rankMaster <= 10) extraClass = ' rank-1';
         else if (p.rankMaster <= 25) extraClass = ' rank-good';
@@ -159,7 +161,7 @@ function getBadges(p, name) {
     }
 
     if (badges.length > 0) {
-        return `${name}<br>${badges.join(' ')}`;
+        return name ? `${name}<br>${badges.join(' ')}` : badges.join(' ');
     }
     return name;
 }

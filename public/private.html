@@ -44,7 +44,7 @@
                                     <span v-if="index < getPokemonTypes(selectedPokemon).length - 1"> / </span>
                                 </template>
                             </span>
-                            <span class="badges-container" v-html="getBadges(selectedPokemon, '')"></span>
+                            <span class="badges-container" v-html="getBadges(selectedPokemon, '', false)"></span>
                         </h2>
                         <div class="pokemon-stats-grid">
                             <div><span>CP</span><strong>{{ selectedPokemon.cp }}</strong></div>
