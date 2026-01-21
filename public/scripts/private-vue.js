@@ -1182,34 +1182,16 @@ pokemons.sort((a, b) => {
                         .slice(0, 6)
                         .map(p => ({ ...p, score: p.dps, scoreLabel: 'DPS' }));
 
-                    // Top 6 Tankers (Bulk)
+                    const attackerIds = new Set(attackers.map(p => p.id));
+
+                    // Top 6 Tankers (Bulk) - Excluding those already selected as attackers
                     const tanks = [...evaluatedPool]
+                        .filter(p => !attackerIds.has(p.id))
                         .sort((a, b) => b.bulk - a.bulk)
                         .slice(0, 6)
                         .map(p => ({ ...p, score: p.bulk, scoreLabel: 'Bulk' }));
 
-                    // Combine (Allow duplicates if they are good at both, or filter unique?)
-                    // User asked for "6 best attackers and 6 best tankers".
-                    // We will display them in that order: Attackers first, then Tanks.
-                    // If a pokemon is in both, it will appear twice, which highlights its versatility,
-                    // but might be confusing. Let's dedup by ID, prioritizing the Attacker role.
-                    
-                    const uniqueSuggestions = [];
-                    const addedIds = new Set();
-
-                    attackers.forEach(p => {
-                        uniqueSuggestions.push(p);
-                        addedIds.add(p.id);
-                    });
-
-                    tanks.forEach(p => {
-                        if (!addedIds.has(p.id)) {
-                            uniqueSuggestions.push(p);
-                            addedIds.add(p.id);
-                        }
-                    });
-
-                    suggestions[enemy.names.English] = uniqueSuggestions;
+                    suggestions[enemy.names.English] = [...attackers, ...tanks];
 
                 } else {
                     // Standard Logic
