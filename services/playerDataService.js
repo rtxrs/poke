@@ -301,16 +301,13 @@ const playerDataService = {
             const playerFiles = files.filter(f => f.endsWith('.json') && f !== 'PGSStats.json');
 
             // --- Optimization Check: Skip if no new uploads ---
-            let lastUpdateTimestamp = 0;
+            let lastHeavyUpdate = 0;
             try {
-                const stats = await fs.stat(RANKINGS_FILE);
-                lastUpdateTimestamp = stats.mtimeMs;
-                
                 const existing = JSON.parse(await fs.readFile(RANKINGS_FILE, 'utf-8'));
                 if (existing.lastHeavyUpdate) {
-                    lastUpdateTimestamp = existing.lastHeavyUpdate;
+                    lastHeavyUpdate = existing.lastHeavyUpdate;
                 }
-            } catch (e) { /* File doesn't exist yet */ }
+            } catch (e) { /* File doesn't exist or is invalid */ }
 
             let latestUploadTime = 0;
             const playerFileStats = await Promise.all(playerFiles.map(f => fs.stat(path.join(DATA_PATH, f))));
@@ -318,8 +315,9 @@ const playerDataService = {
                 if (s.mtimeMs > latestUploadTime) latestUploadTime = s.mtimeMs;
             });
 
-            if (latestUploadTime <= lastUpdateTimestamp && latestUploadTime !== 0) {
-                console.log('⏭️ Skipping global rankings update: No new uploads detected since last run.');
+            // Only skip if we have a record of a previous heavy update AND no files are newer than that record
+            if (lastHeavyUpdate > 0 && latestUploadTime <= lastHeavyUpdate) {
+                console.log('⏭️ Skipping global rankings update: No new uploads detected since last heavy calculation.');
                 return this.rankingsCache;
             }
             // ------------------------------------------------
