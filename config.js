@@ -3,6 +3,8 @@ const path = require('path');
 const DATA_DIR = path.join(__dirname, 'data');
 const RANKINGS_FILE = path.join(DATA_DIR, 'private/rankings.json');
 const POKEDEX_FILE = path.join(DATA_DIR, 'user/generated/pokedex_modified.json');
+const POKEDEX_SERVER_FILE = path.join(DATA_DIR, 'user/generated/pokedex_server.json');
+const POKEDEX_CLIENT_FILE = path.join(DATA_DIR, 'user/generated/pokedex_client.json');
 const POKEDEX_RAW_FILE = path.join(DATA_DIR, 'public/pokedex.json');
 const COSTUME_ID_MAP_FILE = path.join(DATA_DIR, 'user/custom/costumeIdMap.json');
 const PUBLIC_ID_MAP_FILE = path.join(DATA_DIR, 'private/publicIdMap.json');
@@ -31,6 +33,8 @@ module.exports = {
     DATA_FOLDER,
     USERS_FILE,
     POKEDEX_FILE,
+    POKEDEX_SERVER_FILE,
+    POKEDEX_CLIENT_FILE,
     POKEDEX_API_URL,
     SALT_ROUNDS,
     SESSION_SECRET,

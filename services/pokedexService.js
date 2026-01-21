@@ -4,8 +4,16 @@ const fetch = require('node-fetch');
 const crypto = require('crypto');
 const cron = require('node-cron');
 
-const { POKEDEX_API_URL, POKEDEX_FILE, DATA_DIR, SHINY_RATES_FILE, POKEDEX_RAW_FILE, COSTUME_ID_MAP_FILE, MOVE_ID_MAP_FILE, FAST_MOVES_FILE, CHARGED_MOVES_FILE, TYPE_EFFECTIVENESS_FILE, TYPE_EFFECTIVENESS_API_URL } = require('../config');
+const { POKEDEX_API_URL, POKEDEX_FILE, POKEDEX_SERVER_FILE, POKEDEX_CLIENT_FILE, DATA_DIR, SHINY_RATES_FILE, POKEDEX_RAW_FILE, COSTUME_ID_MAP_FILE, MOVE_ID_MAP_FILE, FAST_MOVES_FILE, CHARGED_MOVES_FILE, TYPE_EFFECTIVENESS_FILE, TYPE_EFFECTIVENESS_API_URL } = require('../config');
 const raidBossService = require('./raidBossService');
+
+const CLIENT_MAPPING = {
+    id: 'i', formId: 'f', dexNr: 'd', names: 'n', stats: 's', 
+    primaryType: 't1', secondaryType: 't2', pokemonClass: 'c',
+    assetForms: 'a', regionForms: 'r', megaEvolutions: 'm', assets: 'as',
+    English: 'e', type: 'ty', stamina: 'st', attack: 'at', defense: 'de',
+    image: 'im', shinyImage: 'sh', costume: 'co', form: 'fo'
+};
 
 const pokedexService = {
     pokedex: null,
@@ -239,15 +247,36 @@ const pokedexService = {
                 return pokemon;
             });
 
+            // 1. Save Full Pokedex (reference)
             await fs.writeFile(POKEDEX_FILE, JSON.stringify(cleanedData, null, 2));
-            console.log('✅ Successfully cleaned and saved Pokédex data.');
+
+            // 2. Save Server-side Pokedex (Minified, no indentation)
+            await fs.writeFile(POKEDEX_SERVER_FILE, JSON.stringify(cleanedData));
+
+            // 3. Save Client-side Pokedex (Minified Keys)
+            const minify = (obj) => {
+                if (Array.isArray(obj)) return obj.map(minify);
+                if (obj !== null && typeof obj === 'object') {
+                    const newObj = {};
+                    for (const key in obj) {
+                        const newKey = CLIENT_MAPPING[key] || key;
+                        newObj[newKey] = minify(obj[key]);
+                    }
+                    return newObj;
+                }
+                return obj;
+            };
+            const clientData = minify(cleanedData);
+            await fs.writeFile(POKEDEX_CLIENT_FILE, JSON.stringify(clientData));
+
+            console.log('✅ Successfully processed and saved Pokedex variants.');
         } catch (error) {
             console.error('❌ CRITICAL: Could not clean and save Pokédex data.', error);
         }
 
         try {
-            const localPokedexJson = await fs.readFile(POKEDEX_FILE, 'utf-8');
-            const data = JSON.parse(localPokedexJson);
+            const serverPokedexJson = await fs.readFile(POKEDEX_SERVER_FILE, 'utf-8');
+            const data = JSON.parse(serverPokedexJson);
             this.pokedex = {};
             data.forEach(pokemon => {
                 const dexKey = pokemon.dexNr;
@@ -257,7 +286,7 @@ const pokedexService = {
             });
             console.log(`👍 Pokédex is now loaded with ${Object.keys(this.pokedex).length} entries.`);
         } catch (error) {
-            console.error('❌ CRITICAL: Could not load Pokédex from local file.', error);
+            console.error('❌ CRITICAL: Could not load Pokédex from server file.', error);
             this.pokedex = {};
         }
 

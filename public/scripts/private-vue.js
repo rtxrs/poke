@@ -1791,9 +1791,32 @@ pokemons.sort((a, b) => {
                     }
                 }
 
-                const pokedexResponse = await fetch('/data/user/generated/pokedex_modified.json');
+                const pokedexResponse = await fetch('/data/user/generated/pokedex_client.json');
                 if (pokedexResponse.ok) {
-                    allPokedex.value = await pokedexResponse.json();
+                    const minifiedData = await pokedexResponse.json();
+                    
+                    const DECODE_MAPPING = {
+                        i: 'id', f: 'formId', d: 'dexNr', n: 'names', s: 'stats', 
+                        t1: 'primaryType', t2: 'secondaryType', c: 'pokemonClass',
+                        a: 'assetForms', r: 'regionForms', m: 'megaEvolutions', as: 'assets',
+                        e: 'English', ty: 'type', st: 'stamina', at: 'attack', de: 'defense',
+                        im: 'image', sh: 'shinyImage', co: 'costume', fo: 'form'
+                    };
+
+                    const decode = (obj) => {
+                        if (Array.isArray(obj)) return obj.map(decode);
+                        if (obj !== null && typeof obj === 'object') {
+                            const newObj = {};
+                            for (const key in obj) {
+                                const newKey = DECODE_MAPPING[key] || key;
+                                newObj[newKey] = decode(obj[key]);
+                            }
+                            return newObj;
+                        }
+                        return obj;
+                    };
+                    
+                    allPokedex.value = decode(minifiedData);
 
                     // --- Initialize PvP Worker ---
                     if (allPokemons.value && allPokemons.value.length > 0 && window.Worker && pokedexLookup.value) {
