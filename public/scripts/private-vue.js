@@ -138,6 +138,26 @@ function getBadges(p, name) {
         badges.push('<span class="badge background-badge">Background</span>');
     }
 
+    // PvP Ranks as Markers
+    if (p.rankGreat && p.rankGreat <= 100 && p.cp <= 1500) {
+        let extraClass = '';
+        if (p.rankGreat <= 10) extraClass = ' rank-1';
+        else if (p.rankGreat <= 25) extraClass = ' rank-good';
+        badges.push(`<span class="badge pvp-badge great${extraClass}" title="Great League Rank #${p.rankGreat}"></span>`);
+    }
+    if (p.rankUltra && p.rankUltra <= 100 && p.cp <= 2500) {
+        let extraClass = '';
+        if (p.rankUltra <= 10) extraClass = ' rank-1';
+        else if (p.rankUltra <= 25) extraClass = ' rank-good';
+        badges.push(`<span class="badge pvp-badge ultra${extraClass}" title="Ultra League Rank #${p.rankUltra}"></span>`);
+    }
+    if (p.rankMaster && p.rankMaster <= 100) {
+        let extraClass = '';
+        if (p.rankMaster <= 10) extraClass = ' rank-1';
+        else if (p.rankMaster <= 25) extraClass = ' rank-good';
+        badges.push(`<span class="badge pvp-badge master${extraClass}" title="Master League Rank #${p.rankMaster}"></span>`);
+    }
+
     if (badges.length > 0) {
         return `${name}<br>${badges.join(' ')}`;
     }
@@ -324,11 +344,6 @@ const GridComponent = {
                 </div>
                 <p class="pokemon-name" v-html="getBadges(p, displayName(p))"></p>
                 <p class="pokemon-cp">CP {{ p.cp }}</p>
-                <div class="pvp-ranks">
-                    <span v-if="p.rankGreat && p.rankGreat <= 100 && p.cp <= 1500" :class="['pvp-badge', 'great', { 'rank-1': p.rankGreat <= 10, 'rank-good': p.rankGreat > 10 && p.rankGreat <= 25 }]">GL #{{ p.rankGreat }}</span>
-                    <span v-if="p.rankUltra && p.rankUltra <= 100 && p.cp <= 2500" :class="['pvp-badge', 'ultra', { 'rank-1': p.rankUltra <= 10, 'rank-good': p.rankUltra > 10 && p.rankUltra <= 25 }]">UL #{{ p.rankUltra }}</span>
-                    <span v-if="p.rankMaster && p.rankMaster <= 100" :class="['pvp-badge', 'master', { 'rank-1': p.rankMaster <= 10, 'rank-good': p.rankMaster > 10 && p.rankMaster <= 25 }]">ML #{{ p.rankMaster }}</span>
-                </div>
                 <p v-if="p.score" class="pokemon-score">{{ p.scoreLabel || 'Score' }}: {{ p.score.toFixed(2) }}</p>
                 <div class="iv-bar-container">
                     <div class="iv-bar" :style="{ width: getIvPercent(p) + '%', backgroundColor: getIvColor(getIvPercent(p)) }"></div>
