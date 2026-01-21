@@ -1719,6 +1719,96 @@ pokemons.sort((a, b) => {
             });
         };
 
+        const getPokemonTypeColors = (pokedexEntry) => {
+            const colors = [];
+            if (pokedexEntry?.primaryType?.type) {
+                const type = pokedexEntry.primaryType.type.replace('POKEMON_TYPE_', '');
+                colors.push(pokedexService.value.typeColorMap[type] || '#FFFFFF');
+            }
+            if (pokedexEntry?.secondaryType?.type) {
+                const type = pokedexEntry.secondaryType.type.replace('POKEMON_TYPE_', '');
+                colors.push(pokedexService.value.typeColorMap[type] || '#FFFFFF');
+            }
+            return colors;
+        };
+
+        const getPokemonName = (dexNr, formName) => {
+            const defaultName = `Pokedex #${dexNr}`;
+            const species = pokedexLookup.value[dexNr];
+            if (!species) return defaultName;
+            const normalEntry = species['NORMAL'] || Object.values(species)[0];
+            if (!normalEntry) return defaultName;
+            
+            const formKey = formName.replace(normalEntry.names.English.normalize("NFD").replace(/[\u0300-\u036f]/g, ""), '').toUpperCase().replace(/_/g, '').replace(/-/g, '').replace(/\s/g, '').trim() || 'NORMAL';
+            const entry = species[formKey] || normalEntry;
+            return entry?.names?.English || defaultName;
+        };
+
+        const getPokemonSprite = (p) => {
+            const defaultSprite = `https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon/pokemon_icon_${String(p.pokemonId).padStart(3, '0')}_00.png`;
+            const shinySprite = `https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon/pokemon_icon_${String(p.pokemonId).padStart(3, '0')}_00_shiny.png`;
+            const targetSprite = p.pokemonDisplay.shiny ? 'shinyImage' : 'image';
+
+            const species = pokedexLookup.value[p.pokemonId];
+            const basePokemon = species ? Object.values(species)[0] : null;
+            if (!basePokemon || !basePokemon.assetForms) {
+                return p.pokemonDisplay.shiny ? shinySprite : defaultSprite;
+            }
+
+            const formNameUpper = p.pokemonDisplay.formName.toUpperCase();
+            const baseNameUpper = basePokemon.names.English.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            
+            let formKey;
+            if (p.pokemonId === 201) {
+                formKey = formNameUpper.replace(/_/g, '').replace(/-/g, '').replace(/\s/g, '').trim();
+            } else {
+                formKey = formNameUpper.replace(baseNameUpper, '').replace(/_/g, '').replace(/-/g, '').replace(/\s/g, '').trim();
+            }
+
+            if (formKey === "" || formKey === "NORMAL") formKey = null;
+
+            let costumeKey = null;
+            const costumeId = p.pokemonDisplay.costume;
+            if (costumeId && costumeIdMap.value[costumeId]) {
+                costumeKey = costumeIdMap.value[costumeId].toUpperCase().replace(/_/g, '').replace(/-/g, '').replace(/\s/g, '').trim();
+            }
+
+            let foundAsset = null;
+            if (costumeKey && formKey) {
+                foundAsset = basePokemon.assetForms.find(asset => asset.costume === costumeKey && asset.form === formKey);
+            }
+            if (!foundAsset && costumeKey) {
+                foundAsset = basePokemon.assetForms.find(asset => asset.costume === costumeKey && !asset.form);
+            }
+            if (!foundAsset && formKey) {
+                foundAsset = basePokemon.assetForms.find(asset => asset.form === formKey && !asset.costume);
+            }
+            if (!foundAsset) {
+                foundAsset = basePokemon.assetForms.find(asset => !asset.costume && !asset.form);
+            }
+            if (!foundAsset) {
+                foundAsset = basePokemon.assetForms.find(asset => asset.form === 'NORMAL' && !asset.costume);
+            }
+
+            return foundAsset?.[targetSprite] || (p.pokemonDisplay.shiny ? shinySprite : defaultSprite);
+        };
+
+        const enrichPokemonData = (pokemons) => {
+            return pokemons.map(p => {
+                if (p.isEgg || !p.pokemonDisplay) return p;
+                const entry = getPokedexEntry(p);
+                return {
+                    ...p,
+                    name: getPokemonName(p.pokemonId, p.pokemonDisplay.formName),
+                    sprite: getPokemonSprite(p),
+                    typeColors: getPokemonTypeColors(entry),
+                    pokemonClass: entry?.pokemonClass,
+                    isMaxLevel: (p.cpMultiplier + (p.additionalCpMultiplier || 0)) > 0.83,
+                    specialForm: p.pokemonDisplay.breadModeEnum === 1 ? 'Dynamax' : (p.pokemonDisplay.breadModeEnum === 2 ? 'Gigantamax' : null)
+                };
+            });
+        };
+
         // --- Lifecycle Hook ---
         onMounted(async () => {
             try {
@@ -1746,17 +1836,150 @@ pokemons.sort((a, b) => {
                     currentAvatarId.value = account.value.preferences.avatarId;
                 }
 
-                allPokemons.value = rawPokemons;
+                // Wait for pokedex to load before enriching
+                const pokedexResponse = await fetch('/data/user/generated/pokedex_client.json');
+                if (pokedexResponse.ok) {
+                    const minifiedData = await pokedexResponse.json();
+                    
+                    const DECODE_MAPPING = {
+                        i: 'id', f: 'formId', d: 'dexNr', n: 'names', s: 'stats', 
+                        t1: 'primaryType', t2: 'secondaryType', c: 'pokemonClass',
+                        a: 'assetForms', r: 'regionForms', m: 'megaEvolutions', as: 'assets',
+                        e: 'English', ty: 'type', st: 'stamina', at: 'attack', de: 'defense',
+                        im: 'image', sh: 'shinyImage', co: 'costume', fo: 'form'
+                    };
 
-                // Fetch move map data from the new API endpoint
-                const movesResponse = await fetch('/api/moves');
-                if (movesResponse.ok) {
-                    moveMap.value = await movesResponse.json();
-                }
+                    const decode = (obj) => {
+                        if (Array.isArray(obj)) return obj.map(decode);
+                        if (obj !== null && typeof obj === 'object') {
+                            const newObj = {};
+                            for (const key in obj) {
+                                const newKey = DECODE_MAPPING[key] || key;
+                                newObj[newKey] = decode(obj[key]);
+                            }
+                            return newObj;
+                        }
+                        return obj;
+                    };
+                    
+                    allPokedex.value = decode(minifiedData);
 
-                const costumeResponse = await fetch('/data/user/custom/costumeIdMap.json');
-                if (costumeResponse.ok) {
-                    costumeIdMap.value = await costumeResponse.json();
+                    const costumeResponse = await fetch('/data/user/custom/costumeIdMap.json');
+                    if (costumeResponse.ok) {
+                        costumeIdMap.value = await costumeResponse.json();
+                    }
+
+                    // ENRICH DATA LOCALLY
+                    allPokemons.value = enrichPokemonData(rawPokemons);
+
+                    // --- Initialize PvP Worker ---
+                    if (allPokemons.value && allPokemons.value.length > 0 && pokedexLookup.value) {
+                        
+                        const generateCacheKey = (pokemons) => {
+                            let sumTime = 0;
+                            for (let i = 0; i < pokemons.length; i++) {
+                                sumTime += (pokemons[i].creationTimeMs || 0);
+                            }
+                            const now = new Date();
+                            const year = now.getFullYear();
+                            const month = (now.getMonth() + 1).toString().padStart(2, '0');
+                            const day = now.getDate().toString().padStart(2, '0');
+                            const hour = now.getHours().toString().padStart(2, '0');
+                            return `pvp_${pokemons.length}_${sumTime}_${year}_${month}_${day}_${hour}_v${pvpDataVersion.value}`;
+                        };
+
+                        const cacheKey = generateCacheKey(allPokemons.value);
+                        const cachedDataRaw = localStorage.getItem('pvp_cache');
+                        let loadedFromCache = false;
+
+                        if (cachedDataRaw) {
+                            try {
+                                const cachedData = JSON.parse(cachedDataRaw);
+                                if (cachedData.key === cacheKey) {
+                                    const ranks = cachedData.results;
+                                    allPokemons.value.forEach(p => {
+                                        if (ranks[p.id]) {
+                                            p.rankGreat = ranks[p.id].rankGreat;
+                                            p.rankUltra = ranks[p.id].rankUltra;
+                                            p.rankMaster = ranks[p.id].rankMaster;
+                                        }
+                                    });
+                                    allPokemons.value = [...allPokemons.value];
+                                    loadedFromCache = true;
+                                }
+                            } catch (e) {
+                                localStorage.removeItem('pvp_cache');
+                            }
+                        }
+
+                        if (!loadedFromCache) {
+                            const pvpContainer = document.getElementById('pvp-progress-container');
+                            const pvpBar = document.getElementById('pvp-progress-bar');
+                            if (pvpContainer) pvpContainer.classList.add('active');
+
+                            const payload = allPokemons.value.map(p => {
+                                const entry = getPokedexEntry(p);
+                                return {
+                                    id: p.pokemonId,
+                                    form: entry ? (entry.formId || 'NORMAL') : 'NORMAL',
+                                    ivs: { atk: p.individualAttack, def: p.individualDefense, sta: p.individualStamina },
+                                    uniqueId: p.id
+                                };
+                            });
+                            
+                            // BATCHED PVP LOOKUP (500 per request)
+                            const BATCH_SIZE = 500;
+                            const totalBatches = Math.ceil(payload.length / BATCH_SIZE);
+                            let combinedRanks = {};
+
+                            const fetchBatch = async (batchIdx) => {
+                                const start = batchIdx * BATCH_SIZE;
+                                const end = start + BATCH_SIZE;
+                                const batchPayload = payload.slice(start, end);
+
+                                if (pvpBar) pvpBar.style.width = `${((batchIdx + 1) / totalBatches) * 100}%`;
+
+                                const res = await fetch('/api/pvp-ranks', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ pokemons: batchPayload })
+                                });
+                                const batchRanks = await res.json();
+                                Object.assign(combinedRanks, batchRanks);
+
+                                // Apply this batch's ranks immediately for better UX
+                                allPokemons.value.forEach(p => {
+                                    if (batchRanks[p.id]) {
+                                        p.rankGreat = batchRanks[p.id].rankGreat;
+                                        p.rankUltra = batchRanks[p.id].rankUltra;
+                                        p.rankMaster = batchRanks[p.id].rankMaster;
+                                    }
+                                });
+                                allPokemons.value = [...allPokemons.value];
+
+                                if (batchIdx + 1 < totalBatches) {
+                                    await fetchBatch(batchIdx + 1);
+                                } else {
+                                    // Done!
+                                    try {
+                                        localStorage.setItem('pvp_cache', JSON.stringify({
+                                            key: cacheKey,
+                                            results: combinedRanks
+                                        }));
+                                    } catch (e) { }
+                                    
+                                    setTimeout(() => {
+                                         if (pvpContainer) pvpContainer.classList.remove('active');
+                                    }, 1000);
+                                }
+                            };
+
+                            fetchBatch(0).catch(err => {
+                                console.error("PvP Batch Error:", err);
+                                if (pvpContainer) pvpContainer.classList.remove('active');
+                            });
+                        }
+                    }
                 }
 
                 const typeEffectivenessResponse = await fetch('/data/public/type_effectiveness.json');
@@ -1791,140 +2014,6 @@ pokemons.sort((a, b) => {
                     }
                 }
 
-                const pokedexResponse = await fetch('/data/user/generated/pokedex_client.json');
-                if (pokedexResponse.ok) {
-                    const minifiedData = await pokedexResponse.json();
-                    
-                    const DECODE_MAPPING = {
-                        i: 'id', f: 'formId', d: 'dexNr', n: 'names', s: 'stats', 
-                        t1: 'primaryType', t2: 'secondaryType', c: 'pokemonClass',
-                        a: 'assetForms', r: 'regionForms', m: 'megaEvolutions', as: 'assets',
-                        e: 'English', ty: 'type', st: 'stamina', at: 'attack', de: 'defense',
-                        im: 'image', sh: 'shinyImage', co: 'costume', fo: 'form'
-                    };
-
-                    const decode = (obj) => {
-                        if (Array.isArray(obj)) return obj.map(decode);
-                        if (obj !== null && typeof obj === 'object') {
-                            const newObj = {};
-                            for (const key in obj) {
-                                const newKey = DECODE_MAPPING[key] || key;
-                                newObj[newKey] = decode(obj[key]);
-                            }
-                            return newObj;
-                        }
-                        return obj;
-                    };
-                    
-                    allPokedex.value = decode(minifiedData);
-
-                    // --- Initialize PvP Worker ---
-                    if (allPokemons.value && allPokemons.value.length > 0 && window.Worker && pokedexLookup.value) {
-                        
-                        const generateCacheKey = (pokemons) => {
-                            let sumTime = 0;
-                            // Using a simple loop for performance
-                            for (let i = 0; i < pokemons.length; i++) {
-                                sumTime += (pokemons[i].creationTimeMs || 0);
-                            }
-                            
-                            const now = new Date();
-                            const year = now.getFullYear();
-                            const month = (now.getMonth() + 1).toString().padStart(2, '0'); // Months are 0-indexed
-                            const day = now.getDate().toString().padStart(2, '0');
-                            const hour = now.getHours().toString().padStart(2, '0');
-                            
-                            // Include YYYY_MM_DD_hh to force hourly refresh + data version for background updates
-                            return `pvp_${pokemons.length}_${sumTime}_${year}_${month}_${day}_${hour}_v${pvpDataVersion.value}`;
-                        };
-
-                        const cacheKey = generateCacheKey(allPokemons.value);
-                        const cachedDataRaw = localStorage.getItem('pvp_cache');
-                        let loadedFromCache = false;
-
-                        if (cachedDataRaw) {
-                            try {
-                                const cachedData = JSON.parse(cachedDataRaw);
-                                if (cachedData.key === cacheKey) {
-                                    const ranks = cachedData.results;
-                                    allPokemons.value.forEach(p => {
-                                        if (ranks[p.id]) {
-                                            p.rankGreat = ranks[p.id].rankGreat;
-                                            p.rankGreatPercent = ranks[p.id].rankGreatPercent;
-                                            p.rankUltra = ranks[p.id].rankUltra;
-                                            p.rankUltraPercent = ranks[p.id].rankUltraPercent;
-                                            p.rankMaster = ranks[p.id].rankMaster;
-                                            p.rankMasterPercent = ranks[p.id].rankMasterPercent;
-                                        }
-                                    });
-                                    allPokemons.value = [...allPokemons.value]; // Force reactivity
-                                    loadedFromCache = true;
-                                }
-                            } catch (e) {
-                                console.warn("Error loading PvP cache:", e);
-                                localStorage.removeItem('pvp_cache');
-                            }
-                        }
-
-                        if (!loadedFromCache) {
-                            // Use Server API instead of Worker
-                            const pvpContainer = document.getElementById('pvp-progress-container');
-                            const pvpBar = document.getElementById('pvp-progress-bar');
-                            if (pvpContainer) pvpContainer.classList.add('active');
-                            if (pvpBar) pvpBar.style.width = '20%';
-
-                            const payload = allPokemons.value.map(p => {
-                                const entry = getPokedexEntry(p);
-                                return {
-                                    id: p.pokemonId,
-                                    form: entry ? (entry.formId || 'NORMAL') : 'NORMAL',
-                                    ivs: { atk: p.individualAttack, def: p.individualDefense, sta: p.individualStamina },
-                                    uniqueId: p.id
-                                };
-                            });
-                            
-                            if (pvpBar) pvpBar.style.width = '50%';
-
-                            fetch('/api/pvp-ranks', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ pokemons: payload })
-                            })
-                            .then(res => res.json())
-                            .then(ranks => {
-                                if (pvpBar) pvpBar.style.width = '100%';
-                                
-                                allPokemons.value.forEach(p => {
-                                    if (ranks[p.id]) {
-                                        p.rankGreat = ranks[p.id].rankGreat;
-                                        p.rankUltra = ranks[p.id].rankUltra;
-                                        p.rankMaster = ranks[p.id].rankMaster;
-                                    }
-                                });
-                                
-                                // Cache it
-                                try {
-                                    localStorage.setItem('pvp_cache', JSON.stringify({
-                                        key: cacheKey,
-                                        results: ranks
-                                    }));
-                                } catch (e) { }
-                                
-                                allPokemons.value = [...allPokemons.value];
-                                
-                                setTimeout(() => {
-                                     pvpProgress.value = -1;
-                                     if (pvpContainer) pvpContainer.classList.remove('active');
-                                }, 1000);
-                            })
-                            .catch(err => {
-                                console.error("PvP API Error:", err);
-                                if (pvpContainer) pvpContainer.classList.remove('active');
-                            });
-                        }
-                    }
-                }
-
                 // Update the main title with the player's name and userId
                 const mainTitle = document.getElementById('main-title');
                 if (account.value.name && account.value.userId) {
@@ -1947,6 +2036,14 @@ pokemons.sort((a, b) => {
                 // Set up tab navigation
                 updateActiveTabFromHash();
                 window.addEventListener('hashchange', updateActiveTabFromHash);
+
+            } catch (error) {
+                console.error('Dashboard Error:', error);
+                document.querySelector('.container').innerHTML = `<div class="card"><p>Could not load your player data. Reason: ${error.message}</p></div>`;
+            } finally {
+                loading.value = false;
+            }
+        });
 
             } catch (error) {
                 console.error('Dashboard Error:', error);

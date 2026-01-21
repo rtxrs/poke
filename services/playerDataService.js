@@ -536,34 +536,6 @@ const playerDataService = {
         await this.init();
         try {
             const data = JSON.parse(await fs.readFile(path.join(DATA_PATH, `${playerId}.json`), 'utf-8'));
-            const getPEntry = (p) => {
-                const forms = pokedexService.pokedex[p.pokemonId];
-                if (!forms) return null;
-                const base = forms['NORMAL'] || Object.values(forms)[0];
-                const fName = p.pokemonDisplay.formName?.toUpperCase() || '';
-                if (base.regionForms) {
-                    for (const k in base.regionForms) if (fName.includes(k.replace(/_/g, ''))) return base.regionForms[k];
-                }
-                const norm = base;
-                if (!fName || fName === 'UNSET' || fName.includes('NORMAL')) return norm;
-                const cleanF = fName.replace(/[^A-Z0-9]/g, '');
-                for (const k in forms) if (cleanF.includes(k.replace(/[^A-Z0-9]/g, ''))) return forms[k];
-                return norm;
-            };
-
-            data.pokemons = data.pokemons.map(p => {
-                if (p.isEgg || !p.pokemonDisplay) return p;
-                const entry = getPEntry(p);
-                return {
-                    ...p,
-                    name: pokedexService.getPokemonName(p.pokemonId, p.pokemonDisplay.formName),
-                    sprite: pokedexService.getPokemonSprite(p),
-                    typeColors: pokedexService.getPokemonTypeColors(entry),
-                    pokemonClass: entry?.pokemonClass,
-                    isMaxLevel: (p.cpMultiplier + (p.additionalCpMultiplier || 0)) > 0.83,
-                    specialForm: p.pokemonDisplay.breadModeEnum === 1 ? 'Dynamax' : (p.pokemonDisplay.breadModeEnum === 2 ? 'Gigantamax' : null)
-                };
-            });
             
             const users = await readUsers();
             const user = users.find(u => u.playerId === playerId);
