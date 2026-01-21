@@ -203,6 +203,7 @@ const playerDataService = {
                     }
 
                     const rarityScore = ivScore * shinyRate * (p.isLucky ? 20 : 1);
+                    const currentCpm = p.cpMultiplier + (p.additionalCpMultiplier || 0);
 
                     const baseData = {
                         name: pokedexService.getPokemonName(p.pokemonId, p.pokemonDisplay.formName),
@@ -211,6 +212,13 @@ const playerDataService = {
                         ownerId: playerId,
                         ownerPublicId: publicId,
                         userId: userId,
+                        cp: p.cp,
+                        iv: {
+                            attack: p.individualAttack,
+                            defense: p.individualDefense,
+                            stamina: p.individualStamina
+                        },
+                        cpm: currentCpm,
                         pokemonDisplay: p.pokemonDisplay,
                         isShiny: p.pokemonDisplay.shiny,
                         isLucky: p.isLucky,
@@ -221,10 +229,10 @@ const playerDataService = {
                         isLegendary: pokedexEntry?.pokemonClass === 'POKEMON_CLASS_LEGENDARY',
                         isMythical: pokedexEntry?.pokemonClass === 'POKEMON_CLASS_MYTHIC',
                         isTraded: p.tradedTimeMs > 0,
-                        isMaxLevel: (p.cpMultiplier + (p.additionalCpMultiplier || 0)) > 0.83
+                        isMaxLevel: currentCpm > 0.83
                     };
 
-                    addToCandidateList(strongestCandidates, { ...baseData, cp: p.cp }, 'cp');
+                    addToCandidateList(strongestCandidates, baseData, 'cp');
                     if (rarityScore > 1) {
                         addToCandidateList(rarestCandidates, { ...baseData, rarityScore, rarity: { score: rarityScore } }, 'rarityScore');
                     }
