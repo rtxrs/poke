@@ -70,7 +70,7 @@ app.use('/api', apiRoutes);
             // Non-blocking execution
             const child = exec('node scripts/generate_pvp_ranks.js', { cwd: __dirname });
             
-            // child.stdout.on('data', (data) => process.stdout.write(data)); // Optional: too noisy for background
+            child.stdout.on('data', (data) => process.stdout.write(data)); 
             child.stderr.on('data', (data) => process.stderr.write(data));
 
             child.on('close', (code) => {
