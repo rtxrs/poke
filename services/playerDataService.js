@@ -22,6 +22,8 @@ const playerDataService = {
         }
         // Ensure the data directory exists before trying to access map file
         await fs.mkdir(DATA_DIR, { recursive: true });
+        await fs.mkdir(path.join(DATA_DIR, 'private'), { recursive: true });
+        await fs.mkdir(path.join(DATA_DIR, 'private/sessions'), { recursive: true });
 
         // Load publicIdMap from file
         try {

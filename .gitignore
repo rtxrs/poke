@@ -15,6 +15,7 @@ data/user/pokedex_modified.json
 data/user/generated/*
 data/public/*
 data/private/*
+data/private/sessions/*
 
 # Environment Variables (Good Practice)
 # Contains sensitive information like API keys or secrets.

@@ -1,5 +1,6 @@
 const express = require('express');
 const session = require('express-session');
+const FileStore = require('session-file-store')(session);
 const compression = require('compression');
 const path = require('path');
 
@@ -18,9 +19,14 @@ app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
+    store: new FileStore({
+        path: path.join(__dirname, 'data/private/sessions'),
+        ttl: 86400, // 1 day
+        retries: 0
+    }),
     secret: config.SESSION_SECRET,
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
     cookie: { maxAge: 86400000 }
 }));
 
