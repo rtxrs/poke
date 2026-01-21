@@ -445,7 +445,7 @@ createApp({
         });
 
         const stats_megaEvolvedList = computed(() => {
-            if (!pokedexService.value.pokedex) return [];
+            if (!pokedexLookup.value) return [];
 
             const megaEvolvedIds = new Set();
             allPokemons.value.forEach(p => {
@@ -455,7 +455,7 @@ createApp({
             });
 
             return Array.from(megaEvolvedIds).map(id => {
-                const allForms = pokedexService.value.pokedex[id];
+                const allForms = pokedexLookup.value[id];
                 const entry = allForms?.['NORMAL'] || Object.values(allForms || {})[0];
                 return {
                     id: id,
@@ -540,7 +540,7 @@ createApp({
         });
 
         const stats_mostCommon = computed(() => {
-            if (!pokedexService.value.pokedex || allPokemons.value.length === 0) {
+            if (!pokedexLookup.value || allPokemons.value.length === 0) {
                 return [];
             }
 
@@ -555,7 +555,7 @@ createApp({
 
             return top5.map(([id, count]) => {
                 let name = `ID ${id}`; // Default fallback
-                const pokemonData = pokedexService.value.pokedex[id];
+                const pokemonData = pokedexLookup.value[id];
                 if (pokemonData) {
                     const formEntry = pokemonData['NORMAL'] || Object.values(pokemonData)[0];
                     if (formEntry && formEntry.names && formEntry.names.English) {
@@ -611,9 +611,9 @@ createApp({
         const pokecoins = computed(() => account.value.currencyBalance?.find(c => c.currencyType === 'POKECOIN')?.quantity || 0);
 
         const getPokedexEntry = (p) => {
-            if (!pokedexService.value.pokedex || !pokedexService.value.pokedex[p.pokemonId]) return null;
+            if (!pokedexLookup.value || !pokedexLookup.value[p.pokemonId]) return null;
 
-            const basePokemonData = Object.values(pokedexService.value.pokedex[p.pokemonId])[0];
+            const basePokemonData = Object.values(pokedexLookup.value[p.pokemonId])[0];
             if (!basePokemonData) return null;
 
             const playerFormName = p.pokemonDisplay.formName?.toUpperCase() || '';
@@ -628,7 +628,7 @@ createApp({
             }
 
             // Fallback to existing logic for other forms (costumes, etc.)
-            const allFormsForPokemon = pokedexService.value.pokedex[p.pokemonId];
+            const allFormsForPokemon = pokedexLookup.value[p.pokemonId];
             const normalEntry = allFormsForPokemon['NORMAL'] || basePokemonData;
 
             if (!playerFormName || playerFormName === 'UNSET' || playerFormName.includes('NORMAL')) {
@@ -666,8 +666,8 @@ createApp({
 
         // --- Comprehensive DPS Calculation ---
         const calculateDps = (p, targetTypes = []) => {
-            if (!p || !combatMoves.value || !pokedexService.value.pokedex) {
-                // console.log("DPS Calc Skipped: Missing Data", !!p, !!combatMoves.value, !!pokedexService.value.pokedex);
+            if (!p || !combatMoves.value || !pokedexLookup.value) {
+                // console.log("DPS Calc Skipped: Missing Data", !!p, !!combatMoves.value, !!pokedexLookup.value);
                 return null;
             }
             
@@ -908,6 +908,17 @@ pokemons.sort((a, b) => {
         const customEnemies = ref([]);
         const activeTeamBuilderTab = ref('Overall');
         const allPokedex = ref([]); // To populate the custom enemy selector
+        const pokedexLookup = computed(() => {
+            if (!allPokedex.value) return {};
+            const lookup = {};
+            allPokedex.value.forEach(pokemon => {
+                const dexKey = pokemon.dexNr;
+                if (!lookup[dexKey]) lookup[dexKey] = {};
+                let formKey = pokemon.formId || 'NORMAL';
+                lookup[dexKey][formKey] = pokemon;
+            });
+            return lookup;
+        });
         const allPokedexNames = computed(() => {
             if (!allPokedex.value) return [];
             const names = new Set();
@@ -1783,7 +1794,7 @@ pokemons.sort((a, b) => {
                     allPokedex.value = await pokedexResponse.json();
 
                     // --- Initialize PvP Worker ---
-                    if (allPokemons.value && allPokemons.value.length > 0 && window.Worker && pokedexService.value.pokedex) {
+                    if (allPokemons.value && allPokemons.value.length > 0 && window.Worker && pokedexLookup.value) {
                         
                         const generateCacheKey = (pokemons) => {
                             let sumTime = 0;

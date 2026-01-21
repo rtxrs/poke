@@ -722,7 +722,7 @@ const playerDataService = {
                 playerData: data,
                 pokedexService: {
                     typeColorMap: pokedexService.typeColorMap,
-                    pokedex: pokedexService.pokedex
+                    // pokedex: pokedexService.pokedex // REMOVED to save egress bandwidth
                 }
             };
 

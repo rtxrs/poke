@@ -1,5 +1,6 @@
 const express = require('express');
 const session = require('express-session');
+const compression = require('compression');
 const path = require('path');
 
 const config = require('./config');
@@ -13,6 +14,7 @@ const app = express();
 app.set('trust proxy', 1);
 
 // --- Middleware ---
+app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
@@ -21,9 +23,15 @@ app.use(session({
     saveUninitialized: true,
     cookie: { maxAge: 86400000 }
 }));
-app.use(express.static('public'));
-app.use('/data', express.static(path.join(__dirname, 'data')));
-app.use('/data', express.static('data'));
+
+const staticOptions = {
+    maxAge: '1d',
+    etag: true
+};
+
+app.use(express.static('public', staticOptions));
+app.use('/data', express.static(path.join(__dirname, 'data'), staticOptions));
+app.use('/data', express.static('data', staticOptions));
 
 // --- Routes ---
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
