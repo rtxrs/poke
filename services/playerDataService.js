@@ -713,9 +713,10 @@ const playerDataService = {
             const userId = user ? (users.indexOf(user) + 1).toString().padStart(3, '0') : null;
             const publicId = await this.generatePublicId(playerId);
 
-            // Add userId and publicId to account object
+            // Add userId, publicId, and preferences to account object
             data.account.userId = userId;
             data.account.publicId = publicId;
+            data.account.preferences = user?.preferences || {};
             
             return {
                 playerData: data,

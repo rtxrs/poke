@@ -343,7 +343,14 @@
                         <section class="card" id="trainer-summary">
                             <h2>Trainer Summary</h2>
                             <div class="trainer-info">
-                                <div class="team-logo" :style="{ backgroundColor: teamColor }"></div>
+                                <div class="team-logo-wrapper" @click="openAvatarModal">
+                                    <div class="team-logo" :style="{ backgroundColor: teamColor }">
+                                        <img :src="currentAvatarUrl" alt="Character">
+                                    </div>
+                                    <div class="edit-overlay">
+                                        <span>✏️</span>
+                                    </div>
+                                </div>
                                 <div><strong>Lv. {{ player.level }}</strong></div>
                             </div>
                             <div class="xp-bar-container">
@@ -652,6 +659,33 @@
                 </div>
 
                 <grid-component :pokemons="activeTabSuggestions" @pokemon-clicked="openPokemonModal($event)"></grid-component>
+            </div>
+        </div>
+        
+        <!-- Avatar Selection Modal -->
+        <div id="avatar-modal-backdrop" v-if="showAvatarModal" @click.self="showAvatarModal = false">
+            <div id="avatar-modal-content" class="card">
+                <div class="modal-header">
+                    <h2>Select Avatar</h2>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button class="btn-primary" @click="saveAvatar" :disabled="savingAvatar">
+                            {{ savingAvatar ? 'Saving...' : 'Save Selection' }}
+                        </button>
+                        <button class="close-btn" @click="showAvatarModal = false">&times;</button>
+                    </div>
+                </div>
+                <div class="modal-body avatar-grid-container" @scroll="handleAvatarScroll">
+                    <div class="avatar-grid">
+                        <div v-for="id in visibleAvatars" :key="id" 
+                             class="avatar-item" 
+                             :class="{ selected: pendingAvatarId == id }"
+                             @click="selectAvatar(id)">
+                            <img :src="`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${id}.png`" loading="lazy" :alt="`Pokemon ${id}`">
+                            <span class="avatar-id">#{{ id }}</span>
+                        </div>
+                    </div>
+                    <div v-if="loadingAvatars" class="loading-spinner-small">Loading...</div>
+                </div>
             </div>
         </div>
         

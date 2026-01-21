@@ -16,8 +16,16 @@ body.dashboard-private, body:not([class]) {
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    object-fit: cover;
     background: #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+.team-logo img {
+    width: 85%;
+    height: 85%;
+    object-fit: contain;
 }
 #trainerLevel {
     font-size: 1.5em;
@@ -156,9 +164,142 @@ body.dashboard-private, body:not([class]) {
 .left-column, .right-column { display: flex; flex-direction: column; gap: 20px; }
 
 
+/* --- Team Logo Edit --- */
+.team-logo-wrapper {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    cursor: pointer;
+}
+
+.edit-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.team-logo-wrapper:hover .edit-overlay {
+    opacity: 1;
+}
+
+.edit-overlay span {
+    font-size: 1.2em;
+    user-select: none;
+}
+
+/* --- Avatar Modal --- */
+#avatar-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+#avatar-modal-content {
+    width: 90%;
+    max-width: 800px;
+    height: 80vh;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    background-color: white;
+}
+
+#avatar-modal-content .modal-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#avatar-modal-content .modal-header h2 {
+    margin: 0;
+}
+
+#avatar-modal-content .close-btn {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    cursor: pointer;
+    color: #666;
+}
+
+.avatar-grid-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.avatar-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 15px;
+}
+
+.avatar-item {
+    width: 100px;
+    height: 120px; /* Space for image + ID */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+    background-color: #f9f9f9;
+}
+
+.avatar-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    background-color: #fff;
+    border-color: #ddd;
+}
+
+.avatar-item.selected {
+    border-color: #3498db;
+    background-color: #e7f5ff;
+    box-shadow: 0 0 0 2px #3498db;
+}
+
+.avatar-item img {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+}
+
+.avatar-id {
+    font-size: 0.8em;
+    color: #666;
+    margin-top: 5px;
+}
+
+.loading-spinner-small {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+    font-weight: bold;
+}
+
 /* --- Private Dashboard Components --- */
 .trainer-info { display: flex; align-items: center; gap: 15px; }
-.team-logo { width: 60px; height: 60px; border-radius: 50%; }
 #trainerLevel { font-size: 1.5em; font-weight: bold; }
 .xp-bar-container { width: 100%; background-color: #e9ecef; border-radius: 10px; margin-top: 15px; }
 .xp-bar { height: 20px; background-color: #4caf50; border-radius: 10px; }

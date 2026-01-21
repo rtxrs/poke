@@ -89,6 +89,22 @@ router.get('/private-data', isAuthenticated, async (req, res) => {
     }
 });
 
+router.post('/update-preferences', isAuthenticated, async (req, res) => {
+    try {
+        const { playerId } = req.session.user;
+        const { preferences } = req.body;
+        if (!preferences) {
+            return res.status(400).json({ message: 'No preferences provided.' });
+        }
+        const userService = require('../services/userService');
+        const updatedPrefs = await userService.updateUserPreferences(playerId, preferences);
+        res.json({ success: true, preferences: updatedPrefs });
+    } catch (error) {
+        console.error("Error in /api/update-preferences:", error);
+        res.status(500).json({ message: error.message });
+    }
+});
+
 router.get('/check-auth-status', async (req, res) => {
     if (req.session.user) {
         try {

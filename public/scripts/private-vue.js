@@ -929,6 +929,110 @@ pokemons.sort((a, b) => {
 
         const allTeamSuggestions = ref({}); // New object to hold all suggestions
 
+        // --- Avatar Selection ---
+        const showAvatarModal = ref(false);
+        const totalAvatars = ref(0);
+        const visibleAvatars = ref([]);
+        const loadingAvatars = ref(false);
+        const AVATAR_BATCH_SIZE = 50;
+        const currentAvatarId = ref('132'); // Default to Ditto
+        const pendingAvatarId = ref(null); // The one selected but not yet saved
+        const savingAvatar = ref(false);
+
+        const currentAvatarUrl = computed(() => {
+            const id = currentAvatarId.value;
+            // Check if it's the default Ditto GIF (special case for animation)
+            // We use '132' as the default if no preference is set
+            if (id === '132' && (!account.value.preferences || !account.value.preferences.avatarId)) {
+                 return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/132.gif';
+            }
+            // Otherwise use Home Artwork
+            return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${id}.png`;
+        });
+
+        const openAvatarModal = async () => {
+            showAvatarModal.value = true;
+            pendingAvatarId.value = currentAvatarId.value; // Initialize pending with current
+            if (totalAvatars.value === 0) {
+                // Use local Pokedex data if available
+                if (allPokedex.value) {
+                    if (Array.isArray(allPokedex.value)) {
+                        let maxId = 0;
+                        allPokedex.value.forEach(p => {
+                            if (p.id && typeof p.id === 'number' && p.id > maxId) {
+                                maxId = p.id;
+                            } else if (p.dexNr && typeof p.dexNr === 'number' && p.dexNr > maxId) {
+                                maxId = p.dexNr;
+                            }
+                        });
+                        totalAvatars.value = maxId > 0 ? maxId : 1025;
+                    } else if (typeof allPokedex.value === 'object') {
+                        totalAvatars.value = Object.keys(allPokedex.value).length;
+                    } else {
+                        totalAvatars.value = 1025;
+                    }
+                } else {
+                    totalAvatars.value = 1025;
+                }
+                loadMoreAvatars();
+            }
+        };
+
+        const loadMoreAvatars = () => {
+            if (loadingAvatars.value) return;
+            loadingAvatars.value = true;
+            
+            const currentCount = visibleAvatars.value.length;
+            const nextBatch = [];
+            
+            for (let i = 1; i <= AVATAR_BATCH_SIZE; i++) {
+                const nextId = currentCount + i;
+                if (nextId > totalAvatars.value) break;
+                nextBatch.push(nextId);
+            }
+
+            visibleAvatars.value = [...visibleAvatars.value, ...nextBatch];
+            loadingAvatars.value = false;
+        };
+
+        const handleAvatarScroll = (e) => {
+            const { scrollTop, clientHeight, scrollHeight } = e.target;
+            if (scrollTop + clientHeight >= scrollHeight - 50) {
+                loadMoreAvatars();
+            }
+        };
+
+        const selectAvatar = (id) => {
+            pendingAvatarId.value = id;
+        };
+
+        const saveAvatar = async () => {
+            if (!pendingAvatarId.value) return;
+            savingAvatar.value = true;
+            try {
+                const response = await fetch('/api/update-preferences', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        preferences: { avatarId: pendingAvatarId.value.toString() }
+                    })
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    currentAvatarId.value = pendingAvatarId.value;
+                    account.value.preferences = data.preferences;
+                    showAvatarModal.value = false;
+                } else {
+                    alert('Failed to save avatar preference.');
+                }
+            } catch (e) {
+                console.error("Save avatar error:", e);
+                alert('An error occurred while saving.');
+            } finally {
+                savingAvatar.value = false;
+            }
+        };
+
         // --- Methods ---
         const openTeamBuilderModal = () => { showTeamBuilderModal.value = true; };
         const closeTeamBuilderModal = () => { showTeamBuilderModal.value = false; };
@@ -1625,6 +1729,10 @@ pokemons.sort((a, b) => {
                 const rawPokemons = responseData.playerData.pokemons.filter(p => !p.isEgg && p.pokemonId !== 0);
                 pokedexService.value = responseData.pokedexService || { typeColorMap: {}, pokedex: null };
 
+                if (account.value.preferences && account.value.preferences.avatarId) {
+                    currentAvatarId.value = account.value.preferences.avatarId;
+                }
+
                 allPokemons.value = rawPokemons;
 
                 // Fetch move map data from the new API endpoint
@@ -1846,7 +1954,19 @@ pokemons.sort((a, b) => {
             trashConfig,
             generatedTrashStrings,
             generateTrashString,
-            copyToClipboard
+            copyToClipboard,
+
+            // Avatar Selection
+            showAvatarModal,
+            visibleAvatars,
+            loadingAvatars,
+            currentAvatarUrl,
+            openAvatarModal,
+            handleAvatarScroll,
+            selectAvatar,
+            pendingAvatarId,
+            saveAvatar,
+            savingAvatar
         };
     }
 }).mount('#app');
