@@ -24,57 +24,74 @@ const LEAGUES = { great: 1500, ultra: 2500, master: 10000 };
 const SQRT_TABLE = new Float64Array(1000);
 for (let i = 0; i < 1000; i++) SQRT_TABLE[i] = Math.sqrt(i);
 
-function getFastOptimalStats(baseStats, ivs, cap) {
-    const atkTotal = baseStats.attack + ivs.atk;
-    const defTotal = baseStats.defense + ivs.def;
-    const staTotal = baseStats.stamina + ivs.sta;
-
-    // Const = Atk * sqrt(Def) * sqrt(Sta) / 10
-    const cpConst = (atkTotal * SQRT_TABLE[defTotal] * SQRT_TABLE[staTotal]) / 10;
-
-    // Use Binary Search to find max level where Const * CPM^2 <= cap
-    let low = 0;
-    let high = SORTED_LEVELS.length - 1;
-    let bestIdx = 0;
-
-    while (low <= high) {
-        const mid = (low + high) >> 1;
-        const cp = Math.max(10, Math.floor(cpConst * SORTED_LEVELS[mid].cpm2));
-        if (cp <= cap) {
-            bestIdx = mid;
-            low = mid + 1;
-        } else {
-            high = mid - 1;
-        }
-    }
-
-    const best = SORTED_LEVELS[bestIdx];
-    const realAtk = atkTotal * best.cpm;
-    const realDef = defTotal * best.cpm;
-    const realHp = Math.floor(staTotal * best.cpm);
-    const statProduct = realAtk * realDef * realHp;
-
-    return { cp: Math.max(10, Math.floor(cpConst * best.cpm2)), statProduct };
-}
+// Reusable buffers to avoid allocation in workers
+const statProducts = new Float64Array(4096);
+const cps = new Uint16Array(4096);
+const sortBuffer = new Float64Array(4096);
+const ivKeys = new Uint16Array(4096);
 
 function generateRankList(baseStats, cap) {
-    const combinations = new Array(4096);
+    const atkTotalBase = baseStats.attack;
+    const defTotalBase = baseStats.defense;
+    const staTotalBase = baseStats.stamina;
+
     let i = 0;
     for (let atk = 0; atk <= 15; atk++) {
+        const atkTotal = atkTotalBase + atk;
         for (let def = 0; def <= 15; def++) {
+            const defTotal = defTotalBase + def;
+            const cpPart = (atkTotal * SQRT_TABLE[defTotal]) / 10;
+            const sqrtDef = SQRT_TABLE[defTotal];
+
             for (let sta = 0; sta <= 15; sta++) {
-                const result = getFastOptimalStats(baseStats, { atk, def, sta }, cap);
-                combinations[i++] = {
-                    ivKey: (atk << 8) | (def << 4) | sta,
-                    statProduct: result.statProduct,
-                    cp: result.cp
-                };
+                const staTotal = staTotalBase + sta;
+                const cpConst = cpPart * SQRT_TABLE[staTotal];
+
+                // Binary Search for Level
+                let low = 0, high = SORTED_LEVELS.length - 1, bestIdx = 0;
+                while (low <= high) {
+                    const mid = (low + high) >> 1;
+                    if (Math.floor(cpConst * SORTED_LEVELS[mid].cpm2) <= cap) {
+                        bestIdx = mid;
+                        low = mid + 1;
+                    } else {
+                        high = mid - 1;
+                    }
+                }
+
+                const best = SORTED_LEVELS[bestIdx];
+                const realHp = Math.floor(staTotal * best.cpm);
+                const statProduct = (atkTotal * best.cpm) * (defTotal * best.cpm) * realHp;
+                const finalCp = Math.max(10, Math.floor(cpConst * best.cpm2));
+
+                const ivKey = (atk << 8) | (def << 4) | sta;
+                
+                // Pack for sorting: statProduct is primary, cp is secondary tie-breaker
+                // We use a large multiplier for statProduct to keep it as the most significant part
+                // and add CP as a small fractional part.
+                statProducts[i] = statProduct;
+                cps[i] = finalCp;
+                ivKeys[i] = ivKey;
+                // statProduct is ~1-10 million. CP is ~10-10000.
+                sortBuffer[i] = (statProduct * 100000) + finalCp;
+                i++;
             }
         }
     }
 
-    combinations.sort((a, b) => (b.statProduct - a.statProduct) || (b.cp - a.cp));
-    return combinations.map(c => c.ivKey);
+    // Create an index array to sort
+    const indices = new Uint16Array(4096);
+    for (let j = 0; j < 4096; j++) indices[j] = j;
+
+    // Sort indices based on packed values in sortBuffer
+    indices.sort((a, b) => sortBuffer[b] - sortBuffer[a]);
+
+    // Return the ivKeys in ranked order
+    const result = new Uint16Array(4096);
+    for (let j = 0; j < 4096; j++) {
+        result[j] = ivKeys[indices[j]];
+    }
+    return Array.from(result);
 }
 
 // --- Worker Logic ---
