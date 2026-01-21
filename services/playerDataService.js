@@ -11,8 +11,11 @@ const { readUsers, writeUsers } = require('./userService');
 const playerDataService = {
     publicIdMap: new Map(), // Stores publicId -> playerId mapping
     playerIdToPublicIdMap: new Map(), // Stores playerId -> publicId mapping
+    _initialized: false,
 
     async init() {
+        if (this._initialized) return;
+        
         if (!uuidv4) {
             const uuidModule = await import('uuid');
             uuidv4 = uuidModule.v4;
@@ -69,6 +72,7 @@ const playerDataService = {
 
         // Schedule background rankings update every 15 minutes of the hour
         this.scheduleRankingsUpdate();
+        this._initialized = true;
     },
 
     scheduleRankingsUpdate() {
