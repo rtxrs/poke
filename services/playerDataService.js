@@ -194,17 +194,56 @@ const playerDataService = {
                     const pokedexEntry = getPokedexEntry(p);
                     const shinyRate = pokedexService.getShinyRate(p.pokemonId, p.originDetail?.originDetailCase, pokedexEntry?.pokemonClass, p.originEvents);
                     
-                    let ivScore = 1;
-                    if (p.individualAttack === 0 && p.individualDefense === 0 && p.individualStamina === 0) ivScore = 4097;
-                    else if (p.individualAttack === 15 && p.individualDefense === 15 && p.individualStamina === 15) {
+                    const rarity = {
+                        score: 1,
+                        breakdown: {
+                            iv: { value: 1, text: '' },
+                            shiny: { value: 1, text: '' },
+                            lucky: { value: 1, text: '' },
+                            origin: { value: 1, text: '' }
+                        }
+                    };
+
+                    // IV Rarity
+                    if (p.individualAttack === 0 && p.individualDefense === 0 && p.individualStamina === 0) {
+                        rarity.breakdown.iv.value = 4097;
+                        rarity.breakdown.iv.text = '0 IV';
+                    } else if (p.individualAttack === 15 && p.individualDefense === 15 && p.individualStamina === 15) {
                         const origin = p.originDetail?.originDetailCase;
                         const alignment = p.pokemonDisplay.alignment;
-                        if (alignment === 1) ivScore = (origin === 3 || origin === 28) ? 1000 : 4096;
-                        else if (alignment === 2) ivScore = 152;
-                        else ivScore = p.isLucky ? 64 : (p.tradedTimeMs > 0 ? 987 : 4096);
+                        if (alignment === 1) {
+                            rarity.breakdown.iv.value = (origin === 3 || origin === 28) ? 1000 : 4096;
+                            rarity.breakdown.iv.text = 'Shadow Hundo';
+                        } else if (alignment === 2) {
+                            rarity.breakdown.iv.value = 152;
+                            rarity.breakdown.iv.text = 'Purified Hundo';
+                        } else {
+                            if (p.isLucky) {
+                                rarity.breakdown.iv.value = 64;
+                                rarity.breakdown.iv.text = 'Lucky Hundo';
+                            } else if (p.tradedTimeMs > 0) {
+                                rarity.breakdown.iv.value = 987;
+                                rarity.breakdown.iv.text = 'Traded Hundo';
+                            } else {
+                                rarity.breakdown.iv.value = 4096;
+                                rarity.breakdown.iv.text = 'Wild Hundo';
+                            }
+                        }
                     }
 
-                    const rarityScore = ivScore * shinyRate * (p.isLucky ? 20 : 1);
+                    // Shiny Rarity
+                    if (p.pokemonDisplay?.shiny) {
+                        rarity.breakdown.shiny.value = shinyRate;
+                        rarity.breakdown.shiny.text = (p.originEvents && p.originEvents.some(event => event.includes('community_day'))) ? 'Community Day' : 'Shiny';
+                    }
+
+                    // Lucky Rarity
+                    if (p.isLucky) {
+                        rarity.breakdown.lucky.value = 20;
+                        rarity.breakdown.lucky.text = 'Lucky';
+                    }
+
+                    rarity.score = rarity.breakdown.iv.value * rarity.breakdown.shiny.value * rarity.breakdown.lucky.value;
                     const currentCpm = p.cpMultiplier + (p.additionalCpMultiplier || 0);
 
                     const baseData = {
@@ -231,12 +270,13 @@ const playerDataService = {
                         isLegendary: pokedexEntry?.pokemonClass === 'POKEMON_CLASS_LEGENDARY',
                         isMythical: pokedexEntry?.pokemonClass === 'POKEMON_CLASS_MYTHIC',
                         isTraded: p.tradedTimeMs > 0,
-                        isMaxLevel: currentCpm > 0.83
+                        isMaxLevel: currentCpm > 0.83,
+                        rarity: rarity
                     };
 
                     addToCandidateList(strongestCandidates, baseData, 'cp');
-                    if (rarityScore > 1) {
-                        addToCandidateList(rarestCandidates, { ...baseData, rarityScore, rarity: { score: rarityScore } }, 'rarityScore');
+                    if (rarity.score > 1) {
+                        addToCandidateList(rarestCandidates, { ...baseData, rarityScore: rarity.score }, 'rarityScore');
                     }
                 });
             } catch (err) {
