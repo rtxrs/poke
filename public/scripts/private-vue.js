@@ -597,7 +597,7 @@ createApp({
             if (!player.value.nextLevelExp) return 0;
             const xpForLevel = player.value.nextLevelExp - player.value.prevLevelExp;
             const xpProgress = player.value.experience - player.value.prevLevelExp;
-            return Math.max(0, (xpProgress / xpForLevel) * 100);
+            return Math.min(100, Math.max(0, (xpProgress / xpForLevel) * 100));
         });
 
         const xpProgressText = computed(() => {
