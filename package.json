@@ -1,4 +1,8 @@
 {
+  "scripts": {
+    "start": "node --max-old-space-size=768 server.js",
+    "pvp-gen": "node --max-old-space-size=768 scripts/generate_pvp_ranks.js"
+  },
   "dependencies": {
     "bcrypt": "^6.0.0",
     "compression": "^1.8.1",
