@@ -12,7 +12,7 @@ const CLIENT_MAPPING = {
     primaryType: 't1', secondaryType: 't2', pokemonClass: 'c',
     assetForms: 'a', regionForms: 'r', megaEvolutions: 'm', assets: 'as',
     English: 'e', type: 'ty', stamina: 'st', attack: 'at', defense: 'de',
-    image: 'im', shinyImage: 'sh', costume: 'co', form: 'fo'
+    image: 'im', shinyImage: 'sh', costume: 'co', form: 'fo', isFemale: 'if'
 };
 
 const pokedexService = {
@@ -244,17 +244,9 @@ const pokedexService = {
                 delete pokemon.cinematicMoves;
                 delete pokemon.eliteQuickMoves;
                 delete pokemon.eliteCinematicMoves;
-
-                let formKey = pokemon.formId;
-                const englishNameUpper = pokemon.names.English.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                if (formKey.toUpperCase().includes(englishNameUpper)) {
-                    formKey = formKey.toUpperCase().replace(englishNameUpper, '');
-                }
-                formKey = formKey.toUpperCase().replace(/_/g, '').replace(/-/g, '').replace(/\s/g, '').trim();
-                if (!formKey || formKey === 'UNSET') {
-                    formKey = 'NORMAL';
-                }
-                pokemon.formId = formKey;
+                delete pokemon.generation;
+                delete pokemon.evolutions;
+                delete pokemon.hasGigantamaxEvolution;
 
                 if (pokemon.assetForms && Array.isArray(pokemon.assetForms)) {
                     pokemon.assetForms.forEach(assetForm => {

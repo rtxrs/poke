@@ -1856,7 +1856,7 @@ pokemons.sort((a, b) => {
                         t1: 'primaryType', t2: 'secondaryType', c: 'pokemonClass',
                         a: 'assetForms', r: 'regionForms', m: 'megaEvolutions', as: 'assets',
                         e: 'English', ty: 'type', st: 'stamina', at: 'attack', de: 'defense',
-                        im: 'image', sh: 'shinyImage', co: 'costume', fo: 'form'
+                        im: 'image', sh: 'shinyImage', co: 'costume', fo: 'form', if: 'isFemale'
                     };
 
                     const decode = (obj) => {
