@@ -239,6 +239,10 @@ const pokedexService = {
                     pokemon.secondaryType.names = { English: engType };
                 }
 
+                // Strip unused move pools to save RAM/Bandwidth
+                delete pokemon.quickMoves;
+                delete pokemon.cinematicMoves;
+
                 let formKey = pokemon.formId;
                 const englishNameUpper = pokemon.names.English.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
                 if (formKey.toUpperCase().includes(englishNameUpper)) {
