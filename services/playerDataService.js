@@ -4,6 +4,7 @@ let uuidv4;
 
 const { DATA_PATH, DATA_FOLDER, RANKINGS_FILE, DATA_DIR, PUBLIC_ID_MAP_FILE } = require('../config');
 const pokedexService = require('./pokedexService');
+const pvpService = require('./pvpService');
 const { readUsers, writeUsers } = require('./userService');
 
 const playerDataService = {
