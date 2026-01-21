@@ -1203,11 +1203,6 @@ pokemons.sort((a, b) => {
                     });
 
                     tanks.forEach(p => {
-                        // If we want to show it strictly as a Tank even if it was an Attacker...
-                        // But usually we just want 12 suggestions.
-                        // If we dedup, we might end up with < 12 items.
-                        // Let's NOT dedup for now, so the user explicitly sees the "Tank" list starting after "Attackers".
-                        // Actually, deduping is cleaner UI. 
                         if (!addedIds.has(p.id)) {
                             uniqueSuggestions.push(p);
                             addedIds.add(p.id);
