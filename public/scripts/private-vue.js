@@ -1618,6 +1618,27 @@ pokemons.sort((a, b) => {
                 
                             return displayList;
                         });
+        // --- Scroll to Top Logic ---
+        const showScrollTop = ref(false);
+
+        const handleScroll = () => {
+            let scrolled = false;
+            if (window.scrollY > 300) scrolled = true;
+            
+            const pokemonList = document.getElementById('all-pokemon-list');
+            if (pokemonList && pokemonList.scrollTop > 300) scrolled = true;
+
+            showScrollTop.value = scrolled;
+        };
+
+        const scrollToTop = () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            const pokemonList = document.getElementById('all-pokemon-list');
+            if (pokemonList) {
+                pokemonList.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        };
+
         const pvpProgress = ref(-1); // Progress -1 (Hidden), 0-100 (Visible)
         const combatMoves = ref(null); // Stores full stats for moves (power, energy, duration)
 
@@ -2064,6 +2085,12 @@ pokemons.sort((a, b) => {
                 updateActiveTabFromHash();
                 window.addEventListener('hashchange', updateActiveTabFromHash);
 
+                window.addEventListener('scroll', handleScroll);
+                const pokemonList = document.getElementById('all-pokemon-list');
+                if (pokemonList) {
+                    pokemonList.addEventListener('scroll', handleScroll);
+                }
+
             } catch (error) {
                 console.error('Dashboard Error:', error);
                 document.querySelector('.container').innerHTML = `<div class="card"><p>Could not load your player data. Reason: ${error.message}</p></div>`;
@@ -2074,6 +2101,7 @@ pokemons.sort((a, b) => {
 
         // --- Expose to Template ---
         return {
+            showScrollTop, scrollToTop,
             loading, account, player, items, activeTab, searchQuery, sortKey, sortDirection, itemsExpanded, selectedPokemon, moveMap, costumeIdMap, pokedexService,
             teamColor, xpPercentage, xpProgressText, stardust, pokecoins, highlights,
             groupedItems, itemCategoryOrder, filteredPokemon,
