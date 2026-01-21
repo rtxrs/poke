@@ -300,6 +300,30 @@ const playerDataService = {
             const files = await fs.readdir(DATA_PATH);
             const playerFiles = files.filter(f => f.endsWith('.json') && f !== 'PGSStats.json');
 
+            // --- Optimization Check: Skip if no new uploads ---
+            let lastUpdateTimestamp = 0;
+            try {
+                const stats = await fs.stat(RANKINGS_FILE);
+                lastUpdateTimestamp = stats.mtimeMs;
+                
+                const existing = JSON.parse(await fs.readFile(RANKINGS_FILE, 'utf-8'));
+                if (existing.lastHeavyUpdate) {
+                    lastUpdateTimestamp = existing.lastHeavyUpdate;
+                }
+            } catch (e) { /* File doesn't exist yet */ }
+
+            let latestUploadTime = 0;
+            const playerFileStats = await Promise.all(playerFiles.map(f => fs.stat(path.join(DATA_PATH, f))));
+            playerFileStats.forEach(s => {
+                if (s.mtimeMs > latestUploadTime) latestUploadTime = s.mtimeMs;
+            });
+
+            if (latestUploadTime <= lastUpdateTimestamp && latestUploadTime !== 0) {
+                console.log('⏭️ Skipping global rankings update: No new uploads detected since last run.');
+                return this.rankingsCache;
+            }
+            // ------------------------------------------------
+
             const users = await readUsers();
             const playerIdToUserId = new Map(users.map((user, index) => [user.playerId, (index + 1).toString().padStart(3, '0')]));
 
@@ -310,9 +334,9 @@ const playerDataService = {
                 recentPlayers = existing.recentPlayers || [];
             } catch (e) {
                 // rankings.json might not exist, will rebuild recent list
-                for (const file of playerFiles) {
-                    const filePath = path.join(DATA_PATH, file);
-                    const stats = await fs.stat(filePath);
+                for (let i = 0; i < playerFiles.length; i++) {
+                    const filePath = path.join(DATA_PATH, playerFiles[i]);
+                    const stats = playerFileStats[i];
                     const content = JSON.parse(await fs.readFile(filePath, 'utf-8'));
                     if (!content.account || !content.player) continue;
                     const publicId = await this.generatePublicId(content.account.playerSupportId);
@@ -335,7 +359,12 @@ const playerDataService = {
             }
 
             const { strongestPokemon, rarestPokemon, totalPokemonEvaluated } = await this._calculatePokemonRankings(playerFiles, playerIdToUserId);
-            const rankings = { recentPlayers, strongestPokemon, rarestPokemon };
+            const rankings = { 
+                recentPlayers, 
+                strongestPokemon, 
+                rarestPokemon, 
+                lastHeavyUpdate: Date.now() // Track when we last did the heavy work
+            };
             
             await fs.writeFile(RANKINGS_FILE, JSON.stringify(rankings));
             this.rankingsCache = rankings;
