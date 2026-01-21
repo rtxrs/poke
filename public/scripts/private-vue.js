@@ -1739,7 +1739,10 @@ pokemons.sort((a, b) => {
             const normalEntry = species['NORMAL'] || Object.values(species)[0];
             if (!normalEntry) return defaultName;
             
-            const formKey = formName.replace(normalEntry.names.English.normalize("NFD").replace(/[\u0300-\u036f]/g, ""), '').toUpperCase().replace(/_/g, '').replace(/-/g, '').replace(/\s/g, '').trim() || 'NORMAL';
+            const safeFormName = formName || '';
+            const baseName = (normalEntry.names && normalEntry.names.English) ? normalEntry.names.English.normalize("NFD").replace(/[\u0300-\u036f]/g, "") : '';
+            
+            const formKey = safeFormName.replace(baseName, '').toUpperCase().replace(/[^A-Z0-9]/g, '').trim() || 'NORMAL';
             const entry = species[formKey] || normalEntry;
             return entry?.names?.English || defaultName;
         };
@@ -1747,30 +1750,30 @@ pokemons.sort((a, b) => {
         const getPokemonSprite = (p) => {
             const defaultSprite = `https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon/pokemon_icon_${String(p.pokemonId).padStart(3, '0')}_00.png`;
             const shinySprite = `https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon/pokemon_icon_${String(p.pokemonId).padStart(3, '0')}_00_shiny.png`;
-            const targetSprite = p.pokemonDisplay.shiny ? 'shinyImage' : 'image';
+            const targetSprite = (p.pokemonDisplay && p.pokemonDisplay.shiny) ? 'shinyImage' : 'image';
 
             const species = pokedexLookup.value[p.pokemonId];
-            const basePokemon = species ? Object.values(species)[0] : null;
+            const basePokemon = species ? (species['NORMAL'] || Object.values(species)[0]) : null;
             if (!basePokemon || !basePokemon.assetForms) {
-                return p.pokemonDisplay.shiny ? shinySprite : defaultSprite;
+                return (p.pokemonDisplay && p.pokemonDisplay.shiny) ? shinySprite : defaultSprite;
             }
 
-            const formNameUpper = p.pokemonDisplay.formName.toUpperCase();
+            const safeFormName = (p.pokemonDisplay && p.pokemonDisplay.formName) ? p.pokemonDisplay.formName.toUpperCase() : '';
             const baseNameUpper = basePokemon.names.English.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
             
             let formKey;
             if (p.pokemonId === 201) {
-                formKey = formNameUpper.replace(/_/g, '').replace(/-/g, '').replace(/\s/g, '').trim();
+                formKey = safeFormName.replace(/[^A-Z0-9]/g, '').trim();
             } else {
-                formKey = formNameUpper.replace(baseNameUpper, '').replace(/_/g, '').replace(/-/g, '').replace(/\s/g, '').trim();
+                formKey = safeFormName.replace(baseNameUpper, '').replace(/[^A-Z0-9]/g, '').trim();
             }
 
             if (formKey === "" || formKey === "NORMAL") formKey = null;
 
             let costumeKey = null;
-            const costumeId = p.pokemonDisplay.costume;
+            const costumeId = p.pokemonDisplay ? p.pokemonDisplay.costume : null;
             if (costumeId && costumeIdMap.value[costumeId]) {
-                costumeKey = costumeIdMap.value[costumeId].toUpperCase().replace(/_/g, '').replace(/-/g, '').replace(/\s/g, '').trim();
+                costumeKey = costumeIdMap.value[costumeId].toUpperCase().replace(/[^A-Z0-9]/g, '').trim();
             }
 
             let foundAsset = null;
@@ -1778,19 +1781,16 @@ pokemons.sort((a, b) => {
                 foundAsset = basePokemon.assetForms.find(asset => asset.costume === costumeKey && asset.form === formKey);
             }
             if (!foundAsset && costumeKey) {
-                foundAsset = basePokemon.assetForms.find(asset => asset.costume === costumeKey && !asset.form);
+                foundAsset = basePokemon.assetForms.find(asset => asset.costume === costumeKey && (!asset.form || asset.form === 'NORMAL'));
             }
             if (!foundAsset && formKey) {
-                foundAsset = basePokemon.assetForms.find(asset => asset.form === formKey && !asset.costume);
+                foundAsset = basePokemon.assetForms.find(asset => asset.form === formKey && (!asset.costume || asset.costume === 'NONE'));
             }
             if (!foundAsset) {
-                foundAsset = basePokemon.assetForms.find(asset => !asset.costume && !asset.form);
-            }
-            if (!foundAsset) {
-                foundAsset = basePokemon.assetForms.find(asset => asset.form === 'NORMAL' && !asset.costume);
+                foundAsset = basePokemon.assetForms.find(asset => (!asset.costume || asset.costume === 'NONE') && (!asset.form || asset.form === 'NORMAL'));
             }
 
-            return foundAsset?.[targetSprite] || (p.pokemonDisplay.shiny ? shinySprite : defaultSprite);
+            return foundAsset?.[targetSprite] || ((p.pokemonDisplay && p.pokemonDisplay.shiny) ? shinySprite : defaultSprite);
         };
 
         const enrichPokemonData = (pokemons) => {
@@ -2036,14 +2036,6 @@ pokemons.sort((a, b) => {
                 // Set up tab navigation
                 updateActiveTabFromHash();
                 window.addEventListener('hashchange', updateActiveTabFromHash);
-
-            } catch (error) {
-                console.error('Dashboard Error:', error);
-                document.querySelector('.container').innerHTML = `<div class="card"><p>Could not load your player data. Reason: ${error.message}</p></div>`;
-            } finally {
-                loading.value = false;
-            }
-        });
 
             } catch (error) {
                 console.error('Dashboard Error:', error);
