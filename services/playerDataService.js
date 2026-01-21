@@ -136,6 +136,10 @@ const playerDataService = {
 
         try {
             await fs.access(RANKINGS_FILE);
+            // Load existing rankings into memory cache on boot
+            const content = await fs.readFile(RANKINGS_FILE, 'utf-8');
+            this.rankingsCache = JSON.parse(content);
+            console.log('👍 Rankings cache primed from disk.');
             return;
         } catch (error) {
             if (error.code === 'ENOENT') {

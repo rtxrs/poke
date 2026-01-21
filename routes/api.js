@@ -32,6 +32,16 @@ router.get('/health-check', async (req, res) => {
 router.get('/rankings', async (req, res) => {
     try {
         const rankings = await playerDataService.getRankings();
+        
+        // Use the last update timestamp as the ETag
+        const version = rankings.lastHeavyUpdate || 'initial';
+        res.set('ETag', `"${version}"`);
+
+        // If the browser already has this version, send a 304 Not Modified
+        if (req.fresh) {
+            return res.sendStatus(304);
+        }
+
         res.json(rankings);
     } catch (error) {
         console.error("Error in /api/rankings:", error);
