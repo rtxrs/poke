@@ -40,7 +40,7 @@ app.use('/api', apiRoutes);
         const { exec } = require('child_process');
         // Compare against RAW pokedex.json because pokedex_modified.json is rewritten on every boot
         const pokedexPath = path.join(__dirname, 'data/public/pokedex.json'); 
-        const ranksPath = path.join(__dirname, 'data/user/generated/pvp_ranks.db');
+        const ranksPath = path.join(__dirname, 'data/user/generated/pvp_ranks.json');
         
         let runGen = false;
         try {
@@ -48,12 +48,7 @@ app.use('/api', apiRoutes);
             const pokedexStats = await fsPromises.stat(pokedexPath);
             const ranksStats = await fsPromises.stat(ranksPath);
             
-            // Check if DB is empty
-            const rowCount = pvpService.getRowCount();
-            if (rowCount === 0) {
-                console.log('⚠️ PvP Ranks database is empty. Generating...');
-                runGen = true;
-            } else if (ranksStats.mtime < pokedexStats.mtime) {
+            if (ranksStats.mtime < pokedexStats.mtime) {
                 console.log('⚠️ PvP Ranks file is older than Pokedex source. Regenerating...');
                 runGen = true;
             }
@@ -64,18 +59,18 @@ app.use('/api', apiRoutes);
 
         if (runGen) {
             console.log('⚠️ PvP Ranks file is older/missing. Starting background generation...');
-            // Start generation in background
+            // Non-blocking execution
             const child = exec('node scripts/generate_pvp_ranks.js', { cwd: __dirname });
             
-            // Optional: Pipe output if you want to see progress in server logs
-            child.stdout.on('data', (data) => process.stdout.write(data));
+            // child.stdout.on('data', (data) => process.stdout.write(data)); // Optional: too noisy for background
             child.stderr.on('data', (data) => process.stderr.write(data));
 
             child.on('close', (code) => {
                 if (code !== 0) {
                     console.error(`\n❌ PvP Generation script exited with code ${code}`);
                 } else {
-                    console.log('\n✅ PvP Ranks generation complete.');
+                    console.log('\n✅ PvP Ranks generation complete. Reloading service...');
+                    pvpService.reload();
                 }
             });
         } else {
@@ -83,7 +78,8 @@ app.use('/api', apiRoutes);
         }
         // ---------------------------------------
 
-        pvpService.init();
+        // Initialize with whatever exists (could be empty or old file)
+        await pvpService.init();
         await playerDataService.init();
         await playerDataService.initializeRankings();
         app.listen(config.PORT, () => console.log(`🚀 Server running at http://localhost:${config.PORT}`));

@@ -1,118 +1,83 @@
-const Database = require('better-sqlite3');
-const path = require('path');
 const fs = require('fs');
+const path = require('path');
 
-const DB_PATH = path.join(__dirname, '../data/user/generated/pvp_ranks.db');
+const DATA_PATH = path.join(__dirname, '../data/user/generated/pvp_ranks.json');
 
-// Ensure data/user directory exists
-const dir = path.dirname(DB_PATH);
-if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-}
+let ranksCache = null;
 
-const db = new Database(DB_PATH);
-
-// Initialize Database Schema
-let insertStmt;
-let insertTransaction;
-
-function init() {
-    db.pragma('journal_mode = WAL');
-
-    db.exec(`
-        CREATE TABLE IF NOT EXISTS pvp_ranks (
-            pokemon_id TEXT,
-            form TEXT,
-            league TEXT,
-            rank INTEGER,
-            iv_attack INTEGER,
-            iv_defense INTEGER,
-            iv_stamina INTEGER,
-            level REAL,
-            cp INTEGER,
-            stat_product REAL,
-            percentage REAL,
-            PRIMARY KEY (pokemon_id, form, league, rank)
-        );
-
-        CREATE INDEX IF NOT EXISTS idx_pokemon_lookup 
-        ON pvp_ranks(pokemon_id, form, league);
-
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_pvp_lookup_ivs 
-        ON pvp_ranks(pokemon_id, form, league, iv_attack, iv_defense, iv_stamina);
-    `);
-
-    // Prepare the insert statement once for performance
-    insertStmt = db.prepare(`
-        INSERT OR REPLACE INTO pvp_ranks 
-        (pokemon_id, form, league, rank, iv_attack, iv_defense, iv_stamina, level, cp, stat_product, percentage)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-
-    const tx = db.transaction((rows) => {
-        for (const row of rows) {
-            insertStmt.run(
-                row.pokemon_id,
-                row.form,
-                row.league,
-                row.rank,
-                row.iv_attack,
-                row.iv_defense,
-                row.iv_stamina,
-                row.level,
-                row.cp,
-                row.stat_product,
-                row.percentage
-            );
+async function init() {
+    console.log('Initializing PvP Service (Loading JSON)...');
+    try {
+        if (fs.existsSync(DATA_PATH)) {
+            const data = await fs.promises.readFile(DATA_PATH, 'utf-8');
+            ranksCache = JSON.parse(data);
+            console.log(`PvP Ranks loaded. Species count: ${Object.keys(ranksCache).length}`);
+        } else {
+            console.warn('PvP Ranks file not found at ' + DATA_PATH);
+            ranksCache = {};
         }
-    });
-    insertTransaction = tx.immediate;
-}
-
-function insertMany(rows) {
-    if (!insertTransaction) {
-        throw new Error("Database not initialized. Call init() first.");
+    } catch (e) {
+        console.error('Failed to load PvP ranks:', e);
+        ranksCache = {};
     }
-    insertTransaction(rows);
-}
-
-
-function getRanks(pokemonId, form, league, limit = 100) {
-    const stmt = db.prepare(`
-        SELECT rank, iv_attack, iv_defense, iv_stamina, level, cp, stat_product, percentage
-        FROM pvp_ranks
-        WHERE pokemon_id = ? AND form = ? AND league = ?
-        ORDER BY rank ASC
-        LIMIT ?
-    `);
-    return stmt.all(pokemonId, form, league, limit);
 }
 
 function getRank(pokemonId, form, league, ivAttack, ivDefense, ivStamina) {
-    const stmt = db.prepare(`
-        SELECT rank, percentage, level, cp, stat_product
-        FROM pvp_ranks
-        WHERE pokemon_id = ? AND form = ? AND league = ? 
-        AND iv_attack = ? AND iv_defense = ? AND iv_stamina = ?
-    `);
-    return stmt.get(pokemonId, form, league, ivAttack, ivDefense, ivStamina);
+    if (!ranksCache) return null;
+    
+    const species = ranksCache[pokemonId];
+    if (!species) return null;
+
+    // Handle form fallback logic matching the generator
+    // Generator keys are specific forms. 
+    // If 'NORMAL' is requested but not found, try to find a default? 
+    // Usually 'NORMAL' is the default key.
+    let formRanks = species[form];
+    if (!formRanks && form === 'NORMAL') {
+        // If NORMAL missing, maybe keys are like "BULBASAUR" (for base)? 
+        // Actually generator uses formKey = formId || 'NORMAL'.
+        // So species["NORMAL"] should exist for base forms.
+    }
+    
+    if (!formRanks) return null;
+
+    let list = null;
+    const l = league.toLowerCase();
+    if (l === 'great') list = formRanks.gl;
+    else if (l === 'ultra') list = formRanks.ul;
+    else if (l === 'master') list = formRanks.ml;
+
+    if (!list) return null;
+
+    const ivKey = (ivAttack << 8) | (ivDefense << 4) | ivStamina;
+    const index = list.indexOf(ivKey);
+    
+    if (index === -1) return null;
+
+    return {
+        rank: index + 1
+    };
 }
 
+// Placeholder for compatibility if needed, though not used in current API for single lookups
+function getRanks(pokemonId, form, league, limit = 100) {
+    return [];
+}
+
+// Placeholder for server.js check (though we will update server.js)
 function getRowCount() {
-    try {
-        const stmt = db.prepare('SELECT count(*) as count FROM pvp_ranks');
-        const result = stmt.get();
-        return result ? result.count : 0;
-    } catch (e) {
-        return 0;
-    }
+    return ranksCache ? Object.keys(ranksCache).length : 0;
+}
+
+async function reload() {
+    console.log('Reloading PvP Service...');
+    await init();
 }
 
 module.exports = {
     init,
-    insertMany,
-    getRanks,
+    reload,
     getRank,
-    getRowCount,
-    db
+    getRanks,
+    getRowCount
 };
