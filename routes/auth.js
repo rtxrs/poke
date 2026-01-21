@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const bcrypt = require('bcrypt');
 const { readUsers, writeUsers } = require('../services/userService');
+const { authLimiter } = require('../middlewares/rateLimiter');
 const { SALT_ROUNDS } = require('../config');
 
 const router = express.Router();
@@ -17,7 +18,7 @@ const isAuthenticated = (req, res, next) => {
 
 router.get('/register', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'register.html')));
 
-router.post('/register', async (req, res) => {
+router.post('/register', authLimiter, async (req, res) => {
     try {
         const { web_username, password, playerId } = req.body;
         if (!web_username || !password || !playerId) {
@@ -47,7 +48,7 @@ router.post('/register', async (req, res) => {
     }
 });
 
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
     try {
         const { username, password, playerId } = req.body;
         const users = await readUsers();
