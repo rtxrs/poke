@@ -1864,6 +1864,16 @@ pokemons.sort((a, b) => {
                 const combatMovesResponse = await fetch('/api/combat-moves');
                 if (combatMovesResponse.ok) {
                     combatMoves.value = await combatMovesResponse.json();
+                    
+                    // Populate moveMap for display
+                    const map = {};
+                    if (combatMoves.value.fastMoves) {
+                        combatMoves.value.fastMoves.forEach(m => map[m.move_id] = m);
+                    }
+                    if (combatMoves.value.chargedMoves) {
+                        combatMoves.value.chargedMoves.forEach(m => map[m.move_id] = m);
+                    }
+                    moveMap.value = map;
                 } else {
                     console.error("Failed to load combat moves:", combatMovesResponse.status);
                 }
