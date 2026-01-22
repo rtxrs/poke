@@ -7,6 +7,7 @@
     --team-instinct: #F1C40F;
     --team-mystic: #3498DB;
     --team-valor: #E74C3C;
+    --chart-track: #e9ecef;
 }
 
 [data-theme="dark"] {
@@ -14,6 +15,7 @@
     --text-color: #e0e0e0;
     --bg-color: #121212;
     --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    --chart-track: #333;
 }
 
 body {

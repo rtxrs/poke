@@ -98,14 +98,24 @@ body[data-theme="dark"] .main-header.team-instinct-bg {
 
 /* Fix Buttons in Dark Mode */
 [data-theme="dark"] .show-more-btn,
-[data-theme="dark"] .show-less-btn {
+[data-theme="dark"] .show-less-btn,
+[data-theme="dark"] .btn-secondary {
     background-color: #333;
     color: #fff;
     border-color: #555;
 }
 [data-theme="dark"] .show-more-btn:hover,
-[data-theme="dark"] .show-less-btn:hover {
+[data-theme="dark"] .show-less-btn:hover,
+[data-theme="dark"] .btn-secondary:hover {
     background-color: #444;
+}
+
+[data-theme="dark"] #modal-close-btn,
+[data-theme="dark"] #cleanup-modal-close-btn,
+[data-theme="dark"] #team-builder-modal-close-btn,
+[data-theme="dark"] .trash-modal-redesign .close-btn,
+[data-theme="dark"] #modal-content #modal-close-btn {
+    color: #fff !important;
 }
 
 /* Fix Card Headers */
@@ -229,12 +239,91 @@ body[data-theme="dark"] .main-header.team-instinct-bg {
     background-color: #3498db;
 }
 /* Ensure text in modal is readable */
-[data-theme="dark"] .card {
-    color: #e0e0e0;
+[data-theme="dark"] .card,
+[data-theme="dark"] #modal-content,
+[data-theme="dark"] .card p {
+    color: #e0e0e0 !important;
 }
-[data-theme="dark"] .pokemon-stats-grid div span {
+[data-theme="dark"] .pokemon-info,
+[data-theme="dark"] .pokemon-info h2,
+[data-theme="dark"] #modal-content h2 {
+    color: #e0e0e0 !important;
+}
+[data-theme="dark"] .pokemon-stats-grid div span,
+[data-theme="dark"] .grid-stats div span,
+[data-theme="dark"] .stat-label,
+[data-theme="dark"] .description {
     color: #aaa;
 }
-[data-theme="dark"] .pokemon-stats-grid div strong {
+[data-theme="dark"] .pokemon-stats-grid div strong,
+[data-theme="dark"] .grid-stats div strong {
     color: #fff;
+}
+
+[data-theme="dark"] .pokemon-score {
+    color: #3498db; /* Blueish for visibility */
+}
+
+[data-theme="dark"] .xp-text {
+    color: #aaa;
+}
+
+[data-theme="dark"] .stat-bar {
+    background-color: #333;
+}
+
+[data-theme="dark"] .xp-bar-container {
+    background-color: #333;
+}
+
+[data-theme="dark"] .pokemon-modal-body h4 {
+    color: #fff;
+    border-bottom-color: #444;
+}
+
+/* Fix Item Category Headers */
+[data-theme="dark"] .item-category-header {
+    color: #e0e0e0;
+    border-bottom-color: #444;
+}
+
+/* Fix Raid Boss level titles in selector */
+[data-theme="dark"] .raid-boss-level-title {
+    color: #ccc;
+}
+
+/* Fix Trash Generator Modal Header */
+[data-theme="dark"] .trash-modal-redesign .modal-header {
+    background-color: #252525;
+    border-bottom-color: #444;
+}
+[data-theme="dark"] .trash-modal-redesign .modal-header h2 {
+    color: #e0e0e0;
+}
+
+/* Fix Mega Icons in Statistics */
+[data-theme="dark"] .mega-icon {
+    background-color: #252525;
+    border: 1px solid #444;
+}
+[data-theme="dark"] .mega-icon img {
+    background-color: transparent; /* Remove white background behind sprite */
+}
+
+/* Fix Sort Bar */
+[data-theme="dark"] .sort-bar {
+    background-color: #252525;
+}
+[data-theme="dark"] .sort-bar input,
+[data-theme="dark"] .sort-bar select,
+[data-theme="dark"] .sort-bar button {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+    border-color: #444;
+}
+
+/* Fix Item Cards */
+[data-theme="dark"] .item-card {
+    background-color: #252525;
+    border-color: #444;
 }

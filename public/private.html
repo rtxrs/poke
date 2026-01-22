@@ -484,7 +484,7 @@
                     <div class="stat-card card">
                         <h4>Shiny Collection Rate</h4>
                         <div class="chart-placeholder donut-chart-container">
-                            <div class="donut-chart" :style="{ background: `conic-gradient(#d4af37 0% ${stats_shinyRate.percent}%, #e9ecef ${stats_shinyRate.percent}% 100%)` }">
+                            <div class="donut-chart" :style="{ background: `conic-gradient(#d4af37 0% ${stats_shinyRate.percent}%, var(--chart-track) ${stats_shinyRate.percent}% 100%)` }">
                                 <div class="donut-hole">
                                     <span>{{ stats_shinyRate.percent }}%</span>
                                     <small>{{ stats_shinyRate.shinyCount }} / {{ stats_shinyRate.totalCount }}</small>
@@ -497,7 +497,7 @@
                     <div class="stat-card card">
                         <h4>Lucky Pokémon Rate</h4>
                         <div class="chart-placeholder pie-chart-container">
-                            <div class="pie-chart" :style="{ background: `conic-gradient(#FFD700 0% ${stats_luckyRate.percent}%, #e9ecef ${stats_luckyRate.percent}% 100%)` }"></div>
+                            <div class="pie-chart" :style="{ background: `conic-gradient(#FFD700 0% ${stats_luckyRate.percent}%, var(--chart-track) ${stats_luckyRate.percent}% 100%)` }"></div>
                             <div class="pie-legend legend-lucky">
                                 <span>Lucky ({{ stats_luckyRate.luckyCount }})</span>
                                 <span>Not Lucky ({{ stats_luckyRate.tradedCount - stats_luckyRate.luckyCount }})</span>
@@ -509,7 +509,7 @@
                     <div class="stat-card card">
                         <h4>Legendary & Mythical Ratio</h4>
                         <div class="chart-placeholder pie-chart-container">
-                            <div class="pie-chart" :style="{ background: `conic-gradient(#8E44AD 0% ${stats_legendaryRatio.percent}%, #e9ecef ${stats_legendaryRatio.percent}% 100%)` }"></div>
+                            <div class="pie-chart" :style="{ background: `conic-gradient(#8E44AD 0% ${stats_legendaryRatio.percent}%, var(--chart-track) ${stats_legendaryRatio.percent}% 100%)` }"></div>
                             <div class="pie-legend legend-legendary">
                                 <span>Lgnd/Mythic ({{ stats_legendaryRatio.legendaryMythicalCount }})</span>
                                 <span>Regular ({{ stats_legendaryRatio.totalCount - stats_legendaryRatio.legendaryMythicalCount }})</span>
