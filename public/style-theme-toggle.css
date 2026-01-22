@@ -331,3 +331,34 @@ body[data-theme="dark"] .main-header.team-instinct-bg {
     background-color: #252525;
     border-color: #444;
 }
+
+/* Fix Health Check Page */
+[data-theme="dark"] .health-card {
+    background-color: #2c2c2c !important;
+    color: #e0e0e0;
+}
+[data-theme="dark"] .health-card h2 {
+    border-bottom-color: #444 !important;
+}
+[data-theme="dark"] #cron-summary-card {
+    background-color: #1e1e1e !important;
+    border-color: #444 !important;
+    color: #e0e0e0;
+}
+[data-theme="dark"] .hash-table th {
+    background-color: #252525 !important;
+    color: #ddd !important;
+}
+[data-theme="dark"] .hash-table td {
+    border-bottom-color: #444 !important;
+    color: #e0e0e0 !important;
+}
+[data-theme="dark"] .cron-details p {
+    color: #aaa !important;
+}
+[data-theme="dark"] .cron-details strong {
+    color: #fff !important;
+}
+[data-theme="dark"] main h1 {
+    color: #fff !important;
+}

@@ -31,7 +31,6 @@ async function debug() {
         } else {
             console.log("❌ UserId is null/missing.");
         }
-        
         process.exit(0);
 
     } catch (e) {
