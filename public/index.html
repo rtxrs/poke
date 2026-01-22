@@ -27,24 +27,33 @@
         <!-- This is where the 3 columns will be rendered -->
         <div id="rankings-grid" class="hidden">
             
-            <div class="card ranking-column">
-                <h2>Recent Player Activity</h2>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Current Buddy</th>
-                                <th class="hide-on-mobile">Distance</th>
-                                <th class="hide-on-mobile">Caught</th>
-                            </tr>
-                        </thead>
-                        <tbody id="recent-players-body"></tbody>
-                    </table>
+            <div class="ranking-column composite-column">
+                <div class="card events-card">
+                    <h2>Current & Upcoming Events</h2>
+                    <div id="events-container" class="events-list">
+                        <div class="loading-spinner-small"></div>
+                    </div>
                 </div>
-                <div class="ranking-footer">
-                    <button class="show-more-btn">Show All</button>
-                    <button class="show-less-btn">Show Less</button>
+
+                <div class="card activity-card">
+                    <h2>Recent Player Activity</h2>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Current Buddy</th>
+                                    <th class="hide-on-mobile">Distance</th>
+                                    <th class="hide-on-mobile">Caught</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-players-body"></tbody>
+                        </table>
+                    </div>
+                    <div class="ranking-footer">
+                        <button class="show-more-btn">Show All</button>
+                        <button class="show-less-btn">Show Less</button>
+                    </div>
                 </div>
             </div>
 
@@ -105,6 +114,7 @@
     </div>
 
     <script src="/scripts/public.js"></script>
+    <script src="/scripts/events.js"></script>
     <script src="/scripts/loadHeader.js"></script>
     <script src="/scripts/rankings.js"></script>
 </body>
