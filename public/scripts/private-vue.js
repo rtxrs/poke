@@ -479,6 +479,11 @@ createApp({
         const itemsExpanded = ref(false);
         const defaultSortDirections = { caughtTime: 'desc', cp: 'desc', pokedex: 'asc', name: 'asc' };
         const sortDirection = ref(defaultSortDirections.caughtTime);
+
+        watch(sortKey, (newKey) => {
+            sortDirection.value = defaultSortDirections[newKey];
+        });
+
         const selectedPokemon = ref(null);
         const moveMap = ref({});
         const costumeIdMap = ref({});
