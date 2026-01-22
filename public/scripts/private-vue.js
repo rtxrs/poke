@@ -1162,34 +1162,133 @@ pokemons.sort((a, b) => {
                 }
 
                 if (battleMode.value === 'max') {
-                    // MAX Battle Logic: 6 Best Attackers (DPS) + 6 Best Tanks (Bulk)
+                    // MAX Battle Logic (2026 Mechanics)
                     
-                    // Calculate Metrics
                     const evaluatedPool = pokemonPool.map(p => {
-                        const dpsObj = calculateDps(p, enemyTypes);
-                        const dps = dpsObj ? Math.max(dpsObj.move2 || 0, dpsObj.move3 || 0) : 0;
-                        const bulk = calculateBulk(p, enemyTypes);
-                        // Calculate standard score for Overall ranking
-                        const score = (Math.pow(dps, 1.5) * bulk) / 100000;
-                        overallScores[p.id].score += score;
+                        // --- 1. Max Move Power ---
+                        const isGigantamax = p.pokemonDisplay.breadModeEnum === 2;
+                        let maxAttackLevel = 1;
+                        let maxGuardLevel = 1;
+                        let maxSpiritLevel = 1;
+
+                        if (p.breadMoves && p.breadMoves.length > 0) {
+                            p.breadMoves.forEach(m => {
+                                if (m.moveType === 1) maxAttackLevel = m.moveLevel;
+                                else if (m.moveType === 2) maxGuardLevel = m.moveLevel;
+                                else if (m.moveType === 3) maxSpiritLevel = m.moveLevel;
+                            });
+                        }
+
+                        // Power Scaling: D-Max 250-350, G-Max 350-450
+                        // Assuming linear steps: L1, L2, L3
+                        // D-Max: 250, 300, 350
+                        // G-Max: 350, 400, 450
+                        let power = 0;
+                        if (isGigantamax) {
+                            power = 350 + (maxAttackLevel - 1) * 50;
+                        } else {
+                            power = 250 + (maxAttackLevel - 1) * 50;
+                        }
+
+                        // --- 2. Damage Output Potential ---
+                        // Formula: Floor(0.5 * Power * (Atk / Def) * Multipliers) + 1
+                        // For ranking, we ignore Def and +1. We focus on Output Potential.
+                        // Multipliers: STAB (1.2) * Effectiveness (up to 2.56)
+                        const entry = getPokedexEntry(p);
+                        const cpm = p.cpMultiplier + (p.additionalCpMultiplier || 0);
+                        const trueAtk = (entry.stats.attack + p.individualAttack) * cpm;
+
+                        // STAB
+                        const pTypes = [];
+                        if (entry.primaryType?.names?.English) pTypes.push(entry.primaryType.names.English.toUpperCase());
+                        if (entry.secondaryType?.names?.English) pTypes.push(entry.secondaryType.names.English.toUpperCase());
                         
-                        return { ...p, dps, bulk, score };
+                        // Note: Max Moves take the type of the Fast Move.
+                        // We check the Fast Move type for STAB and Effectiveness.
+                        const fastMove = combatMoves.value.fastMoves.find(m => m.move_id == p.move1);
+                        let moveType = fastMove ? fastMove.type : 'Normal';
+                        
+                        const isStab = pTypes.includes(moveType.toUpperCase()) ? 1.2 : 1.0;
+                        
+                        // Effectiveness against Boss (Handles single and dual-types)
+                        let effectiveness = 1.0;
+                        if (enemyTypes && enemyTypes.length > 0 && typeEffectiveness.value) {
+                            const moveTypeKey = moveType.charAt(0).toUpperCase() + moveType.slice(1).toLowerCase();
+                            enemyTypes.forEach(eType => {
+                                const eTypeKey = eType.charAt(0).toUpperCase() + eType.slice(1).toLowerCase();
+                                if (typeEffectiveness.value[moveTypeKey] && typeEffectiveness.value[moveTypeKey][eTypeKey]) {
+                                    effectiveness *= typeEffectiveness.value[moveTypeKey][eTypeKey];
+                                }
+                            });
+                        }
+
+                        // Power Spot Helper bonus (Baseline 1.1x for ranking)
+                        const powerSpotBonus = 1.1;
+
+                        const damagePotential = 0.5 * power * trueAtk * isStab * effectiveness * powerSpotBonus;
+
+                        // --- 3. Meter Generation Speed (Fast Move Bias) ---
+                        // Favor 0.5s moves. 
+                        // Score Multiplier = 1 / (Duration in seconds)
+                        // duration is in ms (e.g. 500)
+                        const durationSec = (fastMove && fastMove.duration) ? fastMove.duration / 1000 : 1.0;
+                        const speedScore = 1 / durationSec; 
+
+                        // --- 4. Survivability (MCF - Max Cycle to Faint) ---
+                        // Base HP * 2.0 (Dynamax Multiplier)
+                        const trueSta = (entry.stats.stamina + p.individualStamina) * cpm;
+                        const maxHp = Math.floor(trueSta * 2.0);
+
+                        // Max Guard (Shield): L2 = +40. Assume L1=20, L3=60.
+                        const guardBonus = maxGuardLevel * 20;
+
+                        // Max Spirit (Recovery): L2 = 12%. Assume L1=10%, L3=14%.
+                        const spiritPercent = 0.10 + (maxSpiritLevel - 1) * 0.02;
+                        
+                        // "Immortal" calculation: Can we recover more than we take?
+                        // For a ranking score, we treat this as Effective Health Pool multiplier.
+                        // If a team recovers 36% (3x Spirit) per cycle, effectively extending life significantly.
+                        // We'll model this as: HP + Shield + (HP * Spirit% * Estimated_Cycles)
+                        // Assuming a standard battle allows for ~3 Spirits per player? 
+                        // Let's use a simpler effective health metric:
+                        // EffectiveHP = (MaxHP + GuardBonus) * (1 + spiritPercent * 3)
+                        const effectiveHp = (maxHp + guardBonus) * (1 + spiritPercent * 3);
+
+                        // --- 5. Incoming Damage Mitigation (Defense) ---
+                        const trueDef = (entry.stats.defense + p.individualDefense) * cpm;
+                        
+                        // Bulk Score = EffectiveHP * TrueDef
+                        const bulkScore = effectiveHp * trueDef / 10000;
+
+                        // --- Final Score ---
+                        // Combine Damage (weighted by speed) and Bulk.
+                        // The user emphasizes "Damage output" and "Immortal" teams.
+                        // We'll weight Damage * Speed heavily.
+                        const finalScore = (damagePotential * speedScore) * (bulkScore / 100);
+
+                        return { 
+                            ...p, 
+                            dps: damagePotential * speedScore, 
+                            bulk: bulkScore, 
+                            score: finalScore,
+                            scoreLabel: 'Max Score' 
+                        };
                     });
 
-                    // Top 6 Attackers (DPS)
+                    // Top 6 Attackers (Weighted by Speed/Damage)
                     const attackers = [...evaluatedPool]
                         .sort((a, b) => b.dps - a.dps)
                         .slice(0, 6)
-                        .map(p => ({ ...p, score: p.dps, scoreLabel: 'DPS' }));
+                        .map(p => ({ ...p, score: p.dps, scoreLabel: 'Max Dmg' }));
 
                     const attackerIds = new Set(attackers.map(p => p.id));
 
-                    // Top 6 Tankers (Bulk) - Excluding those already selected as attackers
+                    // Top 6 Tanks (Weighted by Survival)
                     const tanks = [...evaluatedPool]
                         .filter(p => !attackerIds.has(p.id))
                         .sort((a, b) => b.bulk - a.bulk)
                         .slice(0, 6)
-                        .map(p => ({ ...p, score: p.bulk, scoreLabel: 'Bulk' }));
+                        .map(p => ({ ...p, score: p.bulk, scoreLabel: 'Survival' }));
 
                     suggestions[enemy.names.English] = [...attackers, ...tanks];
 
