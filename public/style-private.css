@@ -1012,6 +1012,46 @@ body.dashboard-private, body:not([class]) {
 .tools-container {
     display: flex;
     gap: 15px;
+    flex-wrap: wrap;
+}
+
+/* Mobile Optimizations (e.g. S24 Ultra) */
+@media (max-width: 768px) {
+    /* Sub-header horizontal scroll override */
+    .sub-header {
+        white-space: nowrap !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        display: block !important;
+        padding-bottom: 5px;
+    }
+    .sub-header::-webkit-scrollbar {
+        display: none;
+    }
+    .sub-header a {
+        display: inline-block;
+        margin: 0 5px;
+    }
+
+    /* Pokemon Highlights - 2 Columns */
+    #pokemon-highlights-container {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 10px !important;
+        justify-content: normal !important;
+    }
+    #pokemon-highlights-container .pokemon-card {
+        width: auto !important;
+        flex-shrink: 1;
+    }
+
+    /* Tools Buttons Full Width */
+    .tools-container {
+        flex-direction: column;
+    }
+    .tools-container button {
+        width: 100%;
+    }
 }
 
 .raid-boss-selector {
