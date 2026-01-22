@@ -153,7 +153,11 @@ body[data-theme="dark"] .main-header.team-instinct-bg {
     color: #fff !important;
 }
 [data-theme="dark"] .player-badge {
-    text-shadow: none; /* Optional: Cleaner look in dark mode */
+    text-shadow: 
+        -1px -1px 0 rgba(0,0,0,0.5),  
+         1px -1px 0 rgba(0,0,0,0.5),
+        -1px  1px 0 rgba(0,0,0,0.5),
+         1px  1px 0 rgba(0,0,0,0.5);
 }
 
 /* --- New Additions --- */
