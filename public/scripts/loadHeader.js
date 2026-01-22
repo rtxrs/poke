@@ -105,8 +105,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             } else if (path === '/' || path.includes('index.html')) {
                 if (authStatus.loggedIn) {
                     setLinkVisibility(false, false, false, true, true); // Dashboard, Logout
+                    if (mainTitle) {
+                        mainTitle.innerHTML = renderPlayerBadge({ userId: authStatus.userId, publicId: authStatus.publicId });
+                    }
                 } else {
                     setLinkVisibility(false, true, true, false, false); // Login, Register
+                    if (mainTitle) {
+                        mainTitle.textContent = 'Pokémon GO Player Dashboard';
+                    }
                 }
             } else if (path.includes('login.html')) {
                 if (mainTitle) mainTitle.textContent = 'Login';
@@ -116,12 +122,53 @@ document.addEventListener('DOMContentLoaded', async () => {
                 setLinkVisibility(true, true, false, false, false); // Home, Login
             } else if (path.includes('/me') || path.includes('private.html')) {
                 setLinkVisibility(true, false, false, false, true); // Home, Logout
+                if (mainTitle && authStatus.userId) {
+                    mainTitle.innerHTML = renderPlayerBadge({ 
+                        userId: authStatus.userId, 
+                        publicId: authStatus.publicId,
+                        name: authStatus.username 
+                    });
+                } else if (mainTitle) {
+                    // Fallback if userId logic fails but user is logged in
+                    mainTitle.textContent = authStatus.username || 'Player Dashboard';
+                }
             }
 
             // All visibility is set, now make the nav visible to prevent FOUC
             const headerNav = document.querySelector('.header-nav');
             if (headerNav) {
                 headerNav.classList.add('nav-ready');
+            }
+
+            // --- Theme Toggle Logic ---
+            const btnLight = document.getElementById('theme-light');
+            const btnDark = document.getElementById('theme-dark');
+            
+            const updateThemeUI = (theme) => {
+                document.body.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+                
+                if (btnLight && btnDark) {
+                    if (theme === 'dark') {
+                        btnLight.classList.remove('active');
+                        btnDark.classList.add('active');
+                    } else {
+                        btnLight.classList.add('active');
+                        btnDark.classList.remove('active');
+                    }
+                }
+            };
+
+            // 1. Initialize Theme
+            const currentTheme = localStorage.getItem('theme') || 'light';
+            updateThemeUI(currentTheme);
+
+            // 2. Toggle Handlers
+            if (btnLight) {
+                btnLight.addEventListener('click', () => updateThemeUI('light'));
+            }
+            if (btnDark) {
+                btnDark.addEventListener('click', () => updateThemeUI('dark'));
             }
 
             // --- Burger Menu Logic ---

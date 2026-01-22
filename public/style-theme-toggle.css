@@ -1,0 +1,240 @@
+/* Segmented Control Theme Toggle */
+.theme-switch-container {
+    display: flex;
+    align-items: center;
+}
+
+.theme-segmented-control {
+    display: flex;
+    border-radius: 20px; /* Slightly more rounded for header */
+    background-color: rgba(255, 255, 255, 0.2); /* Semi-transparent for header integration */
+    padding: 2px;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.theme-segmented-control button {
+    padding: 5px 12px;
+    border: none;
+    border-radius: 18px;
+    background-color: transparent;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.9em;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.theme-segmented-control button:hover {
+    color: #fff;
+}
+
+.theme-segmented-control button.active {
+    background-color: #fff;
+    color: #333;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* Dark Mode Overrides */
+[data-theme="dark"] .theme-segmented-control {
+    background-color: rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .theme-segmented-control button.active {
+    background-color: #333;
+    color: #fff;
+}
+
+/* Fix Header Background in Dark Mode */
+body[data-theme="dark"] .main-header,
+body[data-theme="dark"] .main-header.default-bg,
+body[data-theme="dark"] .main-header.team-valor-bg,
+body[data-theme="dark"] .main-header.team-mystic-bg,
+body[data-theme="dark"] .main-header.team-instinct-bg {
+    background-color: #1e1e1e !important; /* Dark grey to match cards or slightly darker */
+    border-bottom: 1px solid #333;
+}
+
+/* Fix Content Cards in Dark Mode */
+[data-theme="dark"] .card {
+    background-color: var(--card-bg);
+    color: var(--text-color);
+}
+
+/* Fix Events Widget in Dark Mode */
+[data-theme="dark"] .event-item {
+    background-color: #252525; /* Slightly lighter than card bg */
+    color: var(--text-color);
+}
+[data-theme="dark"] .event-item:hover {
+    background-color: #333;
+}
+[data-theme="dark"] .event-timer {
+    color: #aaa;
+}
+[data-theme="dark"] .events-section-header {
+    background-color: var(--card-bg, #2c2c2c); /* Ensure sticky header matches card bg */
+    color: #ccc;
+    border-bottom-color: #444;
+}
+
+/* Fix Table Headers in Dark Mode */
+[data-theme="dark"] .table-container th {
+    background-color: #252525;
+    color: #ddd;
+    border-bottom-color: #444;
+}
+[data-theme="dark"] .table-container td {
+    border-bottom-color: #444;
+    color: var(--text-color);
+}
+[data-theme="dark"] .table-container tr:hover {
+    background-color: #333;
+}
+
+/* Fix Buttons in Dark Mode */
+[data-theme="dark"] .show-more-btn,
+[data-theme="dark"] .show-less-btn {
+    background-color: #333;
+    color: #fff;
+    border-color: #555;
+}
+[data-theme="dark"] .show-more-btn:hover,
+[data-theme="dark"] .show-less-btn:hover {
+    background-color: #444;
+}
+
+/* Fix Card Headers */
+[data-theme="dark"] .card h2 {
+    color: #e0e0e0;
+    border-bottom-color: #444;
+}
+
+/* Fix Info Button */
+[data-theme="dark"] .info-btn {
+    background-color: #444;
+    color: #fff;
+}
+[data-theme="dark"] .info-btn:hover {
+    background-color: #666;
+}
+
+/* Fix Sub-Header in Dark Mode */
+[data-theme="dark"] .sub-header {
+    background-color: #1e1e1e !important;
+    border-bottom: 1px solid #333;
+}
+
+/* Fix Pokemon Cards in Dark Mode */
+[data-theme="dark"] .pokemon-card:not(.colored) {
+    background-color: #252525;
+    color: #e0e0e0;
+}
+[data-theme="dark"] .pokemon-card small {
+    color: #aaa;
+}
+
+/* Fix Header Text */
+[data-theme="dark"] .main-header h1 {
+    color: #fff !important;
+}
+[data-theme="dark"] .player-badge {
+    text-shadow: none; /* Optional: Cleaner look in dark mode */
+}
+
+/* --- New Additions --- */
+
+/* Fix Pokedex Cards */
+[data-theme="dark"] .pokedex-card {
+    background-color: #252525;
+    border-color: #444;
+}
+[data-theme="dark"] .pokedex-card .pokemon-name {
+    color: #e0e0e0;
+}
+[data-theme="dark"] .pokedex-card .dex-nr {
+    color: #aaa;
+}
+[data-theme="dark"] .pokedex-card.uncaught .pokemon-image-container {
+    filter: grayscale(100%) opacity(0.3); /* Ensure uncaught are still dim */
+}
+
+/* Fix Trash String Generator */
+[data-theme="dark"] .trash-modal-redesign .description {
+    color: #ccc;
+}
+[data-theme="dark"] .trash-modal-redesign h3 {
+    color: #e0e0e0;
+    border-bottom-color: #444;
+}
+[data-theme="dark"] .config-section {
+    background-color: #252525;
+    border-color: #444;
+}
+[data-theme="dark"] .checkbox-card {
+    background-color: #252525;
+    border-color: #444;
+    color: #e0e0e0;
+}
+[data-theme="dark"] .checkbox-card.active {
+    background-color: #2c3e50; /* Darker blueish for active */
+    border-color: #3498db;
+    color: #fff;
+}
+[data-theme="dark"] .number-input-wrapper {
+    background-color: #252525;
+    border-color: #444;
+    color: #e0e0e0;
+}
+[data-theme="dark"] .number-input-wrapper input {
+    color: #e0e0e0;
+}
+[data-theme="dark"] .trash-results .string-block {
+    background-color: #252525;
+    border-color: #444;
+}
+[data-theme="dark"] .trash-results textarea {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+    border-color: #444;
+}
+
+/* Fix Raid Team Builder Inputs & Text */
+[data-theme="dark"] .custom-enemy-input-wrapper input {
+    background-color: #252525;
+    border-color: #444;
+    color: #e0e0e0;
+}
+[data-theme="dark"] .team-builder-options .segmented-control {
+    background-color: #1e1e1e;
+    border-color: #444;
+}
+[data-theme="dark"] .team-builder-options .segmented-control button {
+    color: #aaa;
+}
+[data-theme="dark"] .team-builder-options .segmented-control button.active {
+    background-color: #3498db; /* Or generic active color */
+    color: #fff;
+}
+[data-theme="dark"] .modal-tabs button {
+    color: #aaa;
+    background-color: #252525;
+}
+[data-theme="dark"] .modal-tabs button.active {
+    color: #fff;
+    background-color: #3498db;
+}
+/* Ensure text in modal is readable */
+[data-theme="dark"] .card {
+    color: #e0e0e0;
+}
+[data-theme="dark"] .pokemon-stats-grid div span {
+    color: #aaa;
+}
+[data-theme="dark"] .pokemon-stats-grid div strong {
+    color: #fff;
+}

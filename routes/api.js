@@ -122,6 +122,9 @@ router.get('/check-auth-status', async (req, res) => {
             const team = privateData?.playerData?.account?.team;
             const userId = privateData?.playerData?.account?.userId; // Get userId
             const publicId = privateData?.playerData?.account?.publicId; // Get publicId
+            
+            // console.log("Auth Check:", { user: req.session.user.username, userId, publicId }); // Debug log
+
             res.json({ loggedIn: true, username: req.session.user.username, team: team, userId: userId, publicId: publicId }); // Return userId and publicId
         } catch (error) {
             console.error("Error fetching private data for auth status check:", error);

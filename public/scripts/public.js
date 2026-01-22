@@ -29,32 +29,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return closestLevel;
     }
 
-    function stringToHslColor(str, s, l) {
-        let hash = 0;
-        for (let i = 0; i < str.length; i++) {
-            hash = str.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        const h = hash % 360;
-        return `hsl(${h}, ${s}%, ${l}%)`;
-    }
-
-    function generateGradient(id) {
-        const color1 = stringToHslColor(id, 80, 75);
-        const color2 = stringToHslColor(id.split('').reverse().join(''), 90, 70);
-        const color3 = stringToHslColor(id + '-v2', 70, 80);
-        return `linear-gradient(135deg, ${color1}, ${color2}, ${color3})`;
-    }
-
-    function renderPlayerBadge(player) {
-        if (!player || !player.userId) {
-            // Fallback for data that might be missing the new ID
-            return `<span class="player-badge" style="background: #eee; color: #333;">${player.name || 'N/A'}</span>`;
-        }
-        const gradient = generateGradient(player.publicId);
-        return `<span class="player-badge" style="background: ${gradient};">#${player.userId}</span>`;
-    }
-
-
     function openRarityCalculationModal(pokemon) {
         const getStatLine = (label, breakdown) => {
             if (!breakdown || !breakdown.value || breakdown.value <= 1) return '';
