@@ -95,8 +95,20 @@ body.dashboard-public {
 /* --- Public Dashboard Rankings --- */
 #rankings-container { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
 #rankings-grid { display: grid; grid-template-columns: 1fr; gap: 20px; flex-grow: 1; min-height: 0; }
-@media (min-width: 1024px) { #rankings-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-.ranking-column { display: flex; flex-direction: column; min-height: 0; }
+@media (min-width: 1024px) { 
+    #rankings-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } 
+    .ranking-column { display: flex; flex-direction: column; min-height: 0; }
+    .composite-column { display: flex; flex-direction: column; }
+}
+@media (max-width: 1023px) {
+    #rankings-grid { display: block; overflow-y: auto; }
+    .ranking-column { margin-bottom: 20px; }
+    .composite-column { display: block; }
+    .events-card { margin-bottom: 20px; }
+    .activity-card { min-height: 400px; }
+}
+
+.ranking-column { min-height: 0; }
 
 /* Composite Column (First Column) */
 .composite-column {
