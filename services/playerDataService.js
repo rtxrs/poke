@@ -234,6 +234,9 @@ const playerDataService = {
                             } else if (p.tradedTimeMs > 0) {
                                 rarity.breakdown.iv.value = 987;
                                 rarity.breakdown.iv.text = 'Traded Hundo';
+                            } else if (p.pokemonDisplay.isStrongPokemon) {
+                                rarity.breakdown.iv.value = 216;
+                                rarity.breakdown.iv.text = 'Mighty Hundo';
                             } else {
                                 rarity.breakdown.iv.value = 4096;
                                 rarity.breakdown.iv.text = 'Wild Hundo';
@@ -243,8 +246,13 @@ const playerDataService = {
 
                     // Shiny Rarity
                     if (p.pokemonDisplay?.shiny) {
-                        rarity.breakdown.shiny.value = shinyRate;
-                        rarity.breakdown.shiny.text = (p.originEvents && p.originEvents.some(event => event.includes('community_day'))) ? 'Community Day' : 'Shiny';
+                        if (p.pokemonDisplay.isStrongPokemon) {
+                            rarity.breakdown.shiny.value = 128;
+                            rarity.breakdown.shiny.text = 'Mighty Shiny';
+                        } else {
+                            rarity.breakdown.shiny.value = shinyRate;
+                            rarity.breakdown.shiny.text = (p.originEvents && p.originEvents.some(event => event.includes('community_day'))) ? 'Community Day' : 'Shiny';
+                        }
                     }
 
                     // Lucky Rarity
@@ -277,6 +285,7 @@ const playerDataService = {
                         isZeroIv: p.individualAttack === 0 && p.individualDefense === 0 && p.individualStamina === 0,
                         isShadow: p.pokemonDisplay.alignment === 1,
                         isPurified: p.pokemonDisplay.alignment === 2,
+                        isStrongPokemon: p.pokemonDisplay.isStrongPokemon,
                         isLegendary: pokedexEntry?.pokemonClass === 'POKEMON_CLASS_LEGENDARY',
                         isMythical: pokedexEntry?.pokemonClass === 'POKEMON_CLASS_MYTHIC',
                         isTraded: p.tradedTimeMs > 0,
