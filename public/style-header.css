@@ -43,6 +43,7 @@
     padding: 0;
     display: flex;
     gap: 15px;
+    align-items: center; /* Vertically center all items */
     visibility: hidden; /* Hide nav until JS is ready */
 }
 

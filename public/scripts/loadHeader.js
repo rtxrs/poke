@@ -123,11 +123,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             } else if (path.includes('/me') || path.includes('private.html')) {
                 setLinkVisibility(true, false, false, false, true); // Home, Logout
                 if (mainTitle && authStatus.userId) {
-                    mainTitle.innerHTML = renderPlayerBadge({ 
+                    const badgeHtml = renderPlayerBadge({ 
                         userId: authStatus.userId, 
-                        publicId: authStatus.publicId,
-                        name: authStatus.username 
+                        publicId: authStatus.publicId
+                        // Name intentionally omitted so badge only shows ID
                     });
+                    mainTitle.innerHTML = `${authStatus.username} | ${badgeHtml}`;
                 } else if (mainTitle) {
                     // Fallback if userId logic fails but user is logged in
                     mainTitle.textContent = authStatus.username || 'Player Dashboard';
