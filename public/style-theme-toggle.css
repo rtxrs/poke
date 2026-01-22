@@ -142,6 +142,15 @@ body[data-theme="dark"] .main-nav {
     background-color: #1e1e1e !important;
     border-bottom: 1px solid #333;
 }
+[data-theme="dark"] .sub-header.scroll-left {
+    box-shadow: inset 20px 0 10px -10px rgba(255,255,255,0.15) !important;
+}
+[data-theme="dark"] .sub-header.scroll-right {
+    box-shadow: inset -20px 0 10px -10px rgba(255,255,255,0.15) !important;
+}
+[data-theme="dark"] .sub-header.scroll-left.scroll-right {
+    box-shadow: inset 20px 0 10px -10px rgba(255,255,255,0.15), inset -20px 0 10px -10px rgba(255,255,255,0.15) !important;
+}
 
 /* Fix Pokemon Cards in Dark Mode */
 [data-theme="dark"] .pokemon-card:not(.colored) {

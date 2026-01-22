@@ -1024,6 +1024,16 @@ body.dashboard-private, body:not([class]) {
         -webkit-overflow-scrolling: touch;
         display: block !important;
         padding-bottom: 5px;
+        transition: box-shadow 0.2s ease; /* Smooth transition for shadows */
+    }
+    .sub-header.scroll-left {
+        box-shadow: inset 15px 0 10px -10px rgba(0,0,0,0.3);
+    }
+    .sub-header.scroll-right {
+        box-shadow: inset -15px 0 10px -10px rgba(0,0,0,0.3);
+    }
+    .sub-header.scroll-left.scroll-right {
+        box-shadow: inset 15px 0 10px -10px rgba(0,0,0,0.3), inset -15px 0 10px -10px rgba(0,0,0,0.3);
     }
     .sub-header::-webkit-scrollbar {
         display: none;
