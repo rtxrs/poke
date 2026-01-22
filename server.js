@@ -47,11 +47,27 @@ app.use('/api', apiRoutes);
 // --- Start Server ---
 (async () => {
     try {
+        const fsPromises = require('fs').promises;
+        const { exec } = require('child_process');
+        
+        // --- Ensure Required Directories Exist ---
+        const directories = [
+            path.join(__dirname, 'data/public'),
+            path.join(__dirname, 'data/private'),
+            path.join(__dirname, 'data/private/sessions'),
+            path.join(__dirname, 'data/user/custom'),
+            path.join(__dirname, 'data/user/generated'),
+            path.join(__dirname, config.DATA_FOLDER)
+        ];
+
+        for (const dir of directories) {
+            await fsPromises.mkdir(dir, { recursive: true });
+        }
+        console.log('✅ Required directories initialized.');
+
         await pokedexService.initialize();
         
         // --- PvP Ranks Auto-Generation Check ---
-        const fsPromises = require('fs').promises;
-        const { exec } = require('child_process');
         // Compare against RAW pokedex.json because pokedex_modified.json is rewritten on every boot
         const pokedexPath = path.join(__dirname, 'data/public/pokedex.json'); 
         const ranksPath = path.join(__dirname, 'data/user/generated/pvp_ranks.json');

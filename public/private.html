@@ -44,13 +44,7 @@
                                     <span v-if="index < getPokemonTypes(selectedPokemon).length - 1"> / </span>
                                 </template>
                             </span>
-                            <span class="badges-container" v-html="getBadges(selectedPokemon, '')"></span>
-                            <!-- Full PvP Ranks in Modal -->
-                            <div class="pvp-ranks modal-ranks" v-if="selectedPokemon.rankGreat || selectedPokemon.rankUltra || selectedPokemon.rankMaster">
-                                <span v-if="selectedPokemon.rankGreat && selectedPokemon.cp <= 1500" :class="['pvp-badge', 'great', { 'rank-1': selectedPokemon.rankGreat <= 10 }]">GL #{{ selectedPokemon.rankGreat }}</span>
-                                <span v-if="selectedPokemon.rankUltra && selectedPokemon.cp <= 2500" :class="['pvp-badge', 'ultra', { 'rank-1': selectedPokemon.rankUltra <= 10 }]">UL #{{ selectedPokemon.rankUltra }}</span>
-                                <span v-if="selectedPokemon.rankMaster" :class="['pvp-badge', 'master', { 'rank-1': selectedPokemon.rankMaster <= 10 }]">ML #{{ selectedPokemon.rankMaster }}</span>
-                            </div>
+                            <span class="badges-container" v-html="getBadges(selectedPokemon, '', false)"></span>
                         </h2>
                         <div class="pokemon-stats-grid">
                             <div><span>CP</span><strong>{{ selectedPokemon.cp }}</strong></div>
@@ -693,6 +687,10 @@
         <div id="pvp-progress-container" class="floating-footer-progress">
             <div id="pvp-progress-bar" class="progress-bar"></div>
         </div>
+
+        <!-- Scroll to Top Button -->
+        <button id="scroll-to-top-btn" :class="{ visible: showScrollTop }" @click="scrollToTop">↑</button>
+
     </div> <!-- Close #app -->
 
     <!-- 2. Link to the external Vue Application Logic -->

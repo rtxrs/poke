@@ -3,11 +3,6 @@
 # It should not be committed to version control.
 node_modules/
 
-# Cached Data
-# This file is automatically downloaded and created by the server on startup.
-# Committing it would add unnecessary bulk to the repository.
-pokedex.json
-
 # User Data
 # This folder contains sensitive, user-specific data and should not be committed.
 pgsharp_player_data/*

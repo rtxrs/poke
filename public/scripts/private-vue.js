@@ -102,9 +102,10 @@ function getCardClass(p) {
  * Generates the HTML badges string for a Pokemon card.
  * @param {Object} p - The Pokemon object.
  * @param {string} name - The display name of the Pokemon.
+ * @param {boolean} limitRank - Whether to limit PvP badges to top 100.
  * @returns {string} The HTML string containing the name and badges.
  */
-function getBadges(p, name) {
+function getBadges(p, name, limitRank = true) {
     const badges = [];
     if (!p || !p.pokemonDisplay) return name;
 
@@ -112,7 +113,8 @@ function getBadges(p, name) {
     if (p.pokemonDisplay.shiny) badges.push('<span class="badge shiny-badge">Shiny</span>');
     if (p.isLucky) {
         badges.push('<span class="badge lucky-badge">Lucky</span>');
-    } else if (p.tradedTimeMs > 0) {
+    }
+    else if (p.tradedTimeMs > 0) {
         badges.push('<span class="badge traded-badge">Traded</span>');
     }
     
@@ -138,8 +140,28 @@ function getBadges(p, name) {
         badges.push('<span class="badge background-badge">Background</span>');
     }
 
+    // PvP Ranks as Markers
+    if (p.rankGreat && p.cp <= 1500 && (!limitRank || p.rankGreat <= 100)) {
+        let extraClass = '';
+        if (p.rankGreat <= 10) extraClass = ' rank-1';
+        else if (p.rankGreat <= 25) extraClass = ' rank-good';
+        badges.push(`<span class="badge pvp-badge great${extraClass}" title="Great League Rank #${p.rankGreat}">#${p.rankGreat}</span>`);
+    }
+    if (p.rankUltra && p.cp <= 2500 && (!limitRank || p.rankUltra <= 100)) {
+        let extraClass = '';
+        if (p.rankUltra <= 10) extraClass = ' rank-1';
+        else if (p.rankUltra <= 25) extraClass = ' rank-good';
+        badges.push(`<span class="badge pvp-badge ultra${extraClass}" title="Ultra League Rank #${p.rankUltra}">#${p.rankUltra}</span>`);
+    }
+    if (p.rankMaster && (!limitRank || p.rankMaster <= 100)) {
+        let extraClass = '';
+        if (p.rankMaster <= 10) extraClass = ' rank-1';
+        else if (p.rankMaster <= 25) extraClass = ' rank-good';
+        badges.push(`<span class="badge pvp-badge master${extraClass}" title="Master League Rank #${p.rankMaster}">#${p.rankMaster}</span>`);
+    }
+
     if (badges.length > 0) {
-        return `${name}<br>${badges.join(' ')}`;
+        return name ? `${name}<br>${badges.join(' ')}` : badges.join(' ');
     }
     return name;
 }
@@ -324,11 +346,6 @@ const GridComponent = {
                 </div>
                 <p class="pokemon-name" v-html="getBadges(p, displayName(p))"></p>
                 <p class="pokemon-cp">CP {{ p.cp }}</p>
-                <div class="pvp-ranks">
-                    <span v-if="p.rankGreat && p.rankGreat <= 100 && p.cp <= 1500" :class="['pvp-badge', 'great', { 'rank-1': p.rankGreat <= 10, 'rank-good': p.rankGreat > 10 && p.rankGreat <= 25 }]">GL #{{ p.rankGreat }}</span>
-                    <span v-if="p.rankUltra && p.rankUltra <= 100 && p.cp <= 2500" :class="['pvp-badge', 'ultra', { 'rank-1': p.rankUltra <= 10, 'rank-good': p.rankUltra > 10 && p.rankUltra <= 25 }]">UL #{{ p.rankUltra }}</span>
-                    <span v-if="p.rankMaster && p.rankMaster <= 100" :class="['pvp-badge', 'master', { 'rank-1': p.rankMaster <= 10, 'rank-good': p.rankMaster > 10 && p.rankMaster <= 25 }]">ML #{{ p.rankMaster }}</span>
-                </div>
                 <p v-if="p.score" class="pokemon-score">{{ p.scoreLabel || 'Score' }}: {{ p.score.toFixed(2) }}</p>
                 <div class="iv-bar-container">
                     <div class="iv-bar" :style="{ width: getIvPercent(p) + '%', backgroundColor: getIvColor(getIvPercent(p)) }"></div>
@@ -1165,39 +1182,16 @@ pokemons.sort((a, b) => {
                         .slice(0, 6)
                         .map(p => ({ ...p, score: p.dps, scoreLabel: 'DPS' }));
 
-                    // Top 6 Tankers (Bulk)
+                    const attackerIds = new Set(attackers.map(p => p.id));
+
+                    // Top 6 Tankers (Bulk) - Excluding those already selected as attackers
                     const tanks = [...evaluatedPool]
+                        .filter(p => !attackerIds.has(p.id))
                         .sort((a, b) => b.bulk - a.bulk)
                         .slice(0, 6)
                         .map(p => ({ ...p, score: p.bulk, scoreLabel: 'Bulk' }));
 
-                    // Combine (Allow duplicates if they are good at both, or filter unique?)
-                    // User asked for "6 best attackers and 6 best tankers".
-                    // We will display them in that order: Attackers first, then Tanks.
-                    // If a pokemon is in both, it will appear twice, which highlights its versatility,
-                    // but might be confusing. Let's dedup by ID, prioritizing the Attacker role.
-                    
-                    const uniqueSuggestions = [];
-                    const addedIds = new Set();
-
-                    attackers.forEach(p => {
-                        uniqueSuggestions.push(p);
-                        addedIds.add(p.id);
-                    });
-
-                    tanks.forEach(p => {
-                        // If we want to show it strictly as a Tank even if it was an Attacker...
-                        // But usually we just want 12 suggestions.
-                        // If we dedup, we might end up with < 12 items.
-                        // Let's NOT dedup for now, so the user explicitly sees the "Tank" list starting after "Attackers".
-                        // Actually, deduping is cleaner UI. 
-                        if (!addedIds.has(p.id)) {
-                            uniqueSuggestions.push(p);
-                            addedIds.add(p.id);
-                        }
-                    });
-
-                    suggestions[enemy.names.English] = uniqueSuggestions;
+                    suggestions[enemy.names.English] = [...attackers, ...tanks];
 
                 } else {
                     // Standard Logic
@@ -1601,6 +1595,27 @@ pokemons.sort((a, b) => {
                 
                             return displayList;
                         });
+        // --- Scroll to Top Logic ---
+        const showScrollTop = ref(false);
+
+        const handleScroll = () => {
+            let scrolled = false;
+            if (window.scrollY > 300) scrolled = true;
+            
+            const pokemonList = document.getElementById('all-pokemon-list');
+            if (pokemonList && pokemonList.scrollTop > 300) scrolled = true;
+
+            showScrollTop.value = scrolled;
+        };
+
+        const scrollToTop = () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            const pokemonList = document.getElementById('all-pokemon-list');
+            if (pokemonList) {
+                pokemonList.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        };
+
         const pvpProgress = ref(-1); // Progress -1 (Hidden), 0-100 (Visible)
         const combatMoves = ref(null); // Stores full stats for moves (power, energy, duration)
 
@@ -1870,6 +1885,16 @@ pokemons.sort((a, b) => {
                 const combatMovesResponse = await fetch('/api/combat-moves');
                 if (combatMovesResponse.ok) {
                     combatMoves.value = await combatMovesResponse.json();
+                    
+                    // Populate moveMap for display
+                    const map = {};
+                    if (combatMoves.value.fastMoves) {
+                        combatMoves.value.fastMoves.forEach(m => map[m.move_id] = m);
+                    }
+                    if (combatMoves.value.chargedMoves) {
+                        combatMoves.value.chargedMoves.forEach(m => map[m.move_id] = m);
+                    }
+                    moveMap.value = map;
                 } else {
                     console.error("Failed to load combat moves:", combatMovesResponse.status);
                 }
@@ -2091,6 +2116,12 @@ pokemons.sort((a, b) => {
                 updateActiveTabFromHash();
                 window.addEventListener('hashchange', updateActiveTabFromHash);
 
+                window.addEventListener('scroll', handleScroll);
+                const pokemonList = document.getElementById('all-pokemon-list');
+                if (pokemonList) {
+                    pokemonList.addEventListener('scroll', handleScroll);
+                }
+
             } catch (error) {
                 console.error('Dashboard Error:', error);
                 document.querySelector('.container').innerHTML = `<div class="card"><p>Could not load your player data. Reason: ${error.message}</p></div>`;
@@ -2101,6 +2132,7 @@ pokemons.sort((a, b) => {
 
         // --- Expose to Template ---
         return {
+            showScrollTop, scrollToTop,
             loading, account, player, items, activeTab, searchQuery, sortKey, sortDirection, itemsExpanded, selectedPokemon, moveMap, costumeIdMap, pokedexService,
             teamColor, xpPercentage, xpProgressText, stardust, pokecoins, highlights,
             groupedItems, itemCategoryOrder, filteredPokemon,
