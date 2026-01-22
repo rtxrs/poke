@@ -381,6 +381,29 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
 
+        // --- Mobile Width Fix ---
+        function adjustMobileWidth() {
+            if (window.innerWidth >= 1024) return; // Only needed for mobile/tablet
+
+            const headerContent = document.querySelector('.header-content');
+            const container = document.querySelector('.container');
+            const targetWidth = headerContent ? headerContent.clientWidth : window.innerWidth;
+            
+            // Subtract padding (approx 40px total for container padding)
+            const maxWidth = targetWidth - 40; 
+
+            const columns = document.querySelectorAll('.ranking-column, .composite-column, .events-card, .activity-card');
+            columns.forEach(col => {
+                col.style.width = `${maxWidth}px`;
+            });
+        }
+
+        // Run on load and resize
+        window.addEventListener('resize', adjustMobileWidth);
+        // Wait for header to load (it's injected asynchronously)
+        setTimeout(adjustMobileWidth, 100); 
+        setTimeout(adjustMobileWidth, 500); // Retry a bit later just in case
+
     } catch (error) {
         console.error('Failed to initialize public dashboard:', error);
         loadingOverlay.innerHTML = '<p>Could not load ranking data. Please try again later.</p>';

@@ -59,6 +59,10 @@ body[data-theme="dark"] .main-header.team-instinct-bg {
     border-bottom: 1px solid #333;
 }
 
+body[data-theme="dark"] .main-nav {
+    background-color: #1e1e1e !important;
+}
+
 /* Fix Content Cards in Dark Mode */
 [data-theme="dark"] .card {
     background-color: var(--card-bg);

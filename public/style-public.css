@@ -101,11 +101,15 @@ body.dashboard-public {
     .composite-column { display: flex; flex-direction: column; }
 }
 @media (max-width: 1023px) {
-    #rankings-grid { display: block; overflow-y: auto; }
-    .ranking-column { margin-bottom: 20px; }
-    .composite-column { display: block; }
-    .events-card { margin-bottom: 20px; }
-    .activity-card { min-height: 400px; }
+    #rankings-grid { display: block; overflow-y: visible; overflow-x: hidden; }
+    .ranking-column { margin-bottom: 20px; width: 100%; min-width: 0; }
+    .composite-column { 
+        display: block; 
+        width: 100%; 
+        max-width: 100%; 
+    }
+    .events-card { margin-bottom: 20px; width: 100%; }
+    .activity-card { min-height: 400px; width: 100%; }
 }
 
 .ranking-column { min-height: 0; }
@@ -117,14 +121,21 @@ body.dashboard-public {
 }
 .events-card {
     flex: 0 0 auto;
-    max-height: 300px;
-    overflow: hidden;
+    max-height: 350px; /* Slightly increased */
     display: flex;
     flex-direction: column;
+    /* Removed overflow: hidden to prevent clipping */
 }
 .activity-card {
     flex: 1 1 0;
     min-height: 0;
+}
+
+@media (max-width: 768px) {
+    .card {
+        padding: 15px 10px !important; /* Reduce padding to give more room for content */
+        overflow-x: auto; /* Ensure horizontal scroll if content still exceeds maxWidth */
+    }
 }
 
 /* Events Widget Styles */
@@ -135,7 +146,7 @@ body.dashboard-public {
     flex-direction: column;
     gap: 8px;
     padding-right: 5px;
-    overflow-x: hidden; /* Prevent horizontal scroll in events */
+    overflow-x: hidden; /* Prevent horizontal scroll in events, rely on ellipsis */
 }
 .events-section-header {
     font-size: 0.8em;
@@ -200,10 +211,14 @@ body.dashboard-public {
 }
 table { width: 100%; border-collapse: collapse; min-width: 100%; } /* Ensure table fills but can be wider */
 th, td { padding: 12px 8px; text-align: left; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
-th { font-size: 0.8em; color: #6c757d; text-transform: uppercase; position: sticky; top: 0; background: white; z-index: 1; white-space: nowrap; } /* Prevent header wrap */
+@media (max-width: 768px) {
+    th, td { padding: 8px 5px; } /* More compact on mobile */
+    td { white-space: normal !important; word-break: break-word; } /* Allow wrapping to prevent overflow */
+}
+th { font-size: 0.8em; color: #6c757d; text-transform: uppercase; position: sticky; top: 0; background: white; z-index: 1; white-space: nowrap; } 
 tbody tr:last-child td { border-bottom: none; }
 tbody tr:hover { background-color: #f8f9fa; }
-td { font-size: 0.9em; white-space: nowrap; } /* Prevent cell wrap causing height jumps */
+td { font-size: 0.9em; } 
 td img {
     width: 36px;
     height: 36px;
@@ -253,18 +268,28 @@ td img {
 
     #rankings-grid {
         display: block;
-        overflow-y: visible; /* Let body handle scroll */
-        overflow-x: hidden; /* Prevent grid horizontal scroll */
+        overflow-y: visible;
+        overflow-x: hidden;
     }
 
     .ranking-column {
         margin-bottom: 20px;
-        max-width: 100vw; /* Hard limit */
+        width: 100%; /* Use 100% instead of 100vw to respect padding */
+        min-width: 0; /* Allow shrinking */
     }
 
+    /* Force table container to respect parent width */
     .table-container {
         flex-grow: 0;
-        overflow-x: auto; /* Enable scroll within container */
+        overflow-x: auto;
+        max-width: 100%;
+        display: block; /* Ensure block formatting context */
+        width: 100%;
+    }
+    
+    .table-container table {
+        width: 100%;
+        min-width: 100%; /* Allow table to be at least container width */
     }
 
     .table-container:not(.expanded) tbody tr:nth-child(n+11) {
@@ -272,7 +297,7 @@ td img {
     }
 
     .ranking-footer {
-        display: block; /* Show button on small screens */
+        display: block;
     }
 
     .ranking-column.expanded .show-more-btn {
