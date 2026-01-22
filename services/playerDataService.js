@@ -237,6 +237,9 @@ const playerDataService = {
                             } else if (p.pokemonDisplay.isStrongPokemon) {
                                 rarity.breakdown.iv.value = 216;
                                 rarity.breakdown.iv.text = 'Mighty Hundo';
+                            } else if ((origin === 3 || origin === 14) && (pokedexEntry?.pokemonClass === 'POKEMON_CLASS_LEGENDARY' || pokedexEntry?.pokemonClass === 'POKEMON_CLASS_MYTHIC')) {
+                                rarity.breakdown.iv.value = 216;
+                                rarity.breakdown.iv.text = 'Raid Hundo';
                             } else {
                                 rarity.breakdown.iv.value = 4096;
                                 rarity.breakdown.iv.text = 'Wild Hundo';
