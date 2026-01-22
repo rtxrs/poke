@@ -417,11 +417,61 @@ const RaidBossSelector = {
     `
 };
 
+const MaxBossSelector = {
+    props: ['maxBattles', 'selectedMaxBoss', 'createBackgroundStyle'],
+    emits: ['boss-selected'],
+    setup(props) {
+        const groupedBosses = Vue.computed(() => {
+            const groups = {};
+            props.maxBattles.forEach(boss => {
+                if (!groups[boss.level]) {
+                    groups[boss.level] = [];
+                }
+                groups[boss.level].push(boss);
+            });
+            // Sort keys descending: tier3 -> tier2 -> tier1
+            const sortedKeys = Object.keys(groups).sort().reverse();
+            const sortedGroups = {};
+            sortedKeys.forEach(key => sortedGroups[key] = groups[key]);
+            return sortedGroups;
+        });
+
+        const getBossImage = (boss) => {
+            if (boss.assets && boss.assets.image) {
+                return boss.assets.image;
+            }
+            return 'https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon/pokemon_icon_000.png';
+        };
+
+        return {
+            groupedBosses,
+            getBossImage
+        };
+    },
+    template: `
+        <div class="raid-boss-selector">
+            <div v-for="(bosses, level) in groupedBosses" :key="level" class="raid-boss-group">
+                <h3 class="raid-boss-level-title">{{ level.replace('tier', 'TIER ') }}</h3>
+                <div class="raid-boss-icons">
+                    <div v-for="boss in bosses" :key="boss.id"
+                         class="pokemon-image-container"
+                         :class="{ selected: boss.id === selectedMaxBoss }"
+                         :style="createBackgroundStyle(boss.typeColors)"
+                         @click="$emit('boss-selected', boss.id)">
+                        <img :src="getBossImage(boss)" :alt="boss.names.English">
+                    </div>
+                </div>
+            </div>
+        </div>
+    `
+};
+
 // --- Main Vue App Instance ---
 createApp({
     components: {
         'grid-component': GridComponent,
-        'raid-boss-selector': RaidBossSelector
+        'raid-boss-selector': RaidBossSelector,
+        'max-boss-selector': MaxBossSelector
     },
     setup() {
         // --- Reactive State ---
@@ -929,10 +979,12 @@ pokemons.sort((a, b) => {
         const showTeamBuilderModal = ref(false);
         const selectedRaidBoss = ref('DIALGA');
         const raidBosses = ref([]);
+        const maxBattles = ref([]); // Store Max Battles data
+        const selectedMaxBoss = ref(null); // Store selected Max Boss ID
         const typeEffectiveness = ref({});
 
         // New state for custom team builder
-        const teamBuilderMode = ref('raid'); // 'raid' or 'custom'
+        const teamBuilderMode = ref('raid'); // 'raid', 'custom', 'max_battle_list'
         const customEnemies = ref([]);
         const activeTeamBuilderTab = ref('Overall');
         const allPokedex = ref([]); // To populate the custom enemy selector
@@ -1130,7 +1182,12 @@ pokemons.sort((a, b) => {
 
         const generateSuggestions = () => {
             let enemies = [];
-            if (teamBuilderMode.value === 'raid') {
+            // Force Battle Mode for Max Battles Tab
+            if (teamBuilderMode.value === 'max_battle_list') {
+                battleMode.value = 'max';
+                const boss = maxBattles.value.find(b => b.id === selectedMaxBoss.value);
+                if (boss) enemies.push(boss);
+            } else if (teamBuilderMode.value === 'raid') {
                 const boss = raidBosses.value.find(b => b.id === selectedRaidBoss.value);
                 if (boss) enemies.push(boss);
             } else {
@@ -1314,6 +1371,9 @@ pokemons.sort((a, b) => {
             if (teamBuilderMode.value === 'raid') {
                 const boss = raidBosses.value.find(b => b.id === selectedRaidBoss.value);
                 return boss ? allTeamSuggestions.value[boss.names.English] || [] : [];
+            } else if (teamBuilderMode.value === 'max_battle_list') {
+                const boss = maxBattles.value.find(b => b.id === selectedMaxBoss.value);
+                return boss ? allTeamSuggestions.value[boss.names.English] || [] : [];
             } else { // custom mode
                 if (customEnemies.value.length === 0) return [];
                 if (customEnemies.value.length === 1) {
@@ -1323,7 +1383,6 @@ pokemons.sort((a, b) => {
                 return allTeamSuggestions.value[activeTeamBuilderTab.value] || [];
             }
         });
-
         const addCustomEnemy = () => {
             if (customEnemies.value.length >= 6) return;
             const pokemonName = customEnemyInput.value;
@@ -1387,7 +1446,11 @@ pokemons.sort((a, b) => {
 
         watch(teamBuilderMode, (newMode) => {
             // Reset battle mode when switching between Raid and Custom
-            battleMode.value = 'standard';
+            if (newMode === 'max_battle_list') {
+                battleMode.value = 'max';
+            } else {
+                battleMode.value = 'standard';
+            }
         });
 
         watch(customEnemies, (newEnemies) => {
@@ -2167,51 +2230,32 @@ pokemons.sort((a, b) => {
 
                 const raidBossesResponse = await fetch('/data/public/raidboss.json');
                 if (raidBossesResponse.ok) {
-                    const raidBossData = await raidBossesResponse.json();
-                    const currentBosses = Object.values(raidBossData.currentList).flat();
-                    const groupOrder = ['mega', 'shadow_lvl5', 'lvl5', 'shadow_lvl3', 'lvl3', 'shadow_lvl1', 'lvl1'];
+                    const data = await raidBossesResponse.json();
                     
-                    currentBosses.forEach(boss => {
-                        if (boss.types) {
-                            boss.typeColors = boss.types.map(type => pokedexService.value.typeColorMap[type.toUpperCase()]);
-                        } else {
-                            boss.typeColors = [];
-                        }
-                    });
+                    const processBossList = (list) => {
+                        return list.map(boss => ({
+                            ...boss,
+                            typeColors: boss.types.map(t => pokedexService.value.typeColorMap[t.toUpperCase()] || '#ccc')
+                        }));
+                    };
 
-                    raidBosses.value = currentBosses.sort((a, b) => {
-                        const levelA = groupOrder.indexOf(a.level);
-                        const levelB = groupOrder.indexOf(b.level);
-                        if (levelA !== levelB) {
-                            return levelA - levelB;
-                        }
-                        return a.names.English.localeCompare(b.names.English);
-                    });
-                    if (raidBosses.value.length > 0) {
-                        selectedRaidBoss.value = raidBosses.value[0].id;
+                    const allBosses = [];
+                    for (const level in data.currentList) {
+                        allBosses.push(...processBossList(data.currentList[level]));
                     }
+                    raidBosses.value = allBosses;
                 }
 
-                // Update the main title with the player's name and userId
-                const mainTitle = document.getElementById('main-title');
-                if (account.value.name && account.value.userId) {
-                    document.title = `Pokemon GO | ${account.value.name} #${account.value.userId}`;
-                    if (mainTitle) {
-                        mainTitle.innerHTML = `${account.value.name} | <span class="player-badge" style="${generateGradient(account.value.publicId)}">#${account.value.userId}</span>`;
-                    }
-                } else if (account.value.name) {
-                    document.title = `Pokemon GO | ${account.value.name}'s Profile`;
-                    if (mainTitle) {
-                        mainTitle.textContent = `${account.value.name}'s Profile`;
-                    }
-                } else {
-                    document.title = `Pokemon GO | My Profile`;
-                    if (mainTitle) {
-                        mainTitle.textContent = 'My Profile';
-                    }
+                // Fetch Max Battles
+                const maxBattlesResponse = await fetch('/data/public/max_battles.json');
+                if (maxBattlesResponse.ok) {
+                    const data = await maxBattlesResponse.json();
+                    maxBattles.value = data.map(boss => ({
+                        ...boss,
+                        typeColors: boss.types.map(t => pokedexService.value.typeColorMap[t.toUpperCase()] || '#ccc')
+                    }));
                 }
 
-                // Set up tab navigation
                 updateActiveTabFromHash();
                 window.addEventListener('hashchange', updateActiveTabFromHash);
 
@@ -2239,6 +2283,7 @@ pokemons.sort((a, b) => {
             toggleSortDirection, getItemSprite, createBackgroundStyle, getIvPercent, getCardClass, getBadges, getLevelFromCpm, openPokemonModal, displayMove, getIvColor, getPokemonTypes,
             showCleanupModal, openCleanupModal, closeCleanupModal, cleanupSearchQuery, groupSubstitutes, defaultCleanupData, formGroupedCleanupData,
             showTeamBuilderModal, openTeamBuilderModal, closeTeamBuilderModal, selectedRaidBoss, raidBosses,
+            maxBattles, selectedMaxBoss,
             teamBuilderMode, customEnemies, activeTeamBuilderTab, allPokedex, allPokedexNames, activeTabSuggestions, addCustomEnemy, removeCustomEnemy,             customEnemyInput, battleMode,
             getMoveTypeIconUrl,
             pvpProgress,

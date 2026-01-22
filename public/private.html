@@ -590,6 +590,7 @@
                 <!-- Mode Tabs -->
                 <div class="modal-tabs">
                     <button :class="{ active: teamBuilderMode === 'raid' }" @click="teamBuilderMode = 'raid'">Raid Boss</button>
+                    <button :class="{ active: teamBuilderMode === 'max_battle_list' }" @click="teamBuilderMode = 'max_battle_list'">Max Battles</button>
                     <button :class="{ active: teamBuilderMode === 'custom' }" @click="teamBuilderMode = 'custom'">Custom Team</button>
                 </div>
 
@@ -601,6 +602,16 @@
                         :create-background-style="createBackgroundStyle"
                         @boss-selected="selectedRaidBoss = $event">
                     </raid-boss-selector>
+                </div>
+
+                <!-- Max Boss Selector -->
+                <div v-if="teamBuilderMode === 'max_battle_list'" class="summary-header">
+                    <max-boss-selector
+                        :max-battles="maxBattles"
+                        :selected-max-boss="selectedMaxBoss"
+                        :create-background-style="createBackgroundStyle"
+                        @boss-selected="selectedMaxBoss = $event">
+                    </max-boss-selector>
                 </div>
 
                 <!-- Custom Team Selector -->
@@ -624,7 +635,7 @@
                 </div>
 
                 <!-- Combined Results/Enemy Tabs -->
-                <div class="modal-tabs result-tabs" v-if="(teamBuilderMode === 'custom' && customEnemies.length > 0) || (teamBuilderMode === 'raid' && selectedRaidBoss)">
+                <div class="modal-tabs result-tabs" v-if="(teamBuilderMode === 'custom' && customEnemies.length > 0) || (teamBuilderMode === 'raid' && selectedRaidBoss) || (teamBuilderMode === 'max_battle_list' && selectedMaxBoss)">
                     <!-- Overall Tab (Custom Mode Only) -->
                     <button v-if="teamBuilderMode === 'custom' && customEnemies.length > 1" :class="{ active: activeTeamBuilderTab === 'Overall' }" @click="activeTeamBuilderTab = 'Overall'">
                         Overall
@@ -648,6 +659,15 @@
                                 :class="{ active: true }"
                                 :style="createBackgroundStyle(raidBosses.find(b => b.id === selectedRaidBoss)?.typeColors || [])" class="enemy-tab">
                             {{ raidBosses.find(b => b.id === selectedRaidBoss)?.names.English }}
+                        </button>
+                    </template>
+
+                    <!-- Boss Tab (Max Battle Mode) -->
+                    <template v-if="teamBuilderMode === 'max_battle_list'">
+                        <button v-if="selectedMaxBoss"
+                                :class="{ active: true }"
+                                :style="createBackgroundStyle(maxBattles.find(b => b.id === selectedMaxBoss)?.typeColors || [])" class="enemy-tab">
+                            {{ maxBattles.find(b => b.id === selectedMaxBoss)?.names.English }}
                         </button>
                     </template>
                 </div>

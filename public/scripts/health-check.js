@@ -49,39 +49,65 @@ document.addEventListener('DOMContentLoaded', () => {
             let statusText = '';
             let statusClass = '';
 
-            if (!value.localHash) {
-                statusText = '⚠️ Local file not found';
-                statusClass = 'status-missing';
-            } else if (value.remoteHash && value.localHash.toLowerCase() === value.remoteHash.toLowerCase()) {
-                statusText = '✅ Hashes match';
-                statusClass = 'status-ok';
-            } else {
-                statusText = '❌ Hashes do not match';
-                statusClass = 'status-mismatch';
-            }
+            // Special handling for Max Battles (no hashes)
+            if (key === 'max_battles') {
+                if (value.status === 'Success') {
+                    statusText = '✅ Updated Successfully';
+                    statusClass = 'status-ok';
+                } else if (value.status === 'Failed') {
+                    statusText = '❌ Update Failed';
+                    statusClass = 'status-mismatch';
+                } else {
+                    statusText = value.status || 'Unknown';
+                    statusClass = 'status-missing';
+                }
 
-            table.innerHTML = `
-                <tr>
-                    <th>Source</th>
-                    <th>Hash</th>
-                </tr>
-                <tr>
-                    <td>Remote</td>
-                    <td>${value.remoteHash || 'N/A'}</td>
-                </tr>
-                <tr>
-                    <td>Local</td>
-                    <td>${value.localHash || 'N/A'}</td>
-                </tr>
-                <tr>
-                    <td><strong>Status</strong></td>
-                    <td class="${statusClass}"><strong>${statusText}</strong></td>
-                </tr>
-                 <tr>
-                    <td>Last Checked</td>
-                    <td>${value.lastChecked ? new Date(value.lastChecked).toLocaleString() : 'N/A'}</td>
-                </tr>
-            `;
+                table.innerHTML = `
+                    <tr>
+                        <td><strong>Status</strong></td>
+                        <td class="${statusClass}"><strong>${statusText}</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Last Checked</td>
+                        <td>${value.lastChecked ? new Date(value.lastChecked).toLocaleString() : 'N/A'}</td>
+                    </tr>
+                `;
+            } else {
+                // Standard Hash Comparison
+                if (!value.localHash) {
+                    statusText = '⚠️ Local file not found';
+                    statusClass = 'status-missing';
+                } else if (value.remoteHash && value.localHash.toLowerCase() === value.remoteHash.toLowerCase()) {
+                    statusText = '✅ Hashes match';
+                    statusClass = 'status-ok';
+                } else {
+                    statusText = '❌ Hashes do not match';
+                    statusClass = 'status-mismatch';
+                }
+
+                table.innerHTML = `
+                    <tr>
+                        <th>Source</th>
+                        <th>Hash</th>
+                    </tr>
+                    <tr>
+                        <td>Remote</td>
+                        <td>${value.remoteHash || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                        <td>Local</td>
+                        <td>${value.localHash || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Status</strong></td>
+                        <td class="${statusClass}"><strong>${statusText}</strong></td>
+                    </tr>
+                     <tr>
+                        <td>Last Checked</td>
+                        <td>${value.lastChecked ? new Date(value.lastChecked).toLocaleString() : 'N/A'}</td>
+                    </tr>
+                `;
+            }
 
             card.appendChild(table);
             container.appendChild(card);

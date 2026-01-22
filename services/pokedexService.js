@@ -6,6 +6,7 @@ const cron = require('node-cron');
 
 const { POKEDEX_API_URL, POKEDEX_FILE, POKEDEX_SERVER_FILE, POKEDEX_CLIENT_FILE, DATA_DIR, SHINY_RATES_FILE, POKEDEX_RAW_FILE, COSTUME_ID_MAP_FILE, MOVE_ID_MAP_FILE, FAST_MOVES_FILE, CHARGED_MOVES_FILE, TYPE_EFFECTIVENESS_FILE, TYPE_EFFECTIVENESS_API_URL } = require('../config');
 const raidBossService = require('./raidBossService');
+const scrapeMaxBattles = require('../scripts/scrape_max_battles');
 
 const CLIENT_MAPPING = {
     id: 'i', formId: 'f', dexNr: 'd', names: 'n', stats: 's', 
@@ -35,6 +36,7 @@ const pokedexService = {
         chargedMoves: { remoteHash: null, localHash: null, lastChecked: null, file: 'charged_moves.json' },
         raidboss: { remoteHash: null, localHash: null, lastChecked: null, file: 'raidboss.json' },
         type_effectiveness: { remoteHash: null, localHash: null, lastChecked: null, file: 'type_effectiveness.json' },
+        max_battles: { lastChecked: null, status: 'Not yet run', file: 'max_battles.json' },
         cron: { lastRun: null, status: 'Not yet run' }
     },
 
@@ -213,6 +215,12 @@ const pokedexService = {
         } catch (error) {
             // raidboss-update-status.json might not exist yet
         }
+        
+        // Ensure max_battles status is included (it's managed locally in this service)
+        if (!this.healthStatus.max_battles) {
+             this.healthStatus.max_battles = { lastChecked: null, status: 'Not yet run', file: 'max_battles.json' };
+        }
+
         console.log('Serving stored health check data.');
         return this.healthStatus;
     },
@@ -361,6 +369,18 @@ const pokedexService = {
 
                 await raidBossService.updateRaidBosses();
 
+                try {
+                    console.log('🔄 Checking for Max Battle updates...');
+                    await scrapeMaxBattles();
+                    this.healthStatus.max_battles.lastChecked = new Date().toISOString();
+                    this.healthStatus.max_battles.status = 'Success';
+                    console.log('✅ Max Battles updated successfully.');
+                } catch (maxBattleError) {
+                    console.error('❌ Failed to update Max Battles:', maxBattleError);
+                    this.healthStatus.max_battles.status = 'Failed';
+                    this.healthStatus.max_battles.lastChecked = new Date().toISOString();
+                }
+
                 if (pokedexUpdated || movesUpdated) {
                     console.log('Data was updated, reprocessing and reloading all data...');
                     await this._processAndLoadPokedex();
@@ -395,6 +415,17 @@ const pokedexService = {
         await this.checkForMoveUpdates();
         await this.checkForTypeEffectivenessUpdate();
         await raidBossService.updateRaidBosses();
+        
+        try {
+            console.log('🔄 Initializing Max Battles data...');
+            await scrapeMaxBattles();
+            this.healthStatus.max_battles.lastChecked = new Date().toISOString();
+            this.healthStatus.max_battles.status = 'Success';
+        } catch (e) {
+            console.error('❌ Failed to initialize Max Battles:', e);
+            this.healthStatus.max_battles.status = 'Failed';
+        }
+
         await this._processAndLoadPokedex();
         this.scheduleHourlyUpdates();
     },
