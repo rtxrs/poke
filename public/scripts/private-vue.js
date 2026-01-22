@@ -1787,17 +1787,61 @@ pokemons.sort((a, b) => {
             }
 
             let foundAsset = null;
+            const gender = p.pokemonDisplay ? p.pokemonDisplay.gender : 1;
+            const isFemale = gender === 2;
+
+            const findAsset = (costume, form) => {
+                const costumeMatches = (assetCostume) => {
+                    if (costume) return assetCostume === costume;
+                    return !assetCostume || assetCostume === 'NONE';
+                };
+                const formMatches = (assetForm) => {
+                    if (form && form !== 'NORMAL') return assetForm === form;
+                    return !assetForm || assetForm === 'NORMAL';
+                };
+
+                // 1. Try Exact Gender Match
+                let match = basePokemon.assetForms.find(asset => 
+                   costumeMatches(asset.costume) &&
+                   formMatches(asset.form) &&
+                   asset.isFemale === isFemale
+                );
+                if (match) return match;
+
+                // 2. Fallback to undefined gender
+                match = basePokemon.assetForms.find(asset => 
+                   costumeMatches(asset.costume) &&
+                   formMatches(asset.form) &&
+                   asset.isFemale === undefined
+                );
+                if (match) return match;
+
+                // 3. Fallback: ignore gender flag if we have a specific form/costume target
+                if (form || costume) {
+                    return basePokemon.assetForms.find(asset => 
+                       costumeMatches(asset.costume) &&
+                       formMatches(asset.form)
+                    );
+                }
+                return null;
+            };
+
             if (costumeKey && formKey) {
-                foundAsset = basePokemon.assetForms.find(asset => asset.costume === costumeKey && asset.form === formKey);
+                foundAsset = findAsset(costumeKey, formKey);
             }
             if (!foundAsset && costumeKey) {
-                foundAsset = basePokemon.assetForms.find(asset => asset.costume === costumeKey && (!asset.form || asset.form === 'NORMAL'));
+                foundAsset = findAsset(costumeKey, null);
             }
             if (!foundAsset && formKey) {
-                foundAsset = basePokemon.assetForms.find(asset => asset.form === formKey && (!asset.costume || asset.costume === 'NONE'));
+                foundAsset = findAsset(null, formKey);
             }
             if (!foundAsset) {
-                foundAsset = basePokemon.assetForms.find(asset => (!asset.costume || asset.costume === 'NONE') && (!asset.form || asset.form === 'NORMAL'));
+                foundAsset = findAsset(null, null);
+            }
+            
+            // Special Fallback: If female and no asset found yet, try looking for 'FEMALE' form
+            if (!foundAsset && isFemale && !formKey) {
+                foundAsset = findAsset(costumeKey, 'FEMALE');
             }
 
             return foundAsset?.[targetSprite] || ((p.pokemonDisplay && p.pokemonDisplay.shiny) ? shinySprite : defaultSprite);

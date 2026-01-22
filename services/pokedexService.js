@@ -457,21 +457,59 @@ const pokedexService = {
             costumeKey = this.costumeIdMap[costumeId].toUpperCase().replace(/_/g, '').replace(/-/g, '').replace(/\s/g, '').trim();
         }
 
+        const gender = p.pokemonDisplay.gender;
+        const isFemale = gender === 2;
+
+        const findAsset = (costume, form) => {
+            // 1. Try Exact Gender Match
+            let match = basePokemon.assetForms.find(asset => 
+               (asset.costume === costume || (!asset.costume && !costume)) &&
+               (asset.form === form || (!asset.form && !form)) &&
+               asset.isFemale === isFemale
+            );
+            if (match) return match;
+
+            // 2. Fallback to match ignoring gender (if not specified in asset)
+            match = basePokemon.assetForms.find(asset => 
+               (asset.costume === costume || (!asset.costume && !costume)) &&
+               (asset.form === form || (!asset.form && !form)) &&
+               asset.isFemale === undefined
+            );
+            if (match) return match;
+
+            // 3. Fallback: ignore gender flag if we have a specific form/costume target
+            if (form || costume) {
+                return basePokemon.assetForms.find(asset => 
+                   (asset.costume === costume || (!asset.costume && !costume)) &&
+                   (asset.form === form || (!asset.form && !form))
+                );
+            }
+            return null;
+        };
+
         let foundAsset = null;
         if (costumeKey && formKey) {
-            foundAsset = basePokemon.assetForms.find(asset => asset.costume === costumeKey && asset.form === formKey);
+            foundAsset = findAsset(costumeKey, formKey);
         }
         if (!foundAsset && costumeKey) {
-            foundAsset = basePokemon.assetForms.find(asset => asset.costume === costumeKey && !asset.form);
+            foundAsset = findAsset(costumeKey, null);
         }
         if (!foundAsset && formKey) {
-            foundAsset = basePokemon.assetForms.find(asset => asset.form === formKey && !asset.costume);
+            foundAsset = findAsset(null, formKey);
         }
         if (!foundAsset) {
-            foundAsset = basePokemon.assetForms.find(asset => !asset.costume && !asset.form);
+            foundAsset = findAsset(null, null);
         }
+        
+        // Special Fallback: If female and no asset found yet, try looking for 'FEMALE' form
+        // This handles cases like Pyroar where player data says 'Normal' form but Gender is Female, 
+        // and the asset is under form 'FEMALE'.
+        if (!foundAsset && isFemale && !formKey) {
+            foundAsset = findAsset(costumeKey, 'FEMALE');
+        }
+
         if (!foundAsset) {
-            foundAsset = basePokemon.assetForms.find(asset => asset.form === 'NORMAL' && !asset.costume);
+            foundAsset = basePokemon.assetForms.find(asset => asset.form === 'NORMAL' && !asset.costume && (asset.isFemale === undefined || asset.isFemale === isFemale));
         }
 
         return foundAsset?.[targetSprite] || (p.pokemonDisplay.shiny ? shinySprite : defaultSprite);
