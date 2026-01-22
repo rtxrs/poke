@@ -134,7 +134,7 @@ function getBadges(p, name, limitRank = true) {
     if (p.pokemonDisplay.breadModeEnum === 1) badges.push('<span class="badge dynamax-badge">Dynamax</span>');
     if (p.pokemonDisplay.breadModeEnum === 2) badges.push('<span class="badge gigantamax-badge">G-Max</span>');
 
-    if (p.isMaxLevel) badges.push('<span class="badge max-level-badge">Max</span>');
+    if (p.isMaxLevel) badges.push('<span class="badge max-level-badge">Lvl50</span>');
 
     if (p.pokemonDisplay.locationCard) {
         badges.push('<span class="badge background-badge">Background</span>');

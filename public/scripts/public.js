@@ -98,7 +98,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         let hasIvCombo = false;
         let hasShinyCombo = false;
         let hasLuckyCombo = false;
-        let hasMaxLevelCombo = false;
 
         // Highest priority combos
         if (p.isShiny && p.isLucky && p.isPerfect) {
@@ -107,9 +106,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else if (p.isLucky && p.isPerfect) {
             badges.push('<span class="badge lundo-badge">Lundo</span>');
             hasIvCombo = hasLuckyCombo = true;
-        } else if (p.isPerfect && p.isMaxLevel) {
-            badges.push('<span class="badge max-badge">MAX</span>');
-            hasIvCombo = hasMaxLevelCombo = true;
         } else if (p.isShiny && p.isPerfect) {
             badges.push('<span class="badge shundo-badge">Shundo</span>');
             hasIvCombo = hasShinyCombo = true;
@@ -130,8 +126,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (p.isPerfect) badges.push('<span class="badge perfect-badge">Hundo</span>');
             else if (p.isZeroIv) badges.push('<span class="badge zero-iv-badge">Nundo</span>');
         }
-
-        if (!hasMaxLevelCombo && p.isMaxLevel) badges.push('<span class="badge max-level-badge">Max</span>');
 
                                 // Other non-conflicting badges
                                 if (p.pokemonDisplay?.alignment === 1) badges.push('<span class="badge shadow-badge">Shadow</span>');
