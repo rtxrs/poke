@@ -153,6 +153,10 @@ h2 { margin-top: 0; padding-bottom: 10px; border-bottom: 2px solid var(--bg-colo
 .sort-controls { display: flex; align-items: center; gap: 10px; }
 .sort-bar select, .sort-bar button { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 1em; background-color: white; }
 .sort-bar button { cursor: pointer; font-weight: bold; }
+#sort-direction {
+    min-width: 85px;
+    text-align: center;
+}
 #all-pokemon-list, #modal-pokemon-container { overflow-y: auto; padding: 10px; }
 /* Prevent body scroll when modal is open */
 body.modal-open {
