@@ -254,12 +254,18 @@ body[data-theme="dark"] .main-nav {
 /* Ensure text in modal is readable */
 [data-theme="dark"] .card,
 [data-theme="dark"] #modal-content,
+[data-theme="dark"] .modal-content,
 [data-theme="dark"] .card p {
     color: #e0e0e0 !important;
 }
 [data-theme="dark"] .pokemon-info,
 [data-theme="dark"] .pokemon-info h2,
-[data-theme="dark"] #modal-content h2 {
+[data-theme="dark"] #modal-content h2,
+[data-theme="dark"] .modal-content h2,
+[data-theme="dark"] #modal-content h3,
+[data-theme="dark"] .modal-content h3,
+[data-theme="dark"] #modal-content h4,
+[data-theme="dark"] .modal-content h4 {
     color: #e0e0e0 !important;
 }
 [data-theme="dark"] .pokemon-stats-grid div span,
