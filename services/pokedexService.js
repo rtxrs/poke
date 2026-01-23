@@ -3,10 +3,12 @@ const path = require('path');
 const fetch = require('node-fetch');
 const crypto = require('crypto');
 const cron = require('node-cron');
+const { exec } = require('child_process');
 
 const { POKEDEX_API_URL, POKEDEX_FILE, POKEDEX_SERVER_FILE, POKEDEX_CLIENT_FILE, DATA_DIR, SHINY_RATES_FILE, POKEDEX_RAW_FILE, COSTUME_ID_MAP_FILE, MOVE_ID_MAP_FILE, FAST_MOVES_FILE, CHARGED_MOVES_FILE, TYPE_EFFECTIVENESS_FILE, TYPE_EFFECTIVENESS_API_URL } = require('../config');
 const raidBossService = require('./raidBossService');
 const scrapeMaxBattles = require('../scripts/scrape_max_battles');
+const pvpService = require('./pvpService');
 
 const CLIENT_MAPPING = {
     id: 'i', formId: 'f', dexNr: 'd', names: 'n', stats: 's', 
@@ -350,6 +352,27 @@ const pokedexService = {
         }
     },
 
+    regeneratePvPRanks() {
+        return new Promise((resolve, reject) => {
+            console.log('🔄 Regenerating PvP ranks...');
+            exec('node scripts/generate_pvp_ranks.js', { cwd: process.cwd() }, (error, stdout, stderr) => {
+                if (error) {
+                    console.error(`❌ Error regenerating PvP ranks: ${error.message}`);
+                    return reject(error);
+                }
+                if (stderr) {
+                    // Filter out non-error output if any, or just log as warn
+                    // scripts/generate_pvp_ranks.js might write to stderr on real errors?
+                    // But exec captures stderr.
+                    // console.warn(`PvP Ranks Stderr: ${stderr}`);
+                }
+                console.log(stdout);
+                console.log('✅ PvP ranks regenerated successfully.');
+                resolve();
+            });
+        });
+    },
+
     scheduleHourlyUpdates() {
         cron.schedule('0 * * * *', async () => { // Run hourly
             console.log('⏰ Running scheduled hourly update check...');
@@ -384,6 +407,16 @@ const pokedexService = {
                 if (pokedexUpdated || movesUpdated) {
                     console.log('Data was updated, reprocessing and reloading all data...');
                     await this._processAndLoadPokedex();
+
+                    if (pokedexUpdated) {
+                        try {
+                            await this.regeneratePvPRanks();
+                            await pvpService.reload();
+                            console.log('✅ PvP Service reloaded with new ranks.');
+                        } catch (e) {
+                            console.error('❌ Failed to regenerate PvP ranks or reload service:', e);
+                        }
+                    }
                 }
                 console.log('Scheduled check finished successfully.');
                 this.healthStatus.cron.status = 'Success';
