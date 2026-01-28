@@ -148,8 +148,7 @@ h2 { margin-top: 0; padding-bottom: 10px; border-bottom: 2px solid var(--bg-colo
 /* --- Modals (Shared) --- */
 #header-placeholder {
     height: var(--header-height);
-    margin: 0;
-    padding: 0;
+    display: block;
 }
 
 #subheader-placeholder {
@@ -214,6 +213,7 @@ h2 { margin-top: 0; padding-bottom: 10px; border-bottom: 2px solid var(--bg-colo
 @media (max-width: 992px) {
     #modal-content {
         max-height: 80vh;
+        margin-top: 20px !important;
     }
 }
 .sort-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 15px; margin-bottom: 20px; background-color: #f4f4f9; padding: 10px; border-radius: 8px; flex-shrink: 0; }

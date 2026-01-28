@@ -71,6 +71,8 @@ body.dashboard-public {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    padding-top: var(--header-height);
+    box-sizing: border-box;
 }
 
 /* --- Login & Register Forms --- */

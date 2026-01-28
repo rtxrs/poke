@@ -1761,9 +1761,11 @@ body.dashboard-private, body:not([class]) {
     #modal-content, 
     #cleanup-modal-content, 
     #team-builder-modal-content, 
+    #trash-modal-content,
     .trash-modal-redesign, 
     #avatar-modal-content {
         max-height: 80vh !important;
+        margin-top: 20px !important;
     }
 }
 
