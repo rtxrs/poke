@@ -114,8 +114,27 @@ h2 { margin-top: 0; padding-bottom: 10px; border-bottom: 2px solid var(--bg-colo
 /* --- Pokémon Grids & Cards (Shared) --- */
 .summary-header { display: flex; justify-content: space-between; align-items: center; }
 .summary-header h2 { border-bottom: none; margin-bottom: 10px; }
-#pokemon-highlights-container, #all-pokemon-list, #modal-pokemon-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
-.pokemon-card { border-radius: var(--border-radius); padding: 10px; text-align: center; background-color: #f1f1f1; color: #333; display: flex; flex-direction: column; align-items: center; justify-content: space-between; }
+#pokemon-highlights-container, #all-pokemon-list, #modal-pokemon-container { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, 140px); 
+    justify-content: center;
+    gap: 15px; 
+}
+.pokemon-card { 
+    border-radius: var(--border-radius); 
+    padding: 10px; 
+    text-align: center; 
+    background-color: #f1f1f1; 
+    color: #333; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: space-between; 
+    width: 140px;
+    aspect-ratio: 1 / 2; /* Normal: 2 Height : 1 Width */
+    overflow: hidden;
+    box-sizing: border-box;
+}
 .pokemon-card img {
     width: 72px;
     height: auto;
@@ -429,6 +448,7 @@ body.lite-mode .pokedex-card {
     background: none !important;
     border: 1px solid #ccc !important;
     box-shadow: none !important;
+    aspect-ratio: 3 / 4 !important; /* Lite: 4 Height : 3 Width */
 }
 
 body.lite-mode[data-theme="dark"] .pokemon-card,

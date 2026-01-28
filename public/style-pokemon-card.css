@@ -28,7 +28,8 @@
 /* This single rule now applies the grid to BOTH the highlights and the modal list */
 #pokemon-highlights-container, #all-pokemon-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: repeat(auto-fill, 140px);
+    justify-content: center;
     gap: 15px;
 }
 
@@ -39,6 +40,10 @@
     padding: 10px;
     text-align: center;
     background: linear-gradient(145deg, #f9f9f9, #e6e6e6);
+    width: 140px;
+    aspect-ratio: 1 / 2;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 .pokemon-card img {
     width: 72px;

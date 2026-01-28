@@ -367,23 +367,24 @@ body.dashboard-private, body:not([class]) {
     overflow-y: auto;
     margin: 0 -10px; /* Counteract card padding for full bleed scroll */
     padding: 0 10px;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fill, 140px);
+    justify-content: center;
 }
 
 /* Responsive columns for the main Pokemon list in the Pokemon tab */
 @media (max-width: 499px) {
     #pokemon-section #all-pokemon-list {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(auto-fill, 140px);
     }
 }
 @media (min-width: 768px) {
     #pokemon-section #all-pokemon-list {
-        grid-template-columns: repeat(5, 1fr);
+        grid-template-columns: repeat(auto-fill, 140px);
     }
 }
 @media (min-width: 1200px) {
     #pokemon-section #all-pokemon-list {
-        grid-template-columns: repeat(7, 1fr);
+        grid-template-columns: repeat(auto-fill, 140px);
     }
 }
 
@@ -1011,12 +1012,12 @@ body.dashboard-private, body:not([class]) {
         margin: 0 5px;
     }
 
-    /* Pokemon Highlights - 2 Columns */
+    /* Pokemon Highlights - Fixed Width & Centered */
     #pokemon-highlights-container {
         display: grid !important;
-        grid-template-columns: 1fr 1fr !important;
+        grid-template-columns: repeat(auto-fill, 140px) !important;
         gap: 10px !important;
-        justify-content: normal !important;
+        justify-content: center !important;
     }
     #pokemon-highlights-container .pokemon-card {
         width: auto !important;
