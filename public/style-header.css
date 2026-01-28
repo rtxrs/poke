@@ -1,24 +1,16 @@
 /* Header Styling */
 .main-header {
     color: #fff;
-    padding: 1rem 0;
+    height: var(--header-height);
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}
-
-.main-header.default-bg {
-    background-color: #333;
-}
-
-.main-header.team-valor-bg {
-    background-color: var(--team-valor);
-}
-
-.main-header.team-mystic-bg {
-    background-color: var(--team-mystic);
-}
-
-.main-header.team-instinct-bg {
-    background-color: var(--team-instinct);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
 }
 
 .main-header .header-content {
@@ -28,6 +20,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 0 20px;
+    width: 100%;
 }
 
 .main-header h1 {

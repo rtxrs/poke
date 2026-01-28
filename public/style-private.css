@@ -199,16 +199,15 @@ body.dashboard-private, body:not([class]) {
 /* --- Avatar Modal --- */
 #avatar-modal-backdrop {
     position: fixed;
-    top: 0;
+    top: var(--header-height);
     left: 0;
     width: 100%;
-    height: 100%;
+    height: calc(100% - var(--header-height));
     background-color: rgba(0, 0, 0, 0.6);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1050;
-    padding-top: var(--header-height);
+    z-index: 1010;
     box-sizing: border-box;
 }
 
@@ -797,16 +796,15 @@ body.dashboard-private, body:not([class]) {
 /* --- Cleanup Modal --- */
 #cleanup-modal-backdrop {
     position: fixed;
-    top: 0;
+    top: var(--header-height);
     left: 0;
     width: 100%;
-    height: 100%;
+    height: calc(100% - var(--header-height));
     background-color: rgba(0, 0, 0, 0.6);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1050;
-    padding-top: var(--header-height);
+    z-index: 1010;
     box-sizing: border-box;
 }
 
@@ -853,16 +851,15 @@ body.dashboard-private, body:not([class]) {
 /* --- Team Builder Modal --- */
 #team-builder-modal-backdrop {
     position: fixed;
-    top: 0;
+    top: var(--header-height);
     left: 0;
     width: 100%;
-    height: 100%;
+    height: calc(100% - var(--header-height));
     background-color: rgba(0, 0, 0, 0.6);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1050;
-    padding-top: var(--header-height);
+    z-index: 1010;
     box-sizing: border-box;
 }
 
@@ -1431,16 +1428,15 @@ body.dashboard-private, body:not([class]) {
 /* --- Trash Modal Redesign --- */
 #trash-modal-backdrop {
     position: fixed;
-    top: 0;
+    top: var(--header-height);
     left: 0;
     width: 100%;
-    height: 100%;
+    height: calc(100% - var(--header-height));
     background-color: rgba(0, 0, 0, 0.6);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1050;
-    padding-top: var(--header-height);
+    z-index: 1010;
     box-sizing: border-box;
 }
 

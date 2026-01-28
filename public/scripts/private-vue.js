@@ -1497,16 +1497,6 @@ pokemons.sort((a, b) => {
         const toggleSortDirection = () => { sortDirection.value = sortDirection.value === 'desc' ? 'asc' : 'desc'; };
         const getItemSprite = (itemId) => `https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Items/Item_${String(itemId).padStart(4, '0')}.png`;
 
-        // --- Global Modal Watcher ---
-        watch([selectedPokemon, showCleanupModal, showTeamBuilderModal, showAvatarModal, showTrashModal], (newValues) => {
-            const isAnyModalOpen = newValues.some(val => !!val);
-            if (isAnyModalOpen) {
-                document.body.classList.add('modal-open');
-            } else {
-                document.body.classList.remove('modal-open');
-            }
-        });
-
         const displayMove = (moveId) => moveMap.value[moveId]?.name || moveId;
 
     const openPokemonModal = (pokemon) => {
@@ -1827,6 +1817,16 @@ pokemons.sort((a, b) => {
             keepRankML: 50
         });
         const generatedTrashStrings = ref([]);
+
+        // --- Global Modal Watcher ---
+        watch([selectedPokemon, showCleanupModal, showTeamBuilderModal, showAvatarModal, showTrashModal], (newValues) => {
+            const isAnyModalOpen = newValues.some(val => !!val);
+            if (isAnyModalOpen) {
+                document.body.classList.add('modal-open');
+            } else {
+                document.body.classList.remove('modal-open');
+            }
+        });
 
         const generateTrashString = () => {
             const config = trashConfig.value;

@@ -2,7 +2,8 @@
     background-color: #333; /* Darker default */
     padding: 0.5rem 0;
     text-align: center;
-    margin-bottom: 20px;
+    margin-top: 0 !important;
+    margin-bottom: 1rem;
 }
 .sub-header a {
     color: white;
