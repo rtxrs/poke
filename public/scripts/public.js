@@ -64,7 +64,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
         `;
         modalBackdrop.classList.remove('hidden');
-        document.getElementById('modal-close-btn').onclick = () => modalBackdrop.classList.add('hidden');
+        document.body.classList.add('modal-open');
+        document.getElementById('modal-close-btn').onclick = () => {
+            modalBackdrop.classList.add('hidden');
+            document.body.classList.remove('modal-open');
+        };
     }
 
     function generateBadges(p) {
@@ -163,7 +167,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
         `;
         modalBackdrop.classList.remove('hidden');
-        document.getElementById('modal-close-btn').onclick = () => modalBackdrop.classList.add('hidden');
+        document.body.classList.add('modal-open');
+        document.getElementById('modal-close-btn').onclick = () => {
+            modalBackdrop.classList.add('hidden');
+            document.body.classList.remove('modal-open');
+        };
 
         setTimeout(() => {
             const attackBar = document.getElementById('attack-bar');
@@ -211,7 +219,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
         `;
         modalBackdrop.classList.remove('hidden');
-        document.getElementById('modal-close-btn').onclick = () => modalBackdrop.classList.add('hidden');
+        document.body.classList.add('modal-open');
+        document.getElementById('modal-close-btn').onclick = () => {
+            modalBackdrop.classList.add('hidden');
+            document.body.classList.remove('modal-open');
+        };
 
         try {
             const detailRes = await fetch(`/api/player-detail/${playerId}`);
@@ -275,7 +287,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             </ul>
         `;
         modalBackdrop.classList.remove('hidden');
-        document.getElementById('modal-close-btn').onclick = () => modalBackdrop.classList.add('hidden');
+        document.body.classList.add('modal-open');
+        document.getElementById('modal-close-btn').onclick = () => {
+            modalBackdrop.classList.add('hidden');
+            document.body.classList.remove('modal-open');
+        };
     }
 
     try {
@@ -425,6 +441,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     modalBackdrop.addEventListener('click', (e) => {
         if (e.target === modalBackdrop) {
             modalBackdrop.classList.add('hidden');
+            document.body.classList.remove('modal-open');
         }
     });
 });

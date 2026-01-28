@@ -207,7 +207,9 @@ body.dashboard-private, body:not([class]) {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: 1050;
+    padding-top: var(--header-height);
+    box-sizing: border-box;
 }
 
 #avatar-modal-content {
@@ -803,7 +805,9 @@ body.dashboard-private, body:not([class]) {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: 1050;
+    padding-top: var(--header-height);
+    box-sizing: border-box;
 }
 
 #cleanup-modal-content {
@@ -857,7 +861,9 @@ body.dashboard-private, body:not([class]) {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: 1050;
+    padding-top: var(--header-height);
+    box-sizing: border-box;
 }
 
 #team-builder-modal-content {
@@ -1433,7 +1439,9 @@ body.dashboard-private, body:not([class]) {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: 1050;
+    padding-top: var(--header-height);
+    box-sizing: border-box;
 }
 
 .trash-modal-redesign {

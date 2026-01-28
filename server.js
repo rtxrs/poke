@@ -31,8 +31,13 @@ app.use(session({
 }));
 
 const staticOptions = {
-    maxAge: '1d',
-    etag: true
+    maxAge: 0,
+    etag: true,
+    lastModified: true,
+    setHeaders: (res, path) => {
+        // Force browser to check server every time (revalidation)
+        res.setHeader('Cache-Control', 'public, no-cache, must-revalidate');
+    }
 };
 
 app.use(express.static('public', staticOptions));

@@ -8,6 +8,7 @@
     --team-mystic: #3498DB;
     --team-valor: #E74C3C;
     --chart-track: #e9ecef;
+    --header-height: 70px;
 }
 
 [data-theme="dark"] {
@@ -25,6 +26,7 @@ body {
     color: var(--text-color);
     margin: 0;
     padding: 0;
+    padding-top: var(--header-height);
     animation: gradient 10s ease infinite;
     transition: background 0.3s ease, color 0.3s ease;
 }
@@ -145,7 +147,20 @@ h2 { margin-top: 0; padding-bottom: 10px; border-bottom: 2px solid var(--bg-colo
 .zero-iv-badge { background-color: #34495e; }
 
 /* --- Modals (Shared) --- */
-#modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1010; }
+#modal-backdrop { 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    background-color: rgba(0, 0, 0, 0.6); 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    z-index: 1050; /* Higher than header */
+    padding-top: var(--header-height);
+    box-sizing: border-box;
+}
 #modal-content { 
     position: relative; 
     width: 90%; 
