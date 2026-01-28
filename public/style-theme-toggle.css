@@ -248,7 +248,7 @@ body[data-theme="dark"] .main-nav {
     color: #aaa;
     background-color: #252525;
 }
-[data-theme="dark"] .modal-tabs button.active {
+[data-theme="dark"] .modal-tabs button.active:not(.enemy-tab) {
     color: #fff;
     background-color: #3498db;
 }
