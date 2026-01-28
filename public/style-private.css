@@ -930,6 +930,10 @@ body.dashboard-private, body:not([class]) {
     min-height: 215px; /* Give row a minimum height */
 }
 
+.pokemon-row-scroll .pokemon-card {
+    flex-shrink: 0; /* Prevent collapsing to 0 width */
+}
+
 #pokemon-highlights-container {
     display: flex;
     flex-wrap: wrap;
@@ -955,6 +959,10 @@ body.dashboard-private, body:not([class]) {
     background-color: rgba(0, 0, 0, 0.05);
     padding: 10px;
     border-radius: 8px;
+}
+
+.form-group-box .pokemon-card {
+    flex-shrink: 0;
 }
 
 .form-group-wrapper {
@@ -1020,8 +1028,8 @@ body.dashboard-private, body:not([class]) {
         justify-content: center !important;
     }
     #pokemon-highlights-container .pokemon-card {
-        width: auto !important;
-        flex-shrink: 1;
+        width: 140px !important;
+        flex-shrink: 0 !important;
     }
 
     /* Tools Buttons Full Width */
