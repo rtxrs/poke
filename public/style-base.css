@@ -146,8 +146,46 @@ h2 { margin-top: 0; padding-bottom: 10px; border-bottom: 2px solid var(--bg-colo
 
 /* --- Modals (Shared) --- */
 #modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1010; }
-#modal-content { position: relative; width: 90%; max-width: 800px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; }
-#modal-close-btn { position: absolute; top: 10px; right: 15px; font-size: 1.8em; background: none; border: none; cursor: pointer; color: #666; }
+#modal-content { 
+    position: relative; 
+    width: 90%; 
+    max-width: 800px; 
+    max-height: 90vh; 
+    display: flex; 
+    flex-direction: column; 
+    overflow: hidden; 
+    z-index: 1011;
+}
+#modal-close-btn { 
+    position: absolute; 
+    top: 10px; 
+    right: 15px; 
+    font-size: 2em; 
+    background: white; 
+    border: 1px solid #ddd; 
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer; 
+    color: #333; 
+    z-index: 1020; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+[data-theme="dark"] #modal-close-btn {
+    background: #333;
+    color: #fff;
+    border-color: #444;
+}
+
+@media (max-width: 992px) {
+    #modal-content {
+        max-height: 80vh;
+    }
+}
 .sort-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 15px; margin-bottom: 20px; background-color: #f4f4f9; padding: 10px; border-radius: 8px; flex-shrink: 0; }
 #search-bar { flex-grow: 1; padding: 10px 15px; border-radius: 8px; border: 1px solid #ddd; font-size: 1em; min-width: 150px; }
 .sort-controls { display: flex; align-items: center; gap: 10px; }
@@ -284,4 +322,134 @@ body.modal-open {
     .container {
         padding: 10px;
     }
+}
+
+/* --- Lite Mode --- */
+#lite-mode-toggle {
+    background: none;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: inherit;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+#lite-mode-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+#lite-mode-toggle.active {
+    background-color: #ffd700;
+    color: #333;
+    border-color: #ffd700;
+}
+
+/* Hide images in lite mode */
+body.lite-mode img,
+body.lite-mode svg:not(.burger-menu span), 
+body.lite-mode video,
+body.lite-mode canvas,
+body.lite-mode .pokemon-image-container,
+body.lite-mode .sprite-container {
+    display: none !important;
+}
+
+/* Adjust modal content when image is hidden */
+body.lite-mode .pokemon-modal-header {
+    display: block !important;
+    text-align: center;
+}
+
+body.lite-mode .pokemon-info {
+    width: 100%;
+    text-align: center;
+}
+
+body.lite-mode .pokemon-info h2 {
+    justify-content: center;
+}
+
+/* Force 3 columns in stats grids for lite mode */
+body.lite-mode .pokemon-stats-grid,
+body.lite-mode .grid-stats {
+    grid-template-columns: repeat(3, 1fr) !important;
+}
+
+.clickable-boss {
+    cursor: pointer;
+    margin-right: 5px;
+    margin-bottom: 5px;
+    transition: transform 0.1s;
+}
+
+.clickable-boss:hover {
+    transform: scale(1.05);
+}
+
+.clickable-boss.selected {
+    box-shadow: 0 0 0 2px #fff, 0 0 0 4px #ffd700;
+}
+
+/* Remove card backgrounds in lite mode but keep a visible border for separation */
+body.lite-mode .pokemon-card,
+body.lite-mode .pokedex-card {
+    background: none !important;
+    border: 1px solid #ccc !important;
+    box-shadow: none !important;
+}
+
+body.lite-mode[data-theme="dark"] .pokemon-card,
+body.lite-mode[data-theme="dark"] .pokedex-card {
+    border: 1px solid #444 !important;
+}
+
+/* Style names with background in lite mode */
+body.lite-mode .lite-name-span,
+body.lite-mode .pokemon-name-lite {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 6px;
+    background: var(--pokemon-bg, #f1f1f1);
+    color: #fff !important;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+/* Ensure parent p doesn't interfere */
+body.lite-mode .pokemon-name {
+    background: none !important;
+    padding: 0 !important;
+}
+
+/* Dashboard table adjustments for lite mode */
+body.lite-mode .pokemon-cell {
+    text-align: center;
+}
+
+/* Disable animations in lite mode (except body gradient) */
+body.lite-mode *,
+body.lite-mode *::before,
+body.lite-mode *::after {
+    animation: none !important;
+    transition: none !important;
+}
+
+/* Re-enable body gradient animation */
+body.lite-mode {
+    animation: gradient 10s ease infinite !important;
+}
+
+body.lite-mode[data-theme="dark"] {
+    animation: none !important; /* Respect dark mode static bg preference */
+}
+
+/* Spinner adjustment for lite mode (since it uses animation) */
+body.lite-mode .loading-spinner,
+body.lite-mode .loading-spinner-small {
+    border: 4px solid #ccc;
+    border-radius: 50%;
 }

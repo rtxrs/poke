@@ -810,23 +810,40 @@ body.dashboard-private, body:not([class]) {
     position: relative;
     width: 90%;
     max-width: 1000px; /* Increased width for grid view */
-    height: 90vh; /* Use height instead of max-height */
+    max-height: 90vh; /* Use max-height instead of height */
     display: flex;
     flex-direction: column;
     overflow: hidden; /* Let internal grid handle scroll */
-    padding-top: 40px; /* Add space for the close button */
+    padding-top: 20px;
 }
 
-#cleanup-modal-close-btn {
+#cleanup-modal-close-btn,
+#team-builder-modal-close-btn,
+#trash-modal-close-btn {
     position: absolute;
-    top: 5px; /* Adjust position to be within the new padding */
-    right: 20px;
-    font-size: 1.8em;
-    background: none;
-    border: none;
+    top: 10px;
+    right: 15px;
+    font-size: 2em;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    color: #666;
-    z-index: 10; /* Ensure it's above other content */
+    color: #333;
+    z-index: 1020;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+[data-theme="dark"] #cleanup-modal-close-btn,
+[data-theme="dark"] #team-builder-modal-close-btn,
+[data-theme="dark"] #trash-modal-close-btn {
+    background: #333;
+    color: #fff;
+    border-color: #444;
 }
 
 /* --- Team Builder Modal --- */
@@ -847,69 +864,17 @@ body.dashboard-private, body:not([class]) {
     position: relative;
     width: 90%;
     max-width: 1000px;
-    height: 90vh;
+    max-height: 90vh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    padding-top: 40px; /* Add space for the close button */
+    padding-top: 20px;
     transition: background 0.5s ease, color 0.5s ease; /* Animate background and color */
 }
 
-#team-builder-modal-content.max-mode-active {
-    background: linear-gradient(135deg, #FF0033, #87CEEB);
-    color: white;
-}
+/* ... existing max-mode-active styles ... */
 
-#team-builder-modal-content.max-mode-active h4,
-#team-builder-modal-content.max-mode-active .modal-tabs button,
-#team-builder-modal-content.max-mode-active .segmented-control button {
-    color: white;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-}
-
-#team-builder-modal-content.max-mode-active .segmented-control {
-    background-color: rgba(0,0,0,0.2);
-}
-
-#team-builder-modal-content.max-mode-active .segmented-control button.active {
-    background-color: rgba(255,255,255,0.9);
-    color: #333;
-    text-shadow: none;
-}
-
-#team-builder-modal-content.max-mode-active .modal-tabs {
-    background-color: rgba(0,0,0,0.2);
-}
-
-#team-builder-modal-content.max-mode-active .modal-tabs button.active {
-    background-color: rgba(255,255,255,0.9);
-    color: #333;
-    text-shadow: none;
-}
-
-#team-builder-modal-content.max-mode-active .custom-enemy-input-wrapper input {
-    background-color: rgba(255,255,255,0.9);
-    color: #333;
-}
-
-#team-builder-modal-content.max-mode-active .btn-add-enemy {
-    background-color: rgba(255,255,255,0.9);
-    color: #333;
-}
-
-#team-builder-modal-close-btn {
-    position: absolute;
-    top: 5px; /* Adjust position to be within the new padding */
-    right: 20px;
-    font-size: 1.8em;
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: #666;
-    z-index: 10;
-}
-
-#cleanup-modal-content .summary-header {
+#team-builder-modal-content .summary-header {
     flex-shrink: 0;
 }
 
@@ -1458,45 +1423,48 @@ body.dashboard-private, body:not([class]) {
 }
 
 /* --- Trash Modal Redesign --- */
+#trash-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
 .trash-modal-redesign {
+    position: relative;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    padding-top: 20px;
     display: flex;
     flex-direction: column;
-    height: 85vh;
-    max-width: 800px;
-    padding: 0;
+    overflow: hidden;
+}
+
+.trash-modal-redesign .summary-header {
+    flex-shrink: 0;
+    padding: 0 20px;
+    margin-bottom: 10px;
+}
+
+.trash-scroll-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 10px 20px 20px 20px;
     background-color: #f8f9fa;
 }
 
-.trash-modal-redesign .modal-header {
-    padding: 20px;
-    background-color: #fff;
-    border-bottom: 1px solid #dee2e6;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+[data-theme="dark"] .trash-scroll-container {
+    background-color: #1e1e1e;
 }
 
-.trash-modal-redesign .modal-header h2 {
-    margin: 0;
-    font-size: 1.5em;
-    color: #333;
-}
-
-.trash-modal-redesign .close-btn {
-    background: none;
-    border: none;
-    font-size: 2rem;
-    cursor: pointer;
-    color: #666;
-}
-
-.trash-modal-redesign .modal-body {
-    padding: 20px;
-    overflow-y: auto;
-    flex-grow: 1;
-}
-
-.trash-modal-redesign .description {
+.trash-scroll-container .description {
     margin-bottom: 20px;
     color: #666;
     font-size: 0.95em;
@@ -1504,11 +1472,15 @@ body.dashboard-private, body:not([class]) {
 }
 
 .config-section {
-    background: #fff;
+    background: var(--card-bg);
     padding: 15px;
     border-radius: 8px;
-    border: 1px solid #e9ecef;
+    border: 1px solid rgba(0,0,0,0.1);
     margin-bottom: 20px;
+}
+
+[data-theme="dark"] .config-section {
+    border-color: rgba(255,255,255,0.1);
 }
 
 .config-section h3 {
@@ -1576,17 +1548,20 @@ body.dashboard-private, body:not([class]) {
     justify-content: space-between;
     margin-bottom: 10px;
     padding: 5px 0;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
 .number-input-wrapper {
     position: relative;
-    width: 100px;
+    width: 120px;
 }
 
 .number-input-wrapper input {
     width: 100%;
+    box-sizing: border-box;
     padding: 8px;
-    padding-right: 25px; /* Space for suffix */
+    padding-right: 30px; /* Space for suffix */
     padding-left: 20px; /* Space for prefix */
     border: 1px solid #ced4da;
     border-radius: 4px;
@@ -1693,6 +1668,7 @@ body.dashboard-private, body:not([class]) {
 
 .string-content textarea {
     width: 100%;
+    box-sizing: border-box;
     border: 1px solid #ced4da;
     background: #f8f9fa;
     padding: 10px;
@@ -1737,14 +1713,6 @@ body.dashboard-private, body:not([class]) {
     padding: 8px 12px;
 }
 
-.number-input-wrapper {
-    width: 120px; /* Increased from 100px to fix overlap */
-}
-
-.number-input-wrapper input {
-    padding-right: 30px; /* Increased space for suffix */
-}
-
 .number-input-wrapper.disabled {
     opacity: 0.5;
     pointer-events: none;
@@ -1782,5 +1750,16 @@ body.dashboard-private, body:not([class]) {
 #scroll-to-top-btn:hover {
     background-color: #555;
     transform: translateY(-5px);
+}
+
+/* Global Modal Constraints for Small/Medium Devices */
+@media (max-width: 992px) {
+    #modal-content, 
+    #cleanup-modal-content, 
+    #team-builder-modal-content, 
+    .trash-modal-redesign, 
+    #avatar-modal-content {
+        max-height: 80vh !important;
+    }
 }
 

@@ -275,6 +275,7 @@ const playerDataService = {
                         ownerPublicId: publicId,
                         userId: userId,
                         cp: p.cp,
+                        typeColors: pokedexService.getPokemonTypeColors(pokedexEntry),
                         iv: {
                             attack: p.individualAttack,
                             defense: p.individualDefense,
@@ -362,7 +363,8 @@ const playerDataService = {
                         userId: playerIdToUserId.get(content.account.playerSupportId),
                         buddy: buddy && buddy.pokemonDisplay ? {
                             name: pokedexService.getPokemonName(buddy.pokemonId, buddy.pokemonDisplay.formName),
-                            sprite: pokedexService.getPokemonSprite(buddy)
+                            sprite: pokedexService.getPokemonSprite(buddy),
+                            typeColors: pokedexService.getPokemonTypeColors(Object.values(pokedexService.pokedex[buddy.pokemonId] || {})[0])
                         } : null,
                         kmWalked: content.player.kmWalked.toFixed(1),
                         pokemonCaught: content.player.numPokemonCaptured,
@@ -441,7 +443,8 @@ const playerDataService = {
             userId,
             buddy: buddy && buddy.pokemonDisplay ? {
                 name: pokedexService.getPokemonName(buddy.pokemonId, buddy.pokemonDisplay.formName),
-                sprite: pokedexService.getPokemonSprite(buddy)
+                sprite: pokedexService.getPokemonSprite(buddy),
+                typeColors: pokedexService.getPokemonTypeColors(Object.values(pokedexService.pokedex[buddy.pokemonId] || {})[0])
             } : null,
             kmWalked: playerData.player.kmWalked.toFixed(1),
             pokemonCaught: playerData.player.numPokemonCaptured,

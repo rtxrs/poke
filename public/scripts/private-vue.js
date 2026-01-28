@@ -318,7 +318,7 @@ function filterPokemon(pokemons, query, pokedexService, moveMap) {
  * A reusable grid component to display a list of Pokémon cards.
  */
 const GridComponent = {
-    props: ['pokemons'],
+    props: ['pokemons', 'isLiteMode'],
     emits: ['pokemon-clicked'],
     template: `
         <div id="all-pokemon-list">
@@ -326,7 +326,14 @@ const GridComponent = {
                 <div class="pokemon-image-container" :style="createBackgroundStyle(p.typeColors)">
                     <img :src="p.sprite" :alt="displayName(p)" loading="lazy">
                 </div>
-                <p class="pokemon-name" v-html="getBadges(p, displayName(p))"></p>
+                <p class="pokemon-name">
+                    <span :class="{'lite-name-span': isLiteMode}" 
+                          :style="isLiteMode ? createBackgroundStyle(p.typeColors) : ''">
+                        {{ displayName(p) }}
+                    </span>
+                    <br v-if="getBadges(p, '', true)">
+                    <span v-html="getBadges(p, '', true)"></span>
+                </p>
                 <p class="pokemon-cp">CP {{ p.cp }}</p>
                 <p v-if="p.score" class="pokemon-score">{{ p.scoreLabel || 'Score' }}: {{ p.score.toFixed(2) }}</p>
                 <div class="iv-bar-container">
@@ -348,7 +355,7 @@ const GridComponent = {
 };
 
 const RaidBossSelector = {
-    props: ['raidBosses', 'selectedRaidBoss', 'createBackgroundStyle'],
+    props: ['raidBosses', 'selectedRaidBoss', 'createBackgroundStyle', 'isLiteMode'],
     emits: ['boss-selected'],
     setup(props) {
         const groupedBosses = Vue.computed(() => {
@@ -386,13 +393,22 @@ const RaidBossSelector = {
             <div v-for="(bosses, level) in groupedBosses" :key="level" class="raid-boss-group">
                 <h3 class="raid-boss-level-title">{{ level.replace('_', ' ').toUpperCase() }}</h3>
                 <div class="raid-boss-icons">
-                    <div v-for="boss in bosses" :key="boss.id"
-                         class="pokemon-image-container"
-                         :class="{ selected: boss.id === selectedRaidBoss }"
-                         :style="createBackgroundStyle(boss.typeColors)"
-                         @click="$emit('boss-selected', boss.id)">
-                        <img :src="getBossImage(boss)" :alt="boss.names.English">
-                    </div>
+                    <template v-for="boss in bosses" :key="boss.id">
+                        <div v-if="!isLiteMode"
+                             class="pokemon-image-container"
+                             :class="{ selected: boss.id === selectedRaidBoss }"
+                             :style="createBackgroundStyle(boss.typeColors)"
+                             @click="$emit('boss-selected', boss.id)">
+                            <img :src="getBossImage(boss)" :alt="boss.names.English">
+                        </div>
+                        <span v-else
+                              class="lite-name-span clickable-boss"
+                              :class="{ selected: boss.id === selectedRaidBoss }"
+                              :style="createBackgroundStyle(boss.typeColors)"
+                              @click="$emit('boss-selected', boss.id)">
+                            {{ boss.names.English }}
+                        </span>
+                    </template>
                 </div>
             </div>
         </div>
@@ -400,7 +416,7 @@ const RaidBossSelector = {
 };
 
 const MaxBossSelector = {
-    props: ['maxBattles', 'selectedMaxBoss', 'createBackgroundStyle'],
+    props: ['maxBattles', 'selectedMaxBoss', 'createBackgroundStyle', 'isLiteMode'],
     emits: ['boss-selected'],
     setup(props) {
         const groupedBosses = Vue.computed(() => {
@@ -435,13 +451,22 @@ const MaxBossSelector = {
             <div v-for="(bosses, level) in groupedBosses" :key="level" class="raid-boss-group">
                 <h3 class="raid-boss-level-title">{{ level.replace('tier', 'TIER ') }}</h3>
                 <div class="raid-boss-icons">
-                    <div v-for="boss in bosses" :key="boss.id"
-                         class="pokemon-image-container"
-                         :class="{ selected: boss.id === selectedMaxBoss }"
-                         :style="createBackgroundStyle(boss.typeColors)"
-                         @click="$emit('boss-selected', boss.id)">
-                        <img :src="getBossImage(boss)" :alt="boss.names.English">
-                    </div>
+                    <template v-for="boss in bosses" :key="boss.id">
+                        <div v-if="!isLiteMode"
+                             class="pokemon-image-container"
+                             :class="{ selected: boss.id === selectedMaxBoss }"
+                             :style="createBackgroundStyle(boss.typeColors)"
+                             @click="$emit('boss-selected', boss.id)">
+                            <img :src="getBossImage(boss)" :alt="boss.names.English">
+                        </div>
+                        <span v-else
+                              class="lite-name-span clickable-boss"
+                              :class="{ selected: boss.id === selectedMaxBoss }"
+                              :style="createBackgroundStyle(boss.typeColors)"
+                              @click="$emit('boss-selected', boss.id)">
+                            {{ boss.names.English }}
+                        </span>
+                    </template>
                 </div>
             </div>
         </div>
@@ -488,6 +513,7 @@ createApp({
         const moveMap = ref({});
         const costumeIdMap = ref({});
         const pvpDataVersion = ref(0);
+        const isLiteMode = ref(localStorage.getItem('liteMode') === 'enabled');
 
         // --- Statistics Computed Properties ---
         const stats_shinyRate = computed(() => {
@@ -2262,6 +2288,7 @@ pokemons.sort((a, b) => {
 
         // --- Expose to Template ---
         return {
+            isLiteMode,
             showScrollTop, scrollToTop,
             loading, account, player, items, activeTab, searchQuery, sortKey, sortDirection, itemsExpanded, selectedPokemon, moveMap, costumeIdMap, pokedexService,
             teamColor, xpPercentage, xpProgressText, stardust, pokecoins, highlights,

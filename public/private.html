@@ -160,7 +160,11 @@
                                             <div class="pokemon-image-container" :style="createBackgroundStyle(p.typeColors)">
                                                 <img :src="p.sprite" :alt="p.nickname || p.name" loading="lazy">
                                             </div>
-                                            <p class="pokemon-name" v-html="getBadges(p, p.nickname || p.name)"></p>
+                                            <p class="pokemon-name">
+                                                <span :class="{'lite-name-span': isLiteMode}" :style="isLiteMode ? createBackgroundStyle(p.typeColors) : ''">{{ p.nickname || p.name }}</span>
+                                                <br v-if="getBadges(p, '', true)">
+                                                <span v-html="getBadges(p, '', true)"></span>
+                                            </p>
                                             <p class="pokemon-cp">CP {{ p.cp }}</p>
                                             <div class="iv-bar-container">
                                                 <div class="iv-bar" :style="{ width: getIvPercent(p) + '%', backgroundColor: getIvColor(getIvPercent(p)) }"></div>
@@ -185,7 +189,11 @@
                                 <div class="pokemon-image-container" :style="createBackgroundStyle(p.typeColors)">
                                     <img :src="p.sprite" :alt="p.nickname || p.name" loading="lazy">
                                 </div>
-                                <p class="pokemon-name" v-html="getBadges(p, p.nickname || p.name)"></p>
+                                <p class="pokemon-name">
+                                    <span :class="{'lite-name-span': isLiteMode}" :style="isLiteMode ? createBackgroundStyle(p.typeColors) : ''">{{ p.nickname || p.name }}</span>
+                                    <br v-if="getBadges(p, '', true)">
+                                    <span v-html="getBadges(p, '', true)"></span>
+                                </p>
                                 <p class="pokemon-cp">CP {{ p.cp }}</p>
                                 <div class="iv-bar-container">
                                     <div class="iv-bar" :style="{ width: getIvPercent(p) + '%', backgroundColor: getIvColor(getIvPercent(p)) }"></div>
@@ -201,13 +209,13 @@
         <!-- Trash String Generator Modal -->
         <div id="trash-modal-backdrop" v-if="showTrashModal" @click.self="showTrashModal = false">
             <div id="trash-modal-content" class="card trash-modal-redesign">
-                <!-- Header -->
-                <div class="modal-header">
-                    <h2>Trash String Generator</h2>
-                    <button class="close-btn" @click="showTrashModal = false">&times;</button>
-                </div>
+                <button id="trash-modal-close-btn" class="modal-close-btn" @click="showTrashModal = false">&times;</button>
                 
-                <div class="modal-body">
+                <div class="summary-header">
+                    <h2>Trash String Generator</h2>
+                </div>
+
+                <div class="trash-scroll-container">
                     <p class="description">
                         Define what you want to <strong>KEEP</strong>. The generated string will select everything else (Trash).
                     </p>
@@ -403,7 +411,11 @@
                                     <div class="pokemon-image-container" :style="createBackgroundStyle(p.typeColors)">
                                         <img :src="p.sprite" :alt="p.nickname || p.name" loading="lazy">
                                     </div>
-                                    <p class="pokemon-name" v-html="getBadges(p, p.nickname || p.name)"></p>
+                                    <p class="pokemon-name">
+                                        <span :class="{'lite-name-span': isLiteMode}" :style="isLiteMode ? createBackgroundStyle(p.typeColors) : ''">{{ p.nickname || p.name }}</span>
+                                        <br v-if="getBadges(p, '', true)">
+                                        <span v-html="getBadges(p, '', true)"></span>
+                                    </p>
                                     <p class="pokemon-cp">CP {{ p.cp }}</p>
                                 </div>
                             </div>
@@ -430,7 +442,7 @@
                         <button id="sort-direction" @click="toggleSortDirection">{{ sortDirection === 'desc' ? '▼ Desc' : '▲ Asc' }}</button>
                     </div>
                 </div>
-                <grid-component :pokemons="filteredPokemon" @pokemon-clicked="openPokemonModal($event)"></grid-component>
+                <grid-component :pokemons="filteredPokemon" :is-lite-mode="isLiteMode" @pokemon-clicked="openPokemonModal($event)"></grid-component>
             </section>
 
             <!-- Pokedex Tab -->
@@ -448,7 +460,7 @@
                         <div class="pokemon-image-container">
                             <img :src="entry.sprite" :alt="entry.name" loading="lazy">
                         </div>
-                        <p class="pokemon-name">{{ entry.name }}</p>
+                        <p class="pokemon-name" :style="isLiteMode ? createBackgroundStyle(entry.typeColors) : ''">{{ entry.name }}</p>
                         <small class="dex-nr">#{{ entry.dexNr }}</small>
                     </div>
                 </div>
@@ -601,6 +613,7 @@
                         :raid-bosses="raidBosses"
                         :selected-raid-boss="selectedRaidBoss"
                         :create-background-style="createBackgroundStyle"
+                        :is-lite-mode="isLiteMode"
                         @boss-selected="selectedRaidBoss = $event">
                     </raid-boss-selector>
                 </div>
@@ -611,6 +624,7 @@
                         :max-battles="maxBattles"
                         :selected-max-boss="selectedMaxBoss"
                         :create-background-style="createBackgroundStyle"
+                        :is-lite-mode="isLiteMode"
                         @boss-selected="selectedMaxBoss = $event">
                     </max-boss-selector>
                 </div>
@@ -673,7 +687,7 @@
                     </template>
                 </div>
 
-                <grid-component :pokemons="activeTabSuggestions" @pokemon-clicked="openPokemonModal($event)"></grid-component>
+                <grid-component :pokemons="activeTabSuggestions" :is-lite-mode="isLiteMode" @pokemon-clicked="openPokemonModal($event)"></grid-component>
             </div>
         </div>
         

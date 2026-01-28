@@ -172,6 +172,37 @@ document.addEventListener('DOMContentLoaded', async () => {
                 btnDark.addEventListener('click', () => updateThemeUI('dark'));
             }
 
+            // --- Lite Mode Logic ---
+            const liteModeToggle = document.getElementById('lite-mode-toggle');
+            const liteModeIcon = document.getElementById('lite-mode-icon');
+            
+            const updateLiteModeUI = (isLite) => {
+                if (isLite) {
+                    document.body.classList.add('lite-mode');
+                    if (liteModeToggle) liteModeToggle.classList.add('active');
+                    // Prevent image loading by removing src attributes if they haven't loaded yet? 
+                    // CSS display:none handles visibility, but to stop network requests, a reload is best.
+                } else {
+                    document.body.classList.remove('lite-mode');
+                    if (liteModeToggle) liteModeToggle.classList.remove('active');
+                }
+            };
+
+            // 1. Initialize Lite Mode
+            const isLiteMode = localStorage.getItem('liteMode') === 'enabled';
+            updateLiteModeUI(isLiteMode);
+
+            // 2. Toggle Handler
+            if (liteModeToggle) {
+                liteModeToggle.addEventListener('click', () => {
+                    const currentStatus = localStorage.getItem('liteMode') === 'enabled';
+                    const newStatus = !currentStatus;
+                    localStorage.setItem('liteMode', newStatus ? 'enabled' : 'disabled');
+                    // Reload to ensure images are not fetched (if enabling) or fetched (if disabling)
+                    window.location.reload(); 
+                });
+            }
+
             // --- Burger Menu Logic ---
             const burgerMenu = document.querySelector('.burger-menu');
             const mainNav = document.querySelector('.main-nav');

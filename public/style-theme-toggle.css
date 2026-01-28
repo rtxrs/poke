@@ -114,10 +114,11 @@ body[data-theme="dark"] .main-nav {
     background-color: #444;
 }
 
+/* New unified modal close button color override */
 [data-theme="dark"] #modal-close-btn,
 [data-theme="dark"] #cleanup-modal-close-btn,
 [data-theme="dark"] #team-builder-modal-close-btn,
-[data-theme="dark"] .trash-modal-redesign .close-btn,
+[data-theme="dark"] #trash-modal-close-btn,
 [data-theme="dark"] #modal-content #modal-close-btn {
     color: #fff !important;
 }
@@ -322,15 +323,6 @@ body[data-theme="dark"] .main-nav {
 /* Fix Raid Boss level titles in selector */
 [data-theme="dark"] .raid-boss-level-title {
     color: #ccc;
-}
-
-/* Fix Trash Generator Modal Header */
-[data-theme="dark"] .trash-modal-redesign .modal-header {
-    background-color: #252525;
-    border-bottom-color: #444;
-}
-[data-theme="dark"] .trash-modal-redesign .modal-header h2 {
-    color: #e0e0e0;
 }
 
 /* Fix Mega Icons in Statistics */

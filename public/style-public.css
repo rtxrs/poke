@@ -118,17 +118,22 @@ body.dashboard-public {
 .composite-column {
     gap: 20px;
     min-width: 0; /* Enable flex child shrinking */
+    height: 100%; /* Ensure it fills the grid cell */
+    display: flex;
+    flex-direction: column;
 }
 .events-card {
-    flex: 0 0 auto;
-    max-height: 350px; /* Slightly increased */
+    flex: 1; /* Share height equally */
+    min-height: 0; /* Allow shrinking */
     display: flex;
     flex-direction: column;
     /* Removed overflow: hidden to prevent clipping */
 }
 .activity-card {
-    flex: 1 1 0;
-    min-height: 0;
+    flex: 1; /* Share height equally */
+    min-height: 0; /* Allow shrinking */
+    display: flex;
+    flex-direction: column; /* Ensure content can scroll internally */
 }
 
 @media (max-width: 768px) {

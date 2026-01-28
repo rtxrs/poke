@@ -188,10 +188,14 @@ document.addEventListener('DOMContentLoaded', async () => {
      * @returns {string} The inline CSS style string.
      */
     function createBackgroundStyle(colors) {
-        if (!colors || colors.length === 0) return 'color: #333; text-shadow: none;';
-        if (colors.length === 1) return `background-color: ${colors[0]};`;
-        return `background: linear-gradient(135deg, ${colors[0]} 30%, ${colors[1]} 70%);`;
+        if (!colors || colors.length === 0) return '';
+        const backgroundValue = colors.length === 1 
+            ? colors[0]
+            : `linear-gradient(135deg, ${colors[0]} 30%, ${colors[1]} 70%)`;
+        return `--pokemon-bg: ${backgroundValue};`;
     }
+
+    const isLiteMode = localStorage.getItem('liteMode') === 'enabled';
 
     /**
      * Fetches detailed data for a specific player and displays it in a modal.
@@ -230,7 +234,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                         const cardClass = p.typeColors.length > 0 ? 'pokemon-card colored' : 'pokemon-card';
                         return `<div class="${cardClass}" style="${createBackgroundStyle(p.typeColors)}">
                                     <img src="${p.sprite}" alt="${p.name}" loading="lazy">
-                                    <p class="pokemon-name">${p.name}</p>
+                                    <p class="pokemon-name">
+                                        ${isLiteMode ? `<span class="lite-name-span" style="${createBackgroundStyle(p.typeColors)}">${p.name}</span>` : p.name}
+                                    </p>
                                     <p class="pokemon-cp">CP ${p.cp}</p>
                                 </div>`;
                     }).join('')}
@@ -300,7 +306,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             <tr class="clickable-row" data-player-id="${player.publicId}">
                 <td>${renderPlayerBadge(player)}</td>
                 <td>
-                    ${player.buddy ? `<img src="${player.buddy.sprite}" alt="${player.buddy.name}" title="${player.buddy.name}">` : 'N/A'}
+                    ${player.buddy ? `
+                        <img src="${player.buddy.sprite}" alt="${player.buddy.name}" title="${player.buddy.name}">
+                        ${isLiteMode ? `<span class="pokemon-name-lite" style="${createBackgroundStyle(player.buddy.typeColors)}">${player.buddy.name}</span>` : ''}
+                    ` : 'N/A'}
                 </td>
                 <td class="hide-on-mobile">${player.kmWalked} km</td>
                 <td class="hide-on-mobile">${player.pokemonCaught.toLocaleString()}</td>
@@ -315,6 +324,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td>${index + 1}</td>
                 <td class="pokemon-cell">
                     <img src="${p.sprite}" alt="${p.name}">
+                    ${isLiteMode ? `<span class="pokemon-name-lite" style="${createBackgroundStyle(p.typeColors)}">${p.name}</span>` : ''}
                 </td>
                 <td><strong>${p.cp.toLocaleString()}</strong></td>
                 <td class="hide-on-mobile">${renderPlayerBadge({ userId: p.userId, publicId: p.ownerPublicId })}</td>
@@ -329,6 +339,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td><strong>${index + 1}</strong></td>
                 <td class="pokemon-cell">
                     <img src="${p.sprite}" alt="${p.name}">
+                    ${isLiteMode ? `<span class="pokemon-name-lite" style="${createBackgroundStyle(p.typeColors)}">${p.name}</span>` : ''}
                 </td>
                 <td class="badges-cell">
                     ${generateBadges(p)}
