@@ -4,7 +4,7 @@ import 'dotenv/config';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 // If we are running from the 'dist' folder, the root is one level up
-const rootDir = __dirname.includes('dist') ? path.join(__dirname, '..') : __dirname;
+export const rootDir = __dirname.includes('dist') ? path.join(__dirname, '..') : __dirname;
 export const DATA_DIR = path.join(rootDir, 'data');
 export const RANKINGS_FILE = path.join(DATA_DIR, 'private/rankings.json');
 export const POKEDEX_FILE = path.join(DATA_DIR, 'user/generated/pokedex_modified.json');
@@ -55,5 +55,6 @@ export default {
     TYPE_EFFECTIVENESS_FILE,
     TYPE_EFFECTIVENESS_API_URL,
     RAID_BOSS_FILE,
-    STATUS_FILE
+    STATUS_FILE,
+    rootDir
 };

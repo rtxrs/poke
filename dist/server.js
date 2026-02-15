@@ -19,6 +19,10 @@ const app = express();
 app.set('trust proxy', 1);
 // --- Middleware ---
 app.use(compression());
+app.use((req, res, next) => {
+    res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' unpkg.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com; img-src 'self' data: raw.githubusercontent.com unpkg.com; font-src 'self' fonts.gstatic.com; connect-src 'self' https://pokemon-go-api.github.io https://pogoapi.net;");
+    next();
+});
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
@@ -40,8 +44,8 @@ const staticOptions = {
         res.setHeader('Cache-Control', 'public, no-cache, must-revalidate');
     }
 };
-const isProd = __dirname.includes('dist');
-const clientPath = isProd ? path.join(__dirname, 'client') : path.join(__dirname, 'public');
+const isProd = config.rootDir.includes('dist') || __dirname.includes('dist');
+const clientPath = isProd ? path.join(config.rootDir, 'dist/client') : path.join(config.rootDir, 'public');
 app.use(express.static(clientPath, staticOptions));
 app.use('/data', express.static(config.DATA_DIR, staticOptions));
 // --- Routes ---

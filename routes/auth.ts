@@ -4,15 +4,15 @@ import bcrypt from 'bcrypt';
 import { fileURLToPath } from 'url';
 import { readUsers, writeUsers } from '../services/userService.js';
 import { authLimiter } from '../middlewares/rateLimiter.js';
-import { SALT_ROUNDS } from '../config.js';
+import config, { SALT_ROUNDS } from '../config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const router = express.Router();
 
-const isProd = __dirname.includes('dist');
-const clientPath = isProd ? path.join(__dirname, 'client') : path.join(__dirname, '..', 'public');
+const isProd = config.rootDir.includes('dist') || __dirname.includes('dist');
+const clientPath = isProd ? path.join(config.rootDir, 'dist/client') : path.join(config.rootDir, 'public');
 
 // Extend express-session with user data
 declare module 'express-session' {
