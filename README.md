@@ -18,7 +18,7 @@ A comprehensive, high-performance web application designed to visualize and anal
 - **Showcase:** A global leaderboard of the strongest (by CP) and rarest (by IV/Shiny/Event probability) Pokémon across the community.
 
 ### Technical Power
-- **PvP Rank Engine:** Pre-calculated rankings for Great, Ultra, and Master leagues using a high-speed binary lookup system.
+- **PvP Rank Engine:** Pre-calculated rankings for Great, Ultra, and Master leagues using a high-speed multi-threaded binary lookup system.
 - **Auto-Updating Data:** Background services automatically sync with the latest Pokédex, Move sets, and Raid Boss rotations.
 
 ---
@@ -26,7 +26,7 @@ A comprehensive, high-performance web application designed to visualize and anal
 ## 🛠️ Tech Stack
 
 - **Backend:** Node.js, Express, TypeScript (ESM)
-- **Frontend:** Vue.js 3, Vite, TypeScript
+- **Frontend:** Vue.js 3, Vite, TypeScript, Tailwind CSS v4, DaisyUI
 - **Data Engine:** Multi-threaded worker scripts for heavy calculations (PvP Ranks)
 - **Testing:** Vitest
 - **Package Manager:** pnpm
@@ -37,11 +37,10 @@ A comprehensive, high-performance web application designed to visualize and anal
 ## 📂 Project Structure
 
 ```text
-├── data/                   # JSON and Binary data storage
-│   ├── public/             # Publicly accessible data (pokedex, moves)
-│   ├── private/            # User sessions and protected rankings
-│   └── user/               # User-specific custom maps and generated files
-├── dist/                   # Compiled production build (Backend + Frontend)
+├── data/                   # JSON and Binary data storage (persistent)
+├── dist/                   # Compiled production build
+│   ├── client/             # Bundled Frontend (Vite)
+│   └── ...                 # Compiled Backend (TSC)
 ├── pgsharp_player_data/     # Raw JSON uploads from PGSharp
 ├── public/                 # Frontend source (HTML, Styles, TypeScript)
 ├── routes/                 # Express API and Auth routes
@@ -49,7 +48,9 @@ A comprehensive, high-performance web application designed to visualize and anal
 ├── services/               # Core business logic (PlayerData, Pokedex, etc.)
 ├── tests/                  # Vitest unit and integration tests
 ├── server.ts               # Express application entry point
-└── vite.config.ts          # Vite frontend configuration
+├── vite.config.ts          # Vite frontend configuration
+├── tailwind.config.ts      # Tailwind configuration (v4 via CSS)
+└── ecosystem.config.cjs    # PM2 configuration
 ```
 
 ---
@@ -57,7 +58,7 @@ A comprehensive, high-performance web application designed to visualize and anal
 ## ⚙️ Installation & Setup
 
 ### Prerequisites
-- Node.js (v18+)
+- Node.js (v20+)
 - pnpm (`npm install -g pnpm`)
 
 ### 1. Install Dependencies
@@ -70,7 +71,7 @@ Create a `.env` file in the root directory (you can use `.env.example` as a temp
 ```bash
 cp .env.example .env
 ```
-Update the values in `.env` with your GitHub credentials and a secure session secret.
+Update the values in `.env` with your GitHub credentials (for deployment) and a secure session secret.
 
 ### 3. Prepare Data
 The application will automatically download the necessary Pokédex and Move files on the first run, but you can manually trigger a PvP rank generation:
@@ -78,22 +79,26 @@ The application will automatically download the necessary Pokédex and Move file
 pnpm pvp-gen
 ```
 
-### 3. Development
-Run the Vite development server (includes HMR and backend proxy):
+### 4. Development
+Run the development server (includes HMR and backend proxy):
 ```bash
 pnpm dev
 ```
 
-### 4. Build for Production
-```bash
-pnpm build
-```
+### 5. Deployment Workflow
+This project uses a **Build Locally, Pull Remotely** workflow to save server resources.
 
-### 5. Production Start
-Using PM2:
+**Locally:**
 ```bash
-pm2 start ecosystem.config.cjs
+pnpm run deploy-push
 ```
+*This command builds the assets, commits the changes, and pushes to GitHub using your .env credentials.*
+
+**On Server:**
+```bash
+pnpm run deploy-pull
+```
+*This command pulls the code, installs production dependencies, and restarts PM2.*
 
 ---
 
@@ -103,16 +108,13 @@ Validate the core services and data logic using Vitest:
 ```bash
 pnpm test
 ```
-The test suite validates:
-- Pokédex integrity and loading.
-- Player data parsing.
-- Ranking calculation logic.
-- Shiny rate and rarity scoring.
 
 ---
 
-## 🔒 Security Note
-This application includes a session-based authentication system. Ensure you update the `SESSION_SECRET` in `config.ts` (or use environment variables) before deploying to a public environment.
+## 🔒 Security & Privacy
+- **Content Security Policy:** Optimized to allow trusted Pokémon data sources and CDNs.
+- **Session Security:** Uses encrypted file-based sessions for trainer data protection.
+- **Environment Variables:** All sensitive keys are managed via `.env`.
 
 ## 📄 License
 This project is intended for personal use and data analysis. All Pokémon assets and data are property of Niantic, The Pokémon Company, and Nintendo.
