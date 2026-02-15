@@ -460,8 +460,8 @@ const pokedexService = {
         return entry?.names?.English || defaultName;
     },
     getPokemonSprite(p) {
-        const defaultSprite = `https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon/pokemon_icon_${String(p.pokemonId).padStart(3, '0')}_00.png`;
-        const shinySprite = `https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon/pokemon_icon_${String(p.pokemonId).padStart(3, '0')}_00_shiny.png`;
+        const defaultSprite = `https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon/pokemon_icon_${String(p.pokemonId).padStart(4, '0')}_00.png`;
+        const shinySprite = `https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon/pokemon_icon_${String(p.pokemonId).padStart(4, '0')}_00_shiny.png`;
         const targetSprite = p.pokemonDisplay.shiny ? 'shinyImage' : 'image';
         const basePokemon = Object.values(this.pokedex?.[p.pokemonId] || {})[0];
         if (!basePokemon || !basePokemon.assetForms) {
