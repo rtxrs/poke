@@ -65,7 +65,14 @@ A comprehensive, high-performance web application designed to visualize and anal
 pnpm install
 ```
 
-### 2. Prepare Data
+### 2. Configure Environment
+Create a `.env` file in the root directory (you can use `.env.example` as a template):
+```bash
+cp .env.example .env
+```
+Update the values in `.env` with your GitHub credentials and a secure session secret.
+
+### 3. Prepare Data
 The application will automatically download the necessary Pokédex and Move files on the first run, but you can manually trigger a PvP rank generation:
 ```bash
 pnpm pvp-gen
