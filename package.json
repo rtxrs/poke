@@ -6,12 +6,15 @@
     "dev": "vite",
     "start": "node --max-old-space-size=768 dist/server.js",
     "build": "tsc && vite build",
+    "deploy-push": "pnpm build && node scripts/git-push.js",
+    "deploy-pull": "git pull && ([ -f package.json ] && pnpm install --prod) && pm2 restart ecosystem.config.cjs",
     "test": "vitest run",
     "pvp-gen": "pnpm tsx scripts/generate_pvp_ranks.ts"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
     "compression": "^1.8.1",
+    "dotenv": "^17.3.1",
     "express": "^5.1.0",
     "express-rate-limit": "^8.2.1",
     "express-session": "^1.18.2",

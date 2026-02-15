@@ -1,5 +1,6 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
+import 'dotenv/config';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,15 +23,14 @@ export const TYPE_EFFECTIVENESS_API_URL = 'https://pogoapi.net/api/v1/type_effec
 /**
  * For a production environment, it's highly recommended to use environment variables
  * for sensitive data and configuration that varies between environments.
- * Example: const PORT = process.env.PORT || 3000;
  */
 
-export const PORT = 3000;
+export const PORT = process.env.PORT || 3000;
 export const DATA_FOLDER = 'pgsharp_player_data';
 export const USERS_FILE = path.join(DATA_DIR, 'private/users.json');
 export const POKEDEX_API_URL = 'https://pokemon-go-api.github.io/pokemon-go-api/api/pokedex.json';
 export const SALT_ROUNDS = 10;
-export const SESSION_SECRET = 'your-secret-key-goes-here'; // IMPORTANT: In production, use an environment variable!
+export const SESSION_SECRET = process.env.SESSION_SECRET || 'your-secret-key-goes-here';
 export const DATA_PATH = path.join(__dirname, DATA_FOLDER);
 
 export default {

@@ -2,9 +2,9 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import pokedexService from '../services/pokedexService';
-import playerDataService from '../services/playerDataService';
-import { DATA_PATH } from '../config';
+import pokedexService from '../services/pokedexService.js';
+import playerDataService from '../services/playerDataService.js';
+import { DATA_PATH } from '../config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
