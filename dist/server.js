@@ -50,20 +50,20 @@ app.use('/api', apiRoutes);
 (async () => {
     try {
         const directories = [
-            path.join(__dirname, 'data/public'),
-            path.join(__dirname, 'data/private'),
-            path.join(__dirname, 'data/private/sessions'),
-            path.join(__dirname, 'data/user/custom'),
-            path.join(__dirname, 'data/user/generated'),
-            path.join(__dirname, config.DATA_FOLDER)
+            path.join(config.DATA_DIR, 'public'),
+            path.join(config.DATA_DIR, 'private'),
+            path.join(config.DATA_DIR, 'private/sessions'),
+            path.join(config.DATA_DIR, 'user/custom'),
+            path.join(config.DATA_DIR, 'user/generated'),
+            config.DATA_PATH
         ];
         for (const dir of directories) {
             await fsPromises.mkdir(dir, { recursive: true });
         }
         console.log('✅ Required directories initialized.');
         await pokedexService.initialize();
-        const pokedexPath = path.join(__dirname, 'data/public/pokedex.json');
-        const ranksPath = path.join(__dirname, 'data/user/generated/pvp_ranks.json');
+        const pokedexPath = config.POKEDEX_RAW_FILE;
+        const ranksPath = config.RANKINGS_FILE;
         let runGen = false;
         try {
             await fsPromises.access(ranksPath);

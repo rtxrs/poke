@@ -3,11 +3,10 @@ import fs from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
+import { RAID_BOSS_FILE, STATUS_FILE } from '../config.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const RAID_BOSS_URL = 'https://pokemon-go-api.github.io/pokemon-go-api/api/raidboss.json';
-const RAID_BOSS_FILE = path.join(__dirname, '../data/public/raidboss.json');
-const STATUS_FILE = path.join(__dirname, '../data/user/generated/raidboss-update-status.json');
 const raidBossService = {
     healthStatus: {
         raidboss: { remoteHash: null, localHash: null, lastChecked: null, file: 'raidboss.json' },

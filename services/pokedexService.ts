@@ -10,7 +10,7 @@ import {
     POKEDEX_API_URL, POKEDEX_FILE, POKEDEX_SERVER_FILE, POKEDEX_CLIENT_FILE,
     DATA_DIR, SHINY_RATES_FILE, POKEDEX_RAW_FILE, COSTUME_ID_MAP_FILE,
     MOVE_ID_MAP_FILE, FAST_MOVES_FILE, CHARGED_MOVES_FILE,
-    TYPE_EFFECTIVENESS_FILE, TYPE_EFFECTIVENESS_API_URL
+    TYPE_EFFECTIVENESS_FILE, TYPE_EFFECTIVENESS_API_URL, STATUS_FILE
 } from '../config.js';
 import raidBossService from './raidBossService.js';
 import pvpService from './pvpService.js';
@@ -243,7 +243,7 @@ const pokedexService = {
     
     async getHealthCheckData(): Promise<HealthStatus> {
         try {
-            const raidBossStatusContent = await fs.readFile(path.join(__dirname, '../data/user/generated/raidboss-update-status.json'), 'utf-8');
+            const raidBossStatusContent = await fs.readFile(STATUS_FILE, 'utf-8');
             const raidBossStatus: any = JSON.parse(raidBossStatusContent);
             this.healthStatus.raidboss = raidBossStatus.raidboss;
             this.healthStatus.cron = raidBossStatus.cron;
