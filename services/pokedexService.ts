@@ -381,7 +381,13 @@ const pokedexService = {
     regeneratePvPRanks(): Promise<void> {
         return new Promise((resolve, reject) => {
             console.log('🔄 Regenerating PvP ranks...');
-            exec('pnpm tsx scripts/generate_pvp_ranks.ts', { cwd: process.cwd() }, (error, stdout, stderr) => {
+            const isProd = __dirname.includes('dist');
+            const scriptPath = isProd 
+                ? path.join(__dirname, '../scripts/generate_pvp_ranks.js')
+                : path.join(__dirname, '../scripts/generate_pvp_ranks.ts');
+            const command = isProd ? `node ${scriptPath}` : `pnpm tsx ${scriptPath}`;
+
+            exec(command, { cwd: process.cwd() }, (error, stdout, stderr) => {
                 if (error) {
                     console.error(`❌ Error regenerating PvP ranks: ${error.message}`);
                     return reject(error);

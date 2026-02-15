@@ -80,7 +80,13 @@ app.use('/api', apiRoutes);
         }
         if (runGen) {
             console.log('⚠️ PvP Ranks file is older/missing. Starting background generation...');
-            const child = exec('pnpm tsx scripts/generate_pvp_ranks.ts', { cwd: __dirname });
+            // Check if we are running the compiled code or source
+            const isProd = __dirname.includes('dist');
+            const scriptPath = isProd
+                ? path.join(__dirname, 'scripts/generate_pvp_ranks.js')
+                : path.join(__dirname, 'scripts/generate_pvp_ranks.ts');
+            const command = isProd ? `node ${scriptPath}` : `pnpm tsx ${scriptPath}`;
+            const child = exec(command, { cwd: __dirname });
             child.stdout?.on('data', (data) => process.stdout.write(data));
             child.stderr?.on('data', (data) => process.stderr.write(data));
             child.on('close', (code) => {

@@ -131,7 +131,19 @@ else {
         const numCPUs = Math.max(1, os.cpus().length);
         console.log(`Spawning ${numCPUs} workers for parallel calculation...`);
 
-        const workers = Array.from({ length: numCPUs }, () => new Worker(__filename));
+        const isProd = __dirname.includes('dist');
+        const workerPath = __filename;
+
+        const workers = Array.from({ length: numCPUs }, () => {
+            // If using tsx (dev), we need to pass the loader to the worker
+            if (!isProd) {
+                return new Worker(workerPath, {
+                    execArgv: ['--import', 'tsx']
+                });
+            }
+            return new Worker(workerPath);
+        });
+
         let activeWorkers = numCPUs;
         let index = 0;
         let finished = 0;
@@ -170,7 +182,12 @@ else {
             console.log(`Done! Saved to ${OUTPUT_PATH}`);
             
             console.log("Compiling binary ranks...");
-            exec('pnpm tsx scripts/compile_pvp_binary.ts', { cwd: path.join(__dirname, '..') }, (err, stdout) => {
+            const compileScriptPath = isProd 
+                ? path.join(__dirname, 'compile_pvp_binary.js')
+                : path.join(__dirname, 'compile_pvp_binary.ts');
+            const compileCommand = isProd ? `node ${compileScriptPath}` : `pnpm tsx ${compileScriptPath}`;
+
+            exec(compileCommand, { cwd: path.join(__dirname, '..') }, (err, stdout) => {
                 if (err) console.error(err);
                 else console.log(stdout);
             });
