@@ -11,6 +11,9 @@ const __dirname = path.dirname(__filename);
 
 const router = express.Router();
 
+const isProd = __dirname.includes('dist');
+const clientPath = isProd ? path.join(__dirname, 'client') : path.join(__dirname, '..', 'public');
+
 // Extend express-session with user data
 declare module 'express-session' {
     interface SessionData {
@@ -27,7 +30,7 @@ export const isAuthenticated = (req: Request, res: Response, next: NextFunction)
     }
 };
 
-router.get('/register', (req: Request, res: Response) => res.sendFile(path.join(__dirname, '..', 'public', 'register.html')));
+router.get('/register', (req: Request, res: Response) => res.sendFile(path.join(clientPath, 'register.html')));
 
 router.post('/register', authLimiter, async (req: Request, res: Response) => {
     try {
@@ -94,6 +97,6 @@ router.post('/login', authLimiter, async (req: Request, res: Response) => {
 
 router.get('/logout', (req: Request, res: Response) => req.session.destroy(() => res.redirect('/')));
 
-router.get('/me', isAuthenticated, (req: Request, res: Response) => res.sendFile(path.join(__dirname, '..', 'public', 'private.html')));
+router.get('/me', isAuthenticated, (req: Request, res: Response) => res.sendFile(path.join(clientPath, 'private.html')));
 
 export { router };

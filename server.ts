@@ -46,11 +46,14 @@ const staticOptions = {
     }
 };
 
-app.use(express.static('public', staticOptions));
-app.use('/data', express.static(path.join(__dirname, 'data'), staticOptions));
+const isProd = __dirname.includes('dist');
+const clientPath = isProd ? path.join(__dirname, 'client') : path.join(__dirname, 'public');
+
+app.use(express.static(clientPath, staticOptions));
+app.use('/data', express.static(config.DATA_DIR, staticOptions));
 
 // --- Routes ---
-app.get('/', (req: Request, res: Response) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.get('/', (req: Request, res: Response) => res.sendFile(path.join(clientPath, 'index.html')));
 app.use(authRoutes);
 app.use('/api', apiRoutes);
 

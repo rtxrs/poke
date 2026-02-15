@@ -8,6 +8,8 @@ import { SALT_ROUNDS } from '../config.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const router = express.Router();
+const isProd = __dirname.includes('dist');
+const clientPath = isProd ? path.join(__dirname, 'client') : path.join(__dirname, '..', 'public');
 // Middleware to check if user is authenticated
 export const isAuthenticated = (req, res, next) => {
     if (req.session.user) {
@@ -17,7 +19,7 @@ export const isAuthenticated = (req, res, next) => {
         res.redirect('/login.html');
     }
 };
-router.get('/register', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'register.html')));
+router.get('/register', (req, res) => res.sendFile(path.join(clientPath, 'register.html')));
 router.post('/register', authLimiter, async (req, res) => {
     try {
         const { web_username, password, playerId } = req.body;
@@ -71,5 +73,5 @@ router.post('/login', authLimiter, async (req, res) => {
     }
 });
 router.get('/logout', (req, res) => req.session.destroy(() => res.redirect('/')));
-router.get('/me', isAuthenticated, (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'private.html')));
+router.get('/me', isAuthenticated, (req, res) => res.sendFile(path.join(clientPath, 'private.html')));
 export { router };
