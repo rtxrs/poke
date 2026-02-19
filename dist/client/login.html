@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokemon GO | Login</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon-Xu5iY9dm.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32-C8agoN7r.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16-CixKQmaw.png">
+    <link rel="manifest" href="/assets/site-CRCgC9Nw.webmanifest">
+    <link rel="shortcut icon" href="/assets/favicon-BR64d0U5.ico">
+  <script type="module" crossorigin src="/assets/login-DGQiXVrz.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/loadHeader-BiaDJXqe.js">
+  <link rel="stylesheet" crossorigin href="/assets/loadHeader-rUTpmEU6.css">
+  <link rel="stylesheet" crossorigin href="/assets/style-public-BmZgiB1Y.css">
+</head>
+<body class="dashboard-public">
+    <div id="header-placeholder"></div>
+
+    <div class="form-container card">
+        <!-- Username/Password Login Form -->
+        <form id="form-credentials">
+            <h2>Login with Credentials</h2>
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <button type="submit">Login</button>
+            <div id="credential-error" class="error-message"></div>
+        </form>
+
+        <div class="or-separator">OR</div>
+
+        <!-- Player ID Only Login Form -->
+        <form id="form-playerId">
+            <h2>Login with Player ID</h2>
+            <input type="text" name="playerId" placeholder="Player Support ID" required>
+            <button type="submit">Login</button>
+            <div id="playerId-error" class="error-message"></div>
+        </form>
+
+        <a href="/register.html">Create a new account</a>
+    </div>
+
+</body>
+</html>

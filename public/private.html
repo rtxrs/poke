@@ -9,6 +9,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
     <link rel="manifest" href="/assets/site.webmanifest">
     <link rel="shortcut icon" href="/assets/favicon.ico">
+    <link rel="stylesheet" href="/main.css">
     <link rel="stylesheet" href="style-base.css">
     <link rel="stylesheet" href="style-private.css">
     <link rel="stylesheet" href="style-header.css">
@@ -729,10 +730,10 @@
     </div> <!-- Close #app -->
 
     <!-- 2. Link to the external Vue Application Logic -->
-    <script src="/scripts/utils.js"></script>
-    <script src="/scripts/scroll-indicators.js"></script>
-    <script src="/scripts/private-vue.js"></script>
-    <script src="/scripts/loadHeader.js"></script>
+    <script type="module" src="/scripts/utils.ts"></script>
+    <script type="module" src="/scripts/scroll-indicators.ts"></script>
+    <script type="module" src="/scripts/private-vue.ts"></script>
+    <script type="module" src="/scripts/loadHeader.ts"></script>
 </body>
 </html>
 

@@ -1,0 +1,30 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+@source "../src/**/*.vue";
+@source "../src/**/*.ts";
+@source "./**/*.html";
+@source "./scripts/**/*.ts";
+
+/* Custom Pokémon Theme Colors */
+@theme {
+  --color-pokemon-red: #ff0000;
+  --color-pokemon-blue: #3b4cca;
+  --color-pokemon-yellow: #ffde00;
+  --color-pokemon-gold: #b3a125;
+  
+  --radius-box: 1rem;
+}
+
+@layer base {
+  body {
+    @apply bg-base-200 min-h-screen font-sans;
+  }
+}
+
+/* Glassmorphism utility */
+@layer components {
+  .glass-card {
+    @apply bg-base-100/70 backdrop-blur-md border border-white/10 shadow-xl;
+  }
+}

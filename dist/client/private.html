@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokemon GO</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon-Xu5iY9dm.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32-C8agoN7r.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16-CixKQmaw.png">
+    <link rel="manifest" href="/assets/site-CRCgC9Nw.webmanifest">
+    <link rel="shortcut icon" href="/assets/favicon-BR64d0U5.ico">
+    <!-- 1. Include Vue.js library -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script type="module" crossorigin src="/assets/private-CfhBv7qA.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/loadHeader-BiaDJXqe.js">
+  <link rel="stylesheet" crossorigin href="/assets/loadHeader-rUTpmEU6.css">
+  <link rel="stylesheet" crossorigin href="/assets/private-UdpkF5kE.css">
+</head>
+<body class="dashboard-private">
+    <div id="header-placeholder"></div>
+    <div id="subheader-placeholder"></div>
+    <!-- This is the main container for our Vue app -->
+    <div id="app" class="container">
+        
+        <!-- Pokémon Detail Modal -->
+        <div id="modal-backdrop" v-if="selectedPokemon" @click.self="selectedPokemon = null">
+            <div id="modal-content" class="card">
+                <button id="modal-close-btn" @click="selectedPokemon = null">&times;</button>
+                
+                <div class="pokemon-modal-header">
+                    <div class="sprite-container" :style="createBackgroundStyle(selectedPokemon.typeColors)">
+                        <div v-if="selectedPokemon.pokemonDisplay.alignment === 1" class="vfx-layer shadow-aura"></div>
+                        <div v-if="selectedPokemon.pokemonDisplay.alignment === 2" class="vfx-layer purified-glow"></div>
+                        <div v-if="selectedPokemon.isLucky" class="vfx-layer lucky-glow"></div>
+                        <div v-if="selectedPokemon.pokemonDisplay.shiny" class="vfx-layer shiny-glint"></div>
+                        <img :src="selectedPokemon.sprite" :alt="selectedPokemon.nickname || selectedPokemon.name">
+                    </div>
+                    <div class="pokemon-info">
+                        <h2>
+                            {{ selectedPokemon.nickname || selectedPokemon.name }} |
+                            <span v-if="getPokemonTypes(selectedPokemon).length > 0">
+                                <template v-for="(type, index) in getPokemonTypes(selectedPokemon)">
+                                    <span class="type-text" :style="{ color: type.color }">{{ type.name }}</span>
+                                    <span v-if="index < getPokemonTypes(selectedPokemon).length - 1"> / </span>
+                                </template>
+                            </span>
+                            <span class="badges-container" v-html="getBadges(selectedPokemon, '', false)"></span>
+                        </h2>
+                        <div class="pokemon-stats-grid">
+                            <div><span>CP</span><strong>{{ selectedPokemon.cp }}</strong></div>
+                            <div><span>Level</span><strong>{{ getLevelFromCpm(selectedPokemon.cpMultiplier) }}</strong></div>
+                            <div><span>IV %</span><strong>{{ getIvPercent(selectedPokemon) }}%</strong></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pokemon-modal-body">
+                    <h4>IV Stats</h4>
+                    <div class="iv-stats">
+                        <div class="stat-bar-container">
+                            <span class="stat-label">Attack</span>
+                            <div class="stat-bar">
+                                <div class="stat-bar-fill" data-stat="attack"></div>
+                            </div>
+                            <span class="stat-value">{{ selectedPokemon.individualAttack }}/15</span>
+                        </div>
+                        <div class="stat-bar-container">
+                            <span class="stat-label">Defense</span>
+                            <div class="stat-bar">
+                                <div class="stat-bar-fill" data-stat="defense"></div>
+                            </div>
+                            <span class="stat-value">{{ selectedPokemon.individualDefense }}/15</span>
+                        </div>
+                        <div class="stat-bar-container">
+                            <span class="stat-label">Stamina</span>
+                            <div class="stat-bar">
+                                <div class="stat-bar-fill" data-stat="stamina"></div>
+                            </div>
+                            <span class="stat-value">{{ selectedPokemon.individualStamina }}/15</span>
+                        </div>
+                    </div>
+
+                    <h4>Combat</h4>
+                    <div class="grid-stats moves-grid">
+                        <div>
+                            <span>Fast Move</span>
+                            <strong>
+                                <img v-if="selectedPokemon.move1Type" :src="getMoveTypeIconUrl(selectedPokemon.move1Type)" :alt="selectedPokemon.move1Type" class="move-type-icon">
+                                {{ displayMove(selectedPokemon.move1) }}
+                            </strong>
+                        </div>
+                        <div>
+                            <span>Charged Move</span>
+                            <strong>
+                                <img v-if="selectedPokemon.move2Type" :src="getMoveTypeIconUrl(selectedPokemon.move2Type)" :alt="selectedPokemon.move2Type" class="move-type-icon">
+                                {{ displayMove(selectedPokemon.move2) }}
+                            </strong>
+                        </div>
+                        <div v-if="selectedPokemon.move3">
+                            <span>Charged Move 2</span>
+                            <strong>
+                                <img v-if="selectedPokemon.move3Type" :src="getMoveTypeIconUrl(selectedPokemon.move3Type)" :alt="selectedPokemon.move3Type" class="move-type-icon">
+                                {{ displayMove(selectedPokemon.move3) }}
+                            </strong>
+                        </div>
+                        <!-- Calculated DPS -->
+                        <div v-if="calculateDps(selectedPokemon)">
+                            <span>DPS (Cycle)</span>
+                            <div style="display: flex; flex-direction: column; gap: 4px; font-size: 0.9em;">
+                                <strong v-if="calculateDps(selectedPokemon).move2">
+                                    M1 + M2: {{ calculateDps(selectedPokemon).move2.toFixed(2) }}
+                                </strong>
+                                <strong v-if="calculateDps(selectedPokemon).move3">
+                                    M1 + M3: {{ calculateDps(selectedPokemon).move3.toFixed(2) }}
+                                </strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4>Details</h4>
+                    <div class="grid-stats">
+                        <div><span>Height</span><strong>{{ selectedPokemon.heightM.toFixed(2) }} m</strong></div>
+                        <div><span>Weight</span><strong>{{ selectedPokemon.weightKg.toFixed(2) }} kg</strong></div>
+                        <div><span>Caught</span><strong>{{ new Date(selectedPokemon.creationTimeMs).toLocaleDateString() }}</strong></div>
+                        <div v-if="selectedPokemon.tradedTimeMs > 0"><span>Traded</span><strong>{{ new Date(selectedPokemon.tradedTimeMs).toLocaleDateString() }}</strong></div>
+                        <div v-if="selectedPokemon.hasMegaEvolved"><span>Mega Evolved</span><strong>Yes</strong></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cleanup Modal -->
+        <div id="cleanup-modal-backdrop" v-if="showCleanupModal" @click.self="closeCleanupModal()">
+            <div id="cleanup-modal-content" class="card">
+                <button id="cleanup-modal-close-btn" @click="closeCleanupModal()">&times;</button>
+                <div class="summary-header">
+                    <h2>Pokemon Cleanup</h2>
+                    <div class="cleanup-controls">
+                        <label class="checkbox-label">
+                            <input type="checkbox" v-model="groupSubstitutes">
+                            Group by Form/Costume
+                        </label>
+                        <input type="text" id="cleanup-search-bar" placeholder="Filter duplicates..." v-model="cleanupSearchQuery">
+                    </div>
+                </div>
+
+                <!-- Sub-Grouped View -->
+                <div v-if="groupSubstitutes" class="cleanup-scroll-container">
+                    <div v-for="species in formGroupedCleanupData" :key="species.speciesName" class="cleanup-row">
+                        <div class="cleanup-row-header">
+                            <h4>{{ species.speciesName }} ({{ species.count }})</h4>
+                        </div>
+                        <div class="pokemon-row-scroll">
+                            <template v-for="formGroup in species.forms">
+                                <div v-if="formGroup.pokemons.length > 1" class="form-group-wrapper">
+                                    <h5 class="form-group-header">{{ formGroup.displayName }}</h5>
+                                    <div class="form-group-box">
+                                        <div v-for="p in formGroup.pokemons" :key="p.id" class="pokemon-card" @click="openPokemonModal(p)">
+                                            <div class="pokemon-image-container" :style="createBackgroundStyle(p.typeColors)">
+                                                <img :src="p.sprite" :alt="p.nickname || p.name" loading="lazy">
+                                            </div>
+                                            <p class="pokemon-name">
+                                                <span :class="{'lite-name-span': isLiteMode}" :style="isLiteMode ? createBackgroundStyle(p.typeColors) : ''">{{ p.nickname || p.name }}</span>
+                                                <br v-if="getBadges(p, '', true)">
+                                                <span v-html="getBadges(p, '', true)"></span>
+                                            </p>
+                                            <p class="pokemon-cp">CP {{ p.cp }}</p>
+                                            <div class="iv-bar-container">
+                                                <div class="iv-bar" :style="{ width: getIvPercent(p) + '%', backgroundColor: getIvColor(getIvPercent(p)) }"></div>
+                                            </div>
+                                            <small>{{ getIvPercent(p) }}% ({{ p.individualAttack }}/{{ p.individualDefense }}/{{ p.individualStamina }})</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Default View -->
+                <div v-else class="cleanup-scroll-container">
+                    <div v-for="(group, index) in defaultCleanupData" :key="index" class="cleanup-row">
+                        <div class="cleanup-row-header">
+                            <h4>{{ group[0].name }} ({{ group.length }})</h4>
+                        </div>
+                        <div class="pokemon-row-scroll">
+                            <div v-for="p in group" :key="p.id" class="pokemon-card" @click="openPokemonModal(p)">
+                                <div class="pokemon-image-container" :style="createBackgroundStyle(p.typeColors)">
+                                    <img :src="p.sprite" :alt="p.nickname || p.name" loading="lazy">
+                                </div>
+                                <p class="pokemon-name">
+                                    <span :class="{'lite-name-span': isLiteMode}" :style="isLiteMode ? createBackgroundStyle(p.typeColors) : ''">{{ p.nickname || p.name }}</span>
+                                    <br v-if="getBadges(p, '', true)">
+                                    <span v-html="getBadges(p, '', true)"></span>
+                                </p>
+                                <p class="pokemon-cp">CP {{ p.cp }}</p>
+                                <div class="iv-bar-container">
+                                    <div class="iv-bar" :style="{ width: getIvPercent(p) + '%', backgroundColor: getIvColor(getIvPercent(p)) }"></div>
+                                </div>
+                                <small>{{ getIvPercent(p) }}% ({{ p.individualAttack }}/{{ p.individualDefense }}/{{ p.individualStamina }})</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trash String Generator Modal -->
+        <div id="trash-modal-backdrop" v-if="showTrashModal" @click.self="showTrashModal = false">
+            <div id="trash-modal-content" class="card trash-modal-redesign">
+                <button id="trash-modal-close-btn" class="modal-close-btn" @click="showTrashModal = false">&times;</button>
+                
+                <div class="summary-header">
+                    <h2>Trash String Generator</h2>
+                </div>
+
+                <div class="trash-scroll-container">
+                    <p class="description">
+                        Define what you want to <strong>KEEP</strong>. The generated string will select everything else (Trash).
+                    </p>
+
+                    <!-- Section 1: Attributes (Checkboxes) -->
+                    <div class="config-section">
+                        <h3>Attributes</h3>
+                        <div class="checkbox-grid">
+                            <label class="checkbox-card" :class="{ active: trashConfig.keepShiny }">
+                                <input type="checkbox" v-model="trashConfig.keepShiny"> <span>Shiny</span>
+                            </label>
+                            <label class="checkbox-card" :class="{ active: trashConfig.keepLucky }">
+                                <input type="checkbox" v-model="trashConfig.keepLucky"> <span>Lucky</span>
+                            </label>
+                            <label class="checkbox-card" :class="{ active: trashConfig.keepShadow }">
+                                <input type="checkbox" v-model="trashConfig.keepShadow"> <span>Shadow</span>
+                            </label>
+                            <label class="checkbox-card" :class="{ active: trashConfig.keepPurified }">
+                                <input type="checkbox" v-model="trashConfig.keepPurified"> <span>Purified</span>
+                            </label>
+                            <label class="checkbox-card" :class="{ active: trashConfig.keepLegendary }">
+                                <input type="checkbox" v-model="trashConfig.keepLegendary"> <span>Legendary</span>
+                            </label>
+                            <label class="checkbox-card" :class="{ active: trashConfig.keepCostume }">
+                                <input type="checkbox" v-model="trashConfig.keepCostume"> <span>Costume</span>
+                            </label>
+                            <label class="checkbox-card" :class="{ active: trashConfig.keepFavorite }">
+                                <input type="checkbox" v-model="trashConfig.keepFavorite"> <span>Favorite</span>
+                            </label>
+                            <label class="checkbox-card" :class="{ active: trashConfig.keepBackground }">
+                                <input type="checkbox" v-model="trashConfig.keepBackground"> <span>Background</span>
+                            </label>
+                            <label class="checkbox-card" :class="{ active: trashConfig.keepXXSXXL }">
+                                <input type="checkbox" v-model="trashConfig.keepXXSXXL"> <span>XXS / XXL</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Stats & IVs -->
+                    <div class="config-section">
+                        <h3>IV Stats</h3>
+                        <div class="stats-row">
+                            <label class="checkbox-card wide" :class="{ active: trashConfig.keep4Star }">
+                                <input type="checkbox" v-model="trashConfig.keep4Star"> <span>Keep 100% IV (4*)</span>
+                            </label>
+                            <label class="checkbox-card wide" :class="{ active: trashConfig.keepNundo }">
+                                <input type="checkbox" v-model="trashConfig.keepNundo"> <span>Keep 0% IV (Nundo)</span>
+                            </label>
+                        </div>
+                        <div class="input-group with-check">
+                            <label class="checkbox-card input-check" :class="{ active: trashConfig.useMinIv }">
+                                <input type="checkbox" v-model="trashConfig.useMinIv"> <span>Keep IV >=</span>
+                            </label>
+                            <div class="number-input-wrapper" :class="{ disabled: !trashConfig.useMinIv }">
+                                <input type="number" v-model.number="trashConfig.minIvPercent" min="0" max="100" :disabled="!trashConfig.useMinIv">
+                                <span class="suffix">%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: PvP Ranks -->
+                    <div class="config-section">
+                        <h3>PvP Ranks (Keep Top X)</h3>
+                        <div class="rank-inputs">
+                            <div class="input-group with-check">
+                                <label class="rank-label gl checkbox-card rank-check" :class="{ active: trashConfig.useRankGL }">
+                                    <input type="checkbox" v-model="trashConfig.useRankGL"> Great League
+                                </label>
+                                <div class="number-input-wrapper" :class="{ disabled: !trashConfig.useRankGL }">
+                                    <span class="prefix">#</span>
+                                    <input type="number" v-model.number="trashConfig.keepRankGL" min="1" max="4096" :disabled="!trashConfig.useRankGL">
+                                </div>
+                            </div>
+                            <div class="input-group with-check">
+                                <label class="rank-label ul checkbox-card rank-check" :class="{ active: trashConfig.useRankUL }">
+                                    <input type="checkbox" v-model="trashConfig.useRankUL"> Ultra League
+                                </label>
+                                <div class="number-input-wrapper" :class="{ disabled: !trashConfig.useRankUL }">
+                                    <span class="prefix">#</span>
+                                    <input type="number" v-model.number="trashConfig.keepRankUL" min="1" max="4096" :disabled="!trashConfig.useRankUL">
+                                </div>
+                            </div>
+                            <div class="input-group with-check">
+                                <label class="rank-label ml checkbox-card rank-check" :class="{ active: trashConfig.useRankML }">
+                                    <input type="checkbox" v-model="trashConfig.useRankML"> Master League
+                                </label>
+                                <div class="number-input-wrapper" :class="{ disabled: !trashConfig.useRankML }">
+                                    <span class="prefix">#</span>
+                                    <input type="number" v-model.number="trashConfig.keepRankML" min="1" max="4096" :disabled="!trashConfig.useRankML">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="trash-actions">
+                        <button class="btn-primary large" @click="generateTrashString">Generate Search Strings</button>
+                    </div>
+
+                    <!-- Results -->
+                    <div v-if="generatedTrashStrings.length > 0" class="trash-results">
+                        <div v-for="(str, index) in generatedTrashStrings" :key="index" class="string-block">
+                            <div class="string-header">
+                                <span class="badge-type">{{ str.desc }}</span>
+                                <span class="count-badge">{{ str.count }}</span>
+                            </div>
+                            <div class="string-content">
+                                <textarea readonly :value="str.text" rows="2" @click="$event.target.select()"></textarea>
+                                <button class="btn-copy" @click="copyToClipboard(str.text)">Copy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="loading" class="loading-overlay">
+            <div class="loading-spinner"></div>
+            <p class="loading-message">Loading player data...</p>
+        </div>
+
+        <main v-else>
+            <!-- Character Tab -->
+            <section id="character-section" v-show="activeTab === 'character'">
+                <div class="dashboard-grid">
+                    <!-- Left Column -->
+                    <div class="left-column">
+                        <section class="card" id="trainer-summary">
+                            <h2>Trainer Summary</h2>
+                            <div class="trainer-info">
+                                <div class="team-logo-wrapper" @click="openAvatarModal">
+                                    <div class="team-logo" :style="{ backgroundColor: teamColor }">
+                                        <img :src="currentAvatarUrl" alt="Character">
+                                    </div>
+                                    <div class="edit-overlay">
+                                        <span>✏️</span>
+                                    </div>
+                                </div>
+                                <div><strong>Lv. {{ player.level }}</strong></div>
+                            </div>
+                            <div class="xp-bar-container">
+                                <div class="xp-bar" :style="{ width: xpPercentage + '%' }"></div>
+                            </div>
+                            <p class="xp-text">{{ xpProgressText }}</p>
+                            <div class="grid-stats">
+                                <div><span>Stardust</span><strong>{{ stardust.toLocaleString() }}</strong></div>
+                                <div><span>PokéCoins</span><strong>{{ pokecoins.toLocaleString() }}</strong></div>
+                                <div><span>Pokémon Caught</span><strong>{{ player.numPokemonCaptured?.toLocaleString() }}</strong></div>
+                                <div><span>Pokédex Entries</span><strong>{{ player.numUniquePokedexEntries?.toLocaleString() }}</strong></div>
+                                <div><span>Distance Walked</span><strong>{{ parseFloat(player.kmWalked || 0).toFixed(2) }} km</strong></div>
+                                <div><span>PokéStops Visited</span><strong>{{ player.pokeStopVisits?.toLocaleString() }}</strong></div>
+                            </div>
+                        </section>
+
+                        <section class="card" id="item-summary">
+                            <div class="summary-header">
+                                <h2>Item Bag</h2>
+                                <button class="btn-secondary" @click="itemsExpanded = !itemsExpanded">
+                                    {{ itemsExpanded ? 'Collapse' : 'Expand All' }}
+                                </button>
+                            </div>
+                            <!-- Collapsed View -->
+                            <div v-if="!itemsExpanded" class="item-summary-collapsed">
+                                <p><strong>Poké Balls:</strong> {{ totalPokeBalls.toLocaleString() }}</p>
+                                <p><strong>Potions:</strong> {{ totalPotions.toLocaleString() }}</p>
+                                <p><strong>Revives:</strong> {{ totalRevives.toLocaleString() }}</p>
+                            </div>
+                            <!-- Expanded View -->
+                            <div v-else>
+                                <template v-for="category in itemCategoryOrder" :key="category">
+                                    <div v-if="groupedItems[category]">
+                                        <h3 class="item-category-header">{{ category }}</h3>
+                                        <div class="item-grid-container">
+                                            <div v-for="item in groupedItems[category]" :key="item.itemName" class="item-card">
+                                                <img :src="getItemSprite(item.item)" :alt="item.itemName" loading="lazy" onerror="this.style.display='none'">
+                                                <span class="item-count-badge">{{ item.count }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div class="right-column">
+                        <section class="card" id="pokemon-summary">
+                            <div class="summary-header">
+                                <h2>Pokémon Highlights</h2>
+                            </div>
+                            <div id="pokemon-highlights-container">
+                                <div v-for="p in highlights" :key="p.id" :class="getCardClass(p)" @click="openPokemonModal(p)">
+                                    <div class="pokemon-image-container" :style="createBackgroundStyle(p.typeColors)">
+                                        <img :src="p.sprite" :alt="p.nickname || p.name" loading="lazy">
+                                    </div>
+                                    <p class="pokemon-name">
+                                        <span :class="{'lite-name-span': isLiteMode}" :style="isLiteMode ? createBackgroundStyle(p.typeColors) : ''">{{ p.nickname || p.name }}</span>
+                                        <br v-if="getBadges(p, '', true)">
+                                        <span v-html="getBadges(p, '', true)"></span>
+                                    </p>
+                                    <p class="pokemon-cp">CP {{ p.cp }}</p>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Pokemon Tab -->
+            <section id="pokemon-section" v-show="activeTab === 'pokemon'" class="card">
+                <div class="summary-header">
+                    <h2>My Pokémon ({{ filteredPokemon.length }})</h2>
+                </div>
+                <div class="sort-bar">
+                    <input type="text" id="search-bar" placeholder="Search: shiny, electric, !legendary, etc." v-model="searchQuery">
+                    <div class="sort-controls">
+                        <label for="sort-by">Sort by:</label>
+                        <select id="sort-by" v-model="sortKey">
+                            <option value="caughtTime">Caught Time</option>
+                            <option value="cp">Combat Power</option>
+                            <option value="pokedex">Pokédex #</option>
+                            <option value="name">Name</option>
+                        </select>
+                        <button id="sort-direction" @click="toggleSortDirection">{{ sortDirection === 'desc' ? '▼ Desc' : '▲ Asc' }}</button>
+                    </div>
+                </div>
+                <grid-component :pokemons="filteredPokemon" :is-lite-mode="isLiteMode" @pokemon-clicked="openPokemonModal($event)"></grid-component>
+            </section>
+
+            <!-- Pokedex Tab -->
+            <section id="pokedex-section" v-show="activeTab === 'pokedex'" class="card">
+                <div class="summary-header">
+                    <h2>Pokédex</h2>
+                    <div class="segmented-control">
+                        <button :class="{ active: pokedexMode === 'normal' }" @click="pokedexMode = 'normal'">Normal</button>
+                        <button :class="{ active: pokedexMode === 'completionist' }" @click="pokedexMode = 'completionist'">Completionist</button>
+                    </div>
+                </div>
+                
+                <div class="pokedex-grid">
+                    <div v-for="entry in pokedexDisplayData" :key="entry.uniqueId" class="pokedex-card" :class="{ 'caught': entry.isCaught, 'uncaught': !entry.isCaught }">
+                        <div class="pokemon-image-container">
+                            <img :src="entry.sprite" :alt="entry.name" loading="lazy">
+                        </div>
+                        <p class="pokemon-name" :style="isLiteMode ? createBackgroundStyle(entry.typeColors) : ''">{{ entry.name }}</p>
+                        <small class="dex-nr">#{{ entry.dexNr }}</small>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Statistics Tab -->
+            <section id="statistics-section" v-show="activeTab === 'statistics'">
+                <div class="stats-grid">
+                    <!-- 1. IV Distribution (Histogram) -->
+                    <div class="stat-card card">
+                        <h4>IV Distribution</h4>
+                        <div class="chart-placeholder bar-chart">
+                            <div v-for="bucket in stats_ivDistribution" class="bar" :style="{ height: `${bucket.height}%` }"><span class="label">{{ bucket.label }}</span></div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Perfect vs. Nundo Counts (Bar Chart) -->
+                    <div class="stat-card card">
+                        <h4>Perfect (100%) vs Nundo (0%)</h4>
+                        <div class="chart-placeholder bar-chart-horizontal">
+                            <div class="bar-h-container">
+                                <div class="bar-h" :style="{ width: `${stats_perfectNundo.perfectPerc || 1}%`, backgroundColor: '#e74c3c' }"></div>
+                                <span class="label">Perfect ({{ stats_perfectNundo.perfect }})</span>
+                            </div>
+                            <div class="bar-h-container">
+                                <div class="bar-h" :style="{ width: `${stats_perfectNundo.nundoPerc || 1}%`, backgroundColor: '#34495e' }"></div>
+                                <span class="label">Nundo ({{ stats_perfectNundo.nundo }})</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Shiny Collection Rate (Donut Chart) -->
+                    <div class="stat-card card">
+                        <h4>Shiny Collection Rate</h4>
+                        <div class="chart-placeholder donut-chart-container">
+                            <div class="donut-chart" :style="{ background: `conic-gradient(#d4af37 0% ${stats_shinyRate.percent}%, var(--chart-track) ${stats_shinyRate.percent}% 100%)` }">
+                                <div class="donut-hole">
+                                    <span>{{ stats_shinyRate.percent }}%</span>
+                                    <small>{{ stats_shinyRate.shinyCount }} / {{ stats_shinyRate.totalCount }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 5. Lucky Pokémon Percentage (Gauge/Pie Chart) -->
+                    <div class="stat-card card">
+                        <h4>Lucky Pokémon Rate</h4>
+                        <div class="chart-placeholder pie-chart-container">
+                            <div class="pie-chart" :style="{ background: `conic-gradient(#FFD700 0% ${stats_luckyRate.percent}%, var(--chart-track) ${stats_luckyRate.percent}% 100%)` }"></div>
+                            <div class="pie-legend legend-lucky">
+                                <span>Lucky ({{ stats_luckyRate.luckyCount }})</span>
+                                <span>Not Lucky ({{ stats_luckyRate.tradedCount - stats_luckyRate.luckyCount }})</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 6. Legendary & Mythical Ratio (Pie Chart) -->
+                    <div class="stat-card card">
+                        <h4>Legendary & Mythical Ratio</h4>
+                        <div class="chart-placeholder pie-chart-container">
+                            <div class="pie-chart" :style="{ background: `conic-gradient(#8E44AD 0% ${stats_legendaryRatio.percent}%, var(--chart-track) ${stats_legendaryRatio.percent}% 100%)` }"></div>
+                            <div class="pie-legend legend-legendary">
+                                <span>Lgnd/Mythic ({{ stats_legendaryRatio.legendaryMythicalCount }})</span>
+                                <span>Regular ({{ stats_legendaryRatio.totalCount - stats_legendaryRatio.legendaryMythicalCount }})</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 7. CP Distribution (Histogram) -->
+                    <div class="stat-card card">
+                        <h4>CP Distribution</h4>
+                        <div class="chart-placeholder bar-chart">
+                            <div v-for="bucket in stats_cpDistribution" class="bar" :style="{ height: `${bucket.height}%`, backgroundColor: '#2ecc71' }"><span class="label">{{ bucket.label }}</span></div>
+                        </div>
+                    </div>
+
+                    <!-- 8. Pokémon by Capture Year (Bar Chart) -->
+                    <div class="stat-card card">
+                        <h4>Pokémon by Capture Year</h4>
+                        <div class="chart-placeholder bar-chart">
+                            <div v-for="year in stats_captureByYear" class="bar" :style="{ height: `${year.height}%`, backgroundColor: '#9b59b6' }"><span class="label">{{ year.label }}</span></div>
+                        </div>
+                    </div>
+
+                    <!-- 9. Top 10 Most Common Species (Horizontal Bar Chart) -->
+                    <div class="stat-card card">
+                        <h4>Most Common Pokémon</h4>
+                        <div class="chart-placeholder bar-chart-horizontal">
+                            <div v-for="p in stats_mostCommon" class="bar-h-container">
+                                <div class="bar-h" :style="{ width: `${p.width || 1}%` }"></div>
+                                <span class="label">{{ p.name }} ({{p.count}})</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 13. Pokémon by Acquisition Type (Pie Chart) -->
+                    <div class="stat-card card">
+                        <h4>Acquisition Type</h4>
+                        <div class="chart-placeholder pie-chart-container">
+                            <div class="pie-chart" :style="{ background: `conic-gradient(#2ecc71 0% ${stats_acquisitionType.wildEnd}%, #3498db ${stats_acquisitionType.wildEnd}% ${stats_acquisitionType.hatchedEnd}%, #e74c3c ${stats_acquisitionType.hatchedEnd}% ${stats_acquisitionType.raidEnd}%, #9b59b6 ${stats_acquisitionType.raidEnd}% 100%)` }"></div>
+                            <div class="pie-legend legend-acq">
+                                <span>Wild ({{ stats_acquisitionType.wild }})</span>
+                                <span>Hatched ({{ stats_acquisitionType.hatched }})</span>
+                                <span>Raid ({{ stats_acquisitionType.raid }})</span>
+                                <span>Trade ({{ stats_acquisitionType.trade }})</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 15. Mega Evolution History (Icon Grid) -->
+                    <div class="stat-card card">
+                        <h4>Mega-Evolved Species ({{ stats_megaEvolvedList.length }})</h4>
+                        <div class="chart-placeholder icon-grid-container">
+                            <div class="mega-icon-grid">
+                                <div v-for="p in stats_megaEvolvedList" :key="p.id" class="mega-icon">
+                                    <img :src="p.sprite" :alt="`Pokemon ID ${p.id}`" loading="lazy">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tools Tab -->
+            <section id="tools-section" v-show="activeTab === 'tools'">
+                <div class="tools-container">
+                    <button class="btn-primary" @click="openCleanupModal()">Pokemon Cleanup</button>
+                    <button class="btn-primary" @click="showTrashModal = true">Trash String Generator</button>
+                    <button class="btn-primary" @click="openTeamBuilderModal()">Raid Team Builder</button>
+                    <!-- Content for Pokemon Cleanup will go here -->
+                </div>
+            </section>
+        </main>
+
+        <!-- Team Builder Modal -->
+        <div id="team-builder-modal-backdrop" v-if="showTeamBuilderModal" @click.self="closeTeamBuilderModal()">
+            <div id="team-builder-modal-content" class="card" :class="{ 'max-mode-active': battleMode === 'max' }">
+                <button id="team-builder-modal-close-btn" @click="closeTeamBuilderModal()">&times;</button>
+                
+                <!-- Mode Tabs -->
+                <div class="modal-tabs">
+                    <button :class="{ active: teamBuilderMode === 'raid' }" @click="teamBuilderMode = 'raid'">Raid Boss</button>
+                    <button :class="{ active: teamBuilderMode === 'max_battle_list' }" @click="teamBuilderMode = 'max_battle_list'">Max Battles</button>
+                    <button :class="{ active: teamBuilderMode === 'custom' }" @click="teamBuilderMode = 'custom'">Custom Team</button>
+                </div>
+
+                <!-- Raid Boss Selector -->
+                <div v-if="teamBuilderMode === 'raid'" class="summary-header">
+                    <raid-boss-selector
+                        :raid-bosses="raidBosses"
+                        :selected-raid-boss="selectedRaidBoss"
+                        :create-background-style="createBackgroundStyle"
+                        :is-lite-mode="isLiteMode"
+                        @boss-selected="selectedRaidBoss = $event">
+                    </raid-boss-selector>
+                </div>
+
+                <!-- Max Boss Selector -->
+                <div v-if="teamBuilderMode === 'max_battle_list'" class="summary-header">
+                    <max-boss-selector
+                        :max-battles="maxBattles"
+                        :selected-max-boss="selectedMaxBoss"
+                        :create-background-style="createBackgroundStyle"
+                        :is-lite-mode="isLiteMode"
+                        @boss-selected="selectedMaxBoss = $event">
+                    </max-boss-selector>
+                </div>
+
+                <!-- Custom Team Selector -->
+                <div v-if="teamBuilderMode === 'custom'" class="summary-header custom-team-selector">
+                    <div class="team-builder-options">
+                            <div class="segmented-control">
+                                <button :class="{ active: battleMode === 'standard' }" @click="battleMode = 'standard'">Standard</button>
+                                <button :class="{ active: battleMode === 'max' }" @click="battleMode = 'max'">MAX Battles</button>
+                            </div>
+                        </div>
+                    <div class="custom-enemy-input-wrapper">
+                        <input type="text" list="pokedex-list" v-model="customEnemyInput" @change="addCustomEnemy" @keyup.enter="addCustomEnemy" placeholder="Select up to 6 Enemy Pokémon" />
+                        <datalist id="pokedex-list">
+                            <option v-for="name in allPokedexNames" :value="name"></option>
+                        </datalist>
+                        <button class="btn-add-enemy" @click="addCustomEnemy">Add</button>
+                    </div>
+                    <div class="custom-enemy-display">
+                        <!-- This area is now handled by the result tabs below -->
+                    </div>
+                </div>
+
+                <!-- Combined Results/Enemy Tabs -->
+                <div class="modal-tabs result-tabs" v-if="(teamBuilderMode === 'custom' && customEnemies.length > 0) || (teamBuilderMode === 'raid' && selectedRaidBoss) || (teamBuilderMode === 'max_battle_list' && selectedMaxBoss)">
+                    <!-- Overall Tab (Custom Mode Only) -->
+                    <button v-if="teamBuilderMode === 'custom' && customEnemies.length > 1" :class="{ active: activeTeamBuilderTab === 'Overall' }" @click="activeTeamBuilderTab = 'Overall'">
+                        Overall
+                    </button>
+                    
+                    <!-- Enemy Tabs (Custom Mode) -->
+                    <template v-if="teamBuilderMode === 'custom'">
+                        <button v-for="(enemy, index) in customEnemies" :key="enemy.id" 
+                                :class="{ active: activeTeamBuilderTab === enemy.names.English }" 
+                                @click="activeTeamBuilderTab = enemy.names.English" 
+                                :style="createBackgroundStyle(enemy.typeColors)"
+                                class="enemy-tab">
+                            {{ enemy.names.English }}
+                            <span class="remove-tab-btn" @click.stop="removeCustomEnemy(index)">&times;</span>
+                        </button>
+                    </template>
+
+                    <!-- Boss Tab (Raid Mode) -->
+                    <template v-if="teamBuilderMode === 'raid'">
+                        <button v-if="selectedRaidBoss"
+                                :class="{ active: true }"
+                                :style="createBackgroundStyle(raidBosses.find(b => b.id === selectedRaidBoss)?.typeColors || [])" class="enemy-tab">
+                            {{ raidBosses.find(b => b.id === selectedRaidBoss)?.names.English }}
+                        </button>
+                    </template>
+
+                    <!-- Boss Tab (Max Battle Mode) -->
+                    <template v-if="teamBuilderMode === 'max_battle_list'">
+                        <button v-if="selectedMaxBoss"
+                                :class="{ active: true }"
+                                :style="createBackgroundStyle(maxBattles.find(b => b.id === selectedMaxBoss)?.typeColors || [])" class="enemy-tab">
+                            {{ maxBattles.find(b => b.id === selectedMaxBoss)?.names.English }}
+                        </button>
+                    </template>
+                </div>
+
+                <grid-component :pokemons="activeTabSuggestions" :is-lite-mode="isLiteMode" @pokemon-clicked="openPokemonModal($event)"></grid-component>
+            </div>
+        </div>
+        
+        <!-- Avatar Selection Modal -->
+        <div id="avatar-modal-backdrop" v-if="showAvatarModal" @click.self="showAvatarModal = false">
+            <div id="avatar-modal-content" class="card">
+                <div class="modal-header">
+                    <h2>Select Avatar</h2>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button class="btn-primary" @click="saveAvatar" :disabled="savingAvatar">
+                            {{ savingAvatar ? 'Saving...' : 'Save Selection' }}
+                        </button>
+                        <button class="close-btn" @click="showAvatarModal = false">&times;</button>
+                    </div>
+                </div>
+                <div class="modal-body avatar-grid-container" @scroll="handleAvatarScroll">
+                    <div class="avatar-grid">
+                        <div v-for="id in visibleAvatars" :key="id" 
+                             class="avatar-item" 
+                             :class="{ selected: pendingAvatarId == id }"
+                             @click="selectAvatar(id)">
+                            <img :src="`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${id}.png`" loading="lazy" :alt="`Pokemon ${id}`">
+                            <span class="avatar-id">#{{ id }}</span>
+                        </div>
+                    </div>
+                    <div v-if="loadingAvatars" class="loading-spinner-small">Loading...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- PvP Progress Bar -->
+        <div id="pvp-progress-container" class="floating-footer-progress">
+            <div id="pvp-progress-bar" class="progress-bar"></div>
+        </div>
+
+        <!-- Scroll to Top Button -->
+        <button id="scroll-to-top-btn" :class="{ visible: showScrollTop }" @click="scrollToTop">↑</button>
+
+    </div> <!-- Close #app -->
+
+    <!-- 2. Link to the external Vue Application Logic -->
+</body>
+</html>
+

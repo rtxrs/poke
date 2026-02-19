@@ -1,7 +1,15 @@
 # Dependencies
-# This folder is managed by npm and can be reinstalled by running `npm install`.
-# It should not be committed to version control.
 node_modules/
+.pnpm-debug.log*
+
+# Environment Variables
+.env
+deploy_creds.sh
+
+# Build Output (Committed for deployment)
+# dist/
+dist-ssr/
+*.local
 
 # User Data
 # This folder contains sensitive, user-specific data and should not be committed.
