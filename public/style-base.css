@@ -131,7 +131,7 @@ h2 { margin-top: 0; padding-bottom: 10px; border-bottom: 2px solid var(--bg-colo
     align-items: center; 
     justify-content: space-between; 
     width: 140px;
-    aspect-ratio: 1 / 2; /* Normal: 2 Height : 1 Width */
+    min-height: 280px;
     overflow: hidden;
     box-sizing: border-box;
 }

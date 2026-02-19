@@ -41,9 +41,11 @@
     text-align: center;
     background: linear-gradient(145deg, #f9f9f9, #e6e6e6);
     width: 140px;
-    aspect-ratio: 1 / 2;
+    min-height: 280px;
     overflow: hidden;
     box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
 }
 .pokemon-card img {
     width: 72px;
