@@ -39,22 +39,42 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'github-rtxrs', passwordVariable: 'GITHUB_TOKEN', usernameVariable: 'GITHUB_USER')]) {
                     sshagent(['gcp-web-server']) {
                         sh """
-                            # 1. Create dist.tar.gz from built files
+                            # 1. Create tar of source files (excluding node_modules, .git, dist)
+                            tar -czf source.tar.gz \\
+                                --exclude='node_modules' \\
+                                --exclude='.git' \\
+                                --exclude='dist' \\
+                                --exclude='*.log' \\
+                                --exclude='.env*' \\
+                                ecosystem.config.cjs \\
+                                package.json \\
+                                tsconfig.json \\
+                                vite.config.ts \\
+                                routes/ \\
+                                services/ \\
+                                data/ \\
+                                public/ \\
+                                config.ts \\
+                                server.ts
+                            
+                            # 2. Create dist.tar.gz from built files
                             tar -czf dist.tar.gz dist/
                             
-                            # 2. Copy to server temp location
-                            scp -o StrictHostKeyChecking=no dist.tar.gz rafael@\${TARGET_SERVER}:/tmp/
+                            # 3. Copy both to server temp location
+                            scp -o StrictHostKeyChecking=no source.tar.gz dist.tar.gz rafael@\${TARGET_SERVER}:/tmp/
                             
-                            # 3. Extract and move on server with sudo
+                            # 4. Extract on server with sudo
                             ssh -o StrictHostKeyChecking=no rafael@\${TARGET_SERVER} "
                                 cd /tmp
-                                sudo rm -rf \${TARGET_PATH}/dist
+                                sudo rm -rf \${TARGET_PATH}/*
+                                sudo tar -xzf source.tar.gz -C \${TARGET_PATH}
                                 sudo tar -xzf dist.tar.gz -C \${TARGET_PATH}
-                                rm dist.tar.gz
+                                rm source.tar.gz dist.tar.gz
                             "
                             
-                            # 4. Restart PM2
+                            # 5. Restart PM2
                             ssh -o StrictHostKeyChecking=no rafael@\${TARGET_SERVER} "
+                                cd \${TARGET_PATH}
                                 sudo pm2 restart ecosystem.config.cjs
                                 sudo pm2 save
                             "
