@@ -39,33 +39,20 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'github-rtxrs', passwordVariable: 'GITHUB_TOKEN', usernameVariable: 'GITHUB_USER')]) {
                     sshagent(['gcp-web-server']) {
                         sh """
-                            # 1. Sync dist folder from Jenkins to server (fast!)
-                            rsync -avz --delete -e ssh \\
-                                --exclude='node_modules' \\
-                                --exclude='.git' \\
-                                ./dist/ \\
-                                rafael@\${TARGET_SERVER}:\${TARGET_PATH}/dist/
+                            # 1. Create dist.tar.gz from built files
+                            tar -czf dist.tar.gz dist/
                             
-                            # 2. Sync package files for server reference
-                            rsync -avz -e ssh \\
-                                --exclude='node_modules' \\
-                                --exclude='.git' \\
-                                --include='package.json' \\
-                                --include='pnpm-lock.yaml' \\
-                                --include='ecosystem.config.cjs' \\
-                                --include='tsconfig.json' \\
-                                --include='vite.config.ts' \\
-                                --include='server.ts' \\
-                                --include='config.ts' \\
-                                --include='routes/' \\
-                                --include='services/' \\
-                                --include='public/' \\
-                                --include='data/' \\
-                                --exclude='*' \\
-                                ./ \\
-                                rafael@\${TARGET_SERVER}:\${TARGET_PATH}/
+                            # 2. Copy to server
+                            scp -o StrictHostKeyChecking=no dist.tar.gz rafael@\${TARGET_SERVER}:\${TARGET_PATH}/
                             
-                            # 3. Restart PM2 on server
+                            # 3. Extract on server
+                            ssh -o StrictHostKeyChecking=no rafael@\${TARGET_SERVER} "
+                                cd \${TARGET_PATH}
+                                tar -xzf dist.tar.gz
+                                rm dist.tar.gz
+                            "
+                            
+                            # 4. Restart PM2
                             ssh -o StrictHostKeyChecking=no rafael@\${TARGET_SERVER} "
                                 sudo pm2 restart ecosystem.config.cjs
                                 sudo pm2 save
