@@ -25,8 +25,9 @@ pipeline {
             steps {
                 echo 'Checking out and building POKE...'
                 checkout scm
-                sh 'npm install -g pnpm && pnpm install --frozen-lockfile'
-                sh 'npx tsc --noEmit || true'
+                sh 'npm install -g pnpm && pnpm install --frozen-lockfile --ignore-scripts'
+                sh 'npx tsc --version'
+                sh 'npx tsc --noEmit --non-interactive || true'
                 sh 'pnpm run build'
             }
         }
@@ -46,13 +47,22 @@ pipeline {
                                     # 2. Update PATH (Use \\\\\\\$ to escape for Groovy AND Shell)
                                     export PATH=\\\$NODE_BIN_DIR:\\\$PNPM_BIN_DIR:\\\$PATH
                                     
+                                    # Verify binaries
+                                    echo 'Node version:'
+                                    node --version
+                                    echo 'PNPM version:'
+                                    pnpm --version
+                                    echo 'TypeScript version:'
+                                    pnpm exec tsc --version
+                                    
                                     # 3. Navigate and pull
                                     cd /var/www/poke
                                     git config --global --add safe.directory /var/www/poke
                                     git pull https://\${GITHUB_USER}:\${GITHUB_TOKEN}@github.com/rtxrs/poke.git main
                                     
                                     # 4. Execute commands
-                                    pnpm install
+                                    pnpm install --ignore-scripts
+                                    pnpm exec tsc --version
                                     pnpm run build
                                     
                                     # 5. Restart or Start Services
