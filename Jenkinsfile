@@ -48,6 +48,7 @@ pipeline {
                                 --exclude='.env*' \\
                                 ecosystem.config.cjs \\
                                 package.json \\
+                                pnpm-lock.yaml \\
                                 tsconfig.json \\
                                 vite.config.ts \\
                                 routes/ \\
@@ -70,6 +71,7 @@ pipeline {
                                 sudo rm -rf \${TARGET_PATH}/dist
                                 sudo rm -f \${TARGET_PATH}/ecosystem.config.cjs
                                 sudo rm -f \${TARGET_PATH}/package.json
+                                sudo rm -f \${TARGET_PATH}/pnpm-lock.yaml
                                 sudo rm -f \${TARGET_PATH}/tsconfig.json
                                 sudo rm -f \${TARGET_PATH}/vite.config.ts
                                 sudo rm -rf \${TARGET_PATH}/routes
@@ -91,7 +93,7 @@ pipeline {
                                 export NODE_BIN_DIR='/root/.nvm/versions/node/v24.4.0/bin'
                                 export PNPM_BIN_DIR='/root/.nvm/versions/node/v24.4.0/bin'
                                 export PATH=\\\$NODE_BIN_DIR:\\\$PNPM_BIN_DIR:\\\$PATH
-                                pnpm install --prod --frozen-lockfile
+                                sudo \\\$PNPM_BIN_DIR/pnpm install --prod --frozen-lockfile
                             "
                             
                             # 6. Restart PM2
