@@ -85,11 +85,12 @@ pipeline {
                                 rm source.tar.gz dist.tar.gz
                             "
                             
-                            # 5. Install dependencies only if package.json changed
+                            # 5. Install dependencies using server's pnpm
                             ssh -o StrictHostKeyChecking=no rafael@\${TARGET_SERVER} "
                                 cd \${TARGET_PATH}
-                                export PATH=\\\$(npm root -g)/../bin:\\\$PATH
-                                npm install -g pnpm
+                                export NODE_BIN_DIR='/root/.nvm/versions/node/v24.4.0/bin'
+                                export PNPM_BIN_DIR='/root/.nvm/versions/node/v24.4.0/bin'
+                                export PATH=\\\$NODE_BIN_DIR:\\\$PNPM_BIN_DIR:\\\$PATH
                                 pnpm install --prod --frozen-lockfile
                             "
                             
