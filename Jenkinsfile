@@ -40,8 +40,8 @@ pipeline {
                             ssh -o StrictHostKeyChecking=no rafael@\${TARGET_SERVER} "
                                 sudo bash <<'EOF'
                                     # 1. Setup the environment (Literal values)
-                                    export NODE_BIN_DIR='/root/.nvm/versions/node/v24.13.0/bin'
-                                    export PNPM_BIN_DIR='/root/.local/share/pnpm'
+                                    export NODE_BIN_DIR='/root/.nvm/versions/node/v24.4.0/bin'
+                                    export PNPM_BIN_DIR='/root/.nvm/versions/node/v24.4.0/bin'
                                     
                                     # 2. Update PATH (Use \\\\\\\$ to escape for Groovy AND Shell)
                                     export PATH=\\\$NODE_BIN_DIR:\\\$PNPM_BIN_DIR:\\\$PATH
