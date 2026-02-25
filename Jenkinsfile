@@ -65,8 +65,7 @@ pipeline {
                                     pnpm exec tsc --version
                                     
                                     # Run vite build directly (skip tsc as it was already run in Jenkins)
-                                    # or run with verbose output to debug
-                                    pnpm exec vite build --verbose
+                                    pnpm exec vite build
                                     
                                     # 5. Restart or Start Services
                                     pm2 restart ecosystem.config.cjs
