@@ -39,13 +39,14 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'github-rtxrs', passwordVariable: 'GITHUB_TOKEN', usernameVariable: 'GITHUB_USER')]) {
                     sshagent(['gcp-web-server']) {
                         sh """
-                            # 1. Create tar of source files (excluding node_modules, .git, dist)
+                            # 1. Create tar of source files (excluding node_modules, .git, dist, data)
                             tar -czf source.tar.gz \\
                                 --exclude='node_modules' \\
                                 --exclude='.git' \\
                                 --exclude='dist' \\
                                 --exclude='*.log' \\
                                 --exclude='.env*' \\
+                                --exclude='data' \\
                                 ecosystem.config.cjs \\
                                 package.json \\
                                 pnpm-lock.yaml \\
@@ -53,7 +54,6 @@ pipeline {
                                 vite.config.ts \\
                                 routes/ \\
                                 services/ \\
-                                data/ \\
                                 public/ \\
                                 config.ts \\
                                 server.ts
@@ -64,10 +64,11 @@ pipeline {
                             # 3. Copy both to server temp location
                             scp -o StrictHostKeyChecking=no source.tar.gz dist.tar.gz rafael@\${TARGET_SERVER}:/tmp/
                             
-                            # 4. Extract on server (preserve existing node_modules)
+                            # 4. Extract on server (preserve existing node_modules and data)
+                            # WARNING: Always verify folders being deleted - data loss can occur!
                             ssh -o StrictHostKeyChecking=no rafael@\${TARGET_SERVER} "
                                 cd /tmp
-                                # Remove old files but preserve node_modules
+                                # Remove old files but preserve node_modules and data
                                 sudo rm -rf \${TARGET_PATH}/dist
                                 sudo rm -f \${TARGET_PATH}/ecosystem.config.cjs
                                 sudo rm -f \${TARGET_PATH}/package.json
@@ -76,7 +77,7 @@ pipeline {
                                 sudo rm -f \${TARGET_PATH}/vite.config.ts
                                 sudo rm -rf \${TARGET_PATH}/routes
                                 sudo rm -rf \${TARGET_PATH}/services
-                                sudo rm -rf \${TARGET_PATH}/data
+                                # PRESERVE data folder - contains player data and sessions!
                                 sudo rm -rf \${TARGET_PATH}/public
                                 sudo rm -f \${TARGET_PATH}/config.ts
                                 sudo rm -f \${TARGET_PATH}/server.ts
