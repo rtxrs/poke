@@ -63,16 +63,37 @@ pipeline {
                             # 3. Copy both to server temp location
                             scp -o StrictHostKeyChecking=no source.tar.gz dist.tar.gz rafael@\${TARGET_SERVER}:/tmp/
                             
-                            # 4. Extract on server with sudo
+                            # 4. Extract on server (preserve existing node_modules)
                             ssh -o StrictHostKeyChecking=no rafael@\${TARGET_SERVER} "
                                 cd /tmp
-                                sudo rm -rf \${TARGET_PATH}/*
+                                # Remove old files but preserve node_modules
+                                sudo rm -rf \${TARGET_PATH}/dist
+                                sudo rm -f \${TARGET_PATH}/ecosystem.config.cjs
+                                sudo rm -f \${TARGET_PATH}/package.json
+                                sudo rm -f \${TARGET_PATH}/tsconfig.json
+                                sudo rm -f \${TARGET_PATH}/vite.config.ts
+                                sudo rm -rf \${TARGET_PATH}/routes
+                                sudo rm -rf \${TARGET_PATH}/services
+                                sudo rm -rf \${TARGET_PATH}/data
+                                sudo rm -rf \${TARGET_PATH}/public
+                                sudo rm -f \${TARGET_PATH}/config.ts
+                                sudo rm -f \${TARGET_PATH}/server.ts
+                                
+                                # Extract new files
                                 sudo tar -xzf source.tar.gz -C \${TARGET_PATH}
                                 sudo tar -xzf dist.tar.gz -C \${TARGET_PATH}
                                 rm source.tar.gz dist.tar.gz
                             "
                             
-                            # 5. Restart PM2
+                            # 5. Install dependencies only if package.json changed
+                            ssh -o StrictHostKeyChecking=no rafael@\${TARGET_SERVER} "
+                                cd \${TARGET_PATH}
+                                export PATH=\\\$(npm root -g)/../bin:\\\$PATH
+                                npm install -g pnpm
+                                pnpm install --prod --frozen-lockfile
+                            "
+                            
+                            # 6. Restart PM2
                             ssh -o StrictHostKeyChecking=no rafael@\${TARGET_SERVER} "
                                 cd \${TARGET_PATH}
                                 sudo pm2 restart ecosystem.config.cjs
