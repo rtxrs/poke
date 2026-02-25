@@ -42,13 +42,14 @@ pipeline {
                             # 1. Create dist.tar.gz from built files
                             tar -czf dist.tar.gz dist/
                             
-                            # 2. Copy to server
-                            scp -o StrictHostKeyChecking=no dist.tar.gz rafael@\${TARGET_SERVER}:\${TARGET_PATH}/
+                            # 2. Copy to server temp location
+                            scp -o StrictHostKeyChecking=no dist.tar.gz rafael@\${TARGET_SERVER}:/tmp/
                             
-                            # 3. Extract on server
+                            # 3. Extract and move on server with sudo
                             ssh -o StrictHostKeyChecking=no rafael@\${TARGET_SERVER} "
-                                cd \${TARGET_PATH}
-                                tar -xzf dist.tar.gz
+                                cd /tmp
+                                sudo rm -rf \${TARGET_PATH}/dist
+                                sudo tar -xzf dist.tar.gz -C \${TARGET_PATH}
                                 rm dist.tar.gz
                             "
                             
