@@ -72,18 +72,26 @@ pipeline {
                             DEPLOY_TMP_DIR="/tmp/jenkins_deploy_\$(date +%Y%m%d%H%M%S)"
                             ssh -o StrictHostKeyChecking=no rafael@\${TARGET_SERVER} "mkdir -p \${DEPLOY_TMP_DIR}"
 
+                            # Create a temporary directory on the Jenkins agent to store the tarball
+                            JENKINS_TAR_TMP_DIR="\${WORKSPACE}/jenkins_tar_tmp_\$(date +%Y%m%d%H%M%S)"
+                            mkdir -p \${JENKINS_TAR_TMP_DIR}
+                            TARBALL_PATH="\${JENKINS_TAR_TMP_DIR}/deployment.tar.gz"
+
                             # 1. Create a combined tarball of all necessary files (source code and built 'dist')
                             # Exclude node_modules, .git, log files, .env files, and the persistent 'data' directory
-                            tar -czf deployment.tar.gz \\
+                            tar -czf "\${TARBALL_PATH}" \\
                                 --exclude='node_modules' \\
                                 --exclude='.git' \\
                                 --exclude='*.log' \\
                                 --exclude='.env*' \\
                                 --exclude='data' \\
-                                .
+                                -C . . # Archive contents of current directory
 
                             # 2. Copy the combined archive to the server's temporary staging directory
-                            scp -o StrictHostKeyChecking=no deployment.tar.gz rafael@\${TARGET_SERVER}:\${DEPLOY_TMP_DIR}/
+                            scp -o StrictHostKeyChecking=no "\${TARBALL_PATH}" rafael@\${TARGET_SERVER}:\${DEPLOY_TMP_DIR}/
+
+                            # Clean up the temporary directory on the Jenkins agent
+                            rm -rf \${JENKINS_TAR_TMP_DIR}
 
                             # 3. Execute server-side deployment operations
                             ssh -o StrictHostKeyChecking=no rafael@\${TARGET_SERVER} "
@@ -129,9 +137,9 @@ pipeline {
     
     post {
         always {
-            // Clean up the deployment tarball created on the Jenkins agent
-            echo 'Cleaning up Jenkins agent workspace...'
-            sh 'rm -f deployment.tar.gz'
+            // Jenkins agent workspace cleanup is handled by deployment steps,
+            // as the tarball is created in and cleaned up from a temporary directory.
+            echo 'Jenkins agent workspace cleanup handled by deployment steps.'
         }
         success {
             echo 'POKE build and deployment completed successfully!'
