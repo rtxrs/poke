@@ -100,9 +100,34 @@ pipeline {
                                 sudo mkdir -p \${TARGET_PATH}
                                 sudo chown rafael:rafael \${TARGET_PATH}
 
+                                # Navigate to the application's root directory on the server
+                                cd \${TARGET_PATH}
+
+                                # --- BEGIN: Safely clean and prepare TARGET_PATH ---
+                                # Temporarily move persistent directories out of the way
+                                TEMP_PERSIST_DIR="/tmp/poke_persist_\$(date +%Y%m%d%H%M%S)"
+                                mkdir -p \${TEMP_PERSIST_DIR}
+
+                                # Check and move 'data' if it exists
+                                if [ -d "data" ]; then
+                                    sudo mv data \${TEMP_PERSIST_DIR}/
+                                fi
+                                # Check and move 'node_modules' if it exists (for speed, will reinstall later anyway)
+                                if [ -d "node_modules" ]; then
+                                    sudo mv node_modules \${TEMP_PERSIST_DIR}/
+                                fi
+                                # Check and move '.env' if it exists
+                                if [ -f ".env" ]; then
+                                    sudo mv .env \${TEMP_PERSIST_DIR}/
+                                fi
+
+                                # Now, delete everything else that should be replaced by the new deployment
+                                sudo rm -rf \${TARGET_PATH}/*
+                                # --- END: Safely clean and prepare TARGET_PATH ---
+
                                 # Extract the new deployment archive into the target application directory
                                 # Using -C \${TARGET_PATH} ensures extraction directly into the app directory
-                                cd \${DEPLOY_TMP_DIR}
+                                cd \${DEPLOY_TMP_DIR} # Go back to the temp deploy directory to extract
                                 tar -xzf deployment.tar.gz -C \${TARGET_PATH} --overwrite
 
                                 # Clean up the temporary deployment archive and directory on the server
@@ -110,8 +135,18 @@ pipeline {
                                 cd /tmp
                                 rm -rf \${DEPLOY_TMP_DIR}
 
-                                # Navigate to the application's root directory on the server
+                                # Navigate back to TARGET_PATH and move persistent directories back
                                 cd \${TARGET_PATH}
+                                if [ -d "\${TEMP_PERSIST_DIR}/data" ]; then
+                                    sudo mv \${TEMP_PERSIST_DIR}/data .
+                                fi
+                                if [ -d "\${TEMP_PERSIST_DIR}/node_modules" ]; then
+                                    sudo mv \${TEMP_PERSIST_DIR}/node_modules .
+                                fi
+                                if [ -f "\${TEMP_PERSIST_DIR}/.env" ]; then
+                                    sudo mv \${TEMP_PERSIST_DIR}/.env .
+                                fi
+                                rm -rf \${TEMP_PERSIST_DIR} # Clean up temporary persistent directory
 
                                 # Source NVM to ensure 'pnpm' is in the PATH for the 'rafael' user
                                 # This assumes NVM is installed and configured for the user on the target server.
