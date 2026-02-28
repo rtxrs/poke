@@ -103,7 +103,7 @@ pipeline {
                                 # Extract the new deployment archive into the target application directory
                                 # Using -C \${TARGET_PATH} ensures extraction directly into the app directory
                                 cd \${DEPLOY_TMP_DIR}
-                                tar -xzf deployment.tar.gz -C \${TARGET_PATH}
+                                tar -xzf deployment.tar.gz -C \${TARGET_PATH} --overwrite
 
                                 # Clean up the temporary deployment archive and directory on the server
                                 rm deployment.tar.gz
