@@ -158,12 +158,12 @@ pipeline {
                                 PNPM_FULL_PATH=\\"/root/.nvm/versions/node/v24.4.0/bin/pnpm\\"
 
                                 # Install production-only dependencies using absolute path with sudo
-                                sudo "\\"\${PNPM_FULL_PATH}\\"" install --prod --frozen-lockfile
+                                sudo \\"\${PNPM_FULL_PATH}\\" install --prod --frozen-lockfile
 
                                 # Restart the application using PM2
                                 # 'sudo pm2 restart \${SERVICE_NAME}' attempts to restart an existing process
                                 # '|| sudo pm2 start ecosystem.config.cjs --name \${SERVICE_NAME}' starts it if not found
-                                sudo pm2 restart "\\"\${SERVICE_NAME}\\"" || sudo pm2 start ecosystem.config.cjs --name "\\"\${SERVICE_NAME}\\""
+                                sudo pm2 restart \\"\${SERVICE_NAME}\\" || sudo pm2 start ecosystem.config.cjs --name \\"\${SERVICE_NAME}\\"
                                 sudo pm2 save # Save PM2 process list to retain after reboot
                             "
                         """
