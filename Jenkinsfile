@@ -72,20 +72,21 @@ pipeline {
                             DEPLOY_TMP_DIR="/tmp/jenkins_deploy_\$(date +%Y%m%d%H%M%S)"
                             ssh -o StrictHostKeyChecking=no rafael@\${TARGET_SERVER} "mkdir -p \${DEPLOY_TMP_DIR}"
 
-                            # Create a temporary directory on the Jenkins agent to store the tarball
-                            JENKINS_TAR_TMP_DIR="\${WORKSPACE}/jenkins_tar_tmp_\$(date +%Y%m%d%H%M%S)"
+                            # Create a temporary directory outside the workspace for the tarball
+                            JENKINS_TAR_TMP_DIR="/tmp/jenkins_tar_tmp_\$(date +%Y%m%d%H%M%S)"
                             mkdir -p \${JENKINS_TAR_TMP_DIR}
                             TARBALL_PATH="\${JENKINS_TAR_TMP_DIR}/deployment.tar.gz"
 
                             # 1. Create a combined tarball of all necessary files (source code and built 'dist')
-                            # Exclude node_modules, .git, log files, .env files, and the persistent 'data' directory
+                            # The tar command will operate on the current directory (${WORKSPACE}),
+                            # but create the tarball in the /tmp location.
                             tar -czf "\${TARBALL_PATH}" \\
                                 --exclude='node_modules' \\
                                 --exclude='.git' \\
                                 --exclude='*.log' \\
                                 --exclude='.env*' \\
                                 --exclude='data' \\
-                                -C . . # Archive contents of current directory
+                                . # Archive contents of current directory
 
                             # 2. Copy the combined archive to the server's temporary staging directory
                             scp -o StrictHostKeyChecking=no "\${TARBALL_PATH}" rafael@\${TARGET_SERVER}:\${DEPLOY_TMP_DIR}/
