@@ -69,11 +69,12 @@ pipeline {
                     sshagent(['gcp-web-server']) { // Using the existing SSH agent for GCP server access
                         sh """
                             # Create a temporary directory on the target server for staging the deployment
-                            DEPLOY_TMP_DIR="/tmp/jenkins_deploy_\$(date +%Y%m%d%H%M%S)"
+                            # This AGENT_REMOTE_DEPLOY_TMP_DIR is set on the Jenkins agent, its value will be passed to remote.
+                            AGENT_REMOTE_DEPLOY_TMP_DIR="/tmp/jenkins_deploy_\$(date +%Y%m%d%H%M%S)"
                             # Use simple ssh command, with Groovy variable interpolation for TARGET_SERVER
-                            ssh -o StrictHostKeyChecking=no rafael@${env.TARGET_SERVER} "mkdir -p \"\${DEPLOY_TMP_DIR}\""
+                            ssh -o StrictHostKeyChecking=no rafael@${env.TARGET_SERVER} "mkdir -p \"\${AGENT_REMOTE_DEPLOY_TMP_DIR}\""
 
-                            # Create a temporary directory outside the workspace for the tarball
+                            # Create a temporary directory outside the workspace for the tarball on Jenkins agent
                             JENKINS_TAR_TMP_DIR="/tmp/jenkins_tar_tmp_\$(date +%Y%m%d%H%M%S)"
                             mkdir -p "\${JENKINS_TAR_TMP_DIR}"
                             TARBALL_PATH="\${JENKINS_TAR_TMP_DIR}/deployment.tar.gz"
@@ -83,18 +84,27 @@ pipeline {
                                 --exclude='node_modules' \\
                                 --exclude='.git' \\
                                 --exclude='*.log' \\
-                                --exclude='.env*' \\
                                 --exclude='data' \\
+                                --exclude='.env*' \\
                                 . # Archive contents of current directory
 
                             # 2. Copy the combined archive to the server's temporary staging directory
-                            scp -o StrictHostKeyChecking=no "\${TARBALL_PATH}" rafael@${env.TARGET_SERVER}:"\${DEPLOY_TMP_DIR}/"
+                            scp -o StrictHostKeyChecking=no "\${TARBALL_PATH}" rafael@${env.TARGET_SERVER}:"\${AGENT_REMOTE_DEPLOY_TMP_DIR}/"
 
                             # Clean up the temporary directory on the Jenkins agent
                             rm -rf "\${JENKINS_TAR_TMP_DIR}"
 
                             # 3. Execute server-side deployment operations (main ssh block)
-                            ssh -o StrictHostKeyChecking=no rafael@${env.TARGET_SERVER} << 'EOF'
+                            # Pass necessary variables from Groovy/Jenkins agent into the remote script's environment
+                            ssh -o StrictHostKeyChecking=no rafael@${env.TARGET_SERVER} /bin/bash -s -- \
+                                "${env.TARGET_PATH}" \
+                                "${env.SERVICE_NAME}" \
+                                "${AGENT_REMOTE_DEPLOY_TMP_DIR}" << 'EOF_REMOTE_SCRIPT'
+                                # Assign passed arguments to local variables in the remote script
+                                TARGET_PATH="$1"
+                                SERVICE_NAME="$2"
+                                DEPLOY_TMP_DIR="$3"
+
                                 # Ensure the target application directory exists and has correct permissions
                                 sudo mkdir -p "${TARGET_PATH}"
                                 sudo chown rafael:rafael "${TARGET_PATH}"
@@ -125,14 +135,14 @@ pipeline {
                                 # --- END: Safely clean and prepare TARGET_PATH ---
 
                                 # Extract the new deployment archive into the target application directory
-                                # Using -C "${TARGET_PATH}" ensures extraction directly into the app directory
-                                cd "\${DEPLOY_TMP_DIR}" # Go back to the temp deploy directory to extract
+                                # The deployment tarball is located in DEPLOY_TMP_DIR on the remote server
+                                cd "\${DEPLOY_TMP_DIR}" # Change into the directory where the tarball was copied
                                 tar -xzf deployment.tar.gz -C "${TARGET_PATH}" --overwrite
 
                                 # Clean up the temporary deployment archive and directory on the server
                                 rm deployment.tar.gz
                                 cd /tmp
-                                rm -rf "\${DEPLOY_TMP_DIR}"
+                                rm -rf "\${DEPLOY_TMP_DIR}" # Clean up the remote temporary deploy directory
 
                                 # Navigate back to TARGET_PATH and move persistent directories back
                                 cd "${TARGET_PATH}"
@@ -148,10 +158,9 @@ pipeline {
                                 rm -rf "\${TEMP_PERSIST_DIR}" # Clean up temporary persistent directory
 
                                 # Source NVM to ensure 'pnpm' is in the PATH for the 'rafael' user
-                                # This assumes NVM is installed and configured for the user on the target server.
-                                export NVM_DIR="/root/.nvm" # Adjust this path if NVM is installed elsewhere
-                                [ -s "\$NVM_DIR/nvm.sh" ] && \\. "\$NVM_DIR/nvm.sh"  # Loads nvm
-                                [ -s "\$NVM_DIR/bash_completion" ] && \\. "\$NVM_DIR/bash_completion"  # Loads nvm bash_completion
+                                export NVM_DIR="/root/.nvm"
+                                [ -s "\$NVM_DIR/nvm.sh" ] && \. "\$NVM_DIR/nvm.sh"
+                                [ -s "\$NVM_DIR/bash_completion" ] && \. "\$NVM_DIR/bash_completion"
 
                                 # Hardcode pnpm path for sudo execution as NVM_DIR is consistent.
                                 PNPM_FULL_PATH="/root/.nvm/versions/node/v24.4.0/bin/pnpm"
@@ -160,9 +169,9 @@ pipeline {
                                 sudo "\${PNPM_FULL_PATH}" install --prod --frozen-lockfile
 
                                 # Restart the application using PM2
-                                sudo pm2 restart "${SERVICE_NAME}" || sudo pm2 start ecosystem.config.cjs --name "${SERVICE_NAME}"
+                                sudo pm2 restart "\${SERVICE_NAME}" || sudo pm2 start ecosystem.config.cjs --name "\${SERVICE_NAME}"
                                 sudo pm2 save # Save PM2 process list to retain after reboot
-                            EOF
+                            EOF_REMOTE_SCRIPT
                         """
                     }
                 }
