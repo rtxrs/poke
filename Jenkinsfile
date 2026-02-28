@@ -150,8 +150,8 @@ pipeline {
                                 # Source NVM to ensure 'pnpm' is in the PATH for the 'rafael' user
                                 # This assumes NVM is installed and configured for the user on the target server.
                                 export NVM_DIR="/root/.nvm" # Adjust this path if NVM is installed elsewhere
-                                [ -s "\$NVM_DIR/nvm.sh" ] && \. "\$NVM_DIR/nvm.sh"  # Loads nvm
-                                [ -s "\$NVM_DIR/bash_completion" ] && \. "\$NVM_DIR/bash_completion"  # Loads nvm bash_completion
+                                [ -s "\$NVM_DIR/nvm.sh" ] && \\. "\$NVM_DIR/nvm.sh"  # Loads nvm
+                                [ -s "\$NVM_DIR/bash_completion" ] && \\. "\$NVM_DIR/bash_completion"  # Loads nvm bash_completion
 
                                 # Hardcode pnpm path for sudo execution as NVM_DIR is consistent.
                                 PNPM_FULL_PATH="/root/.nvm/versions/node/v24.4.0/bin/pnpm"
