@@ -4,11 +4,12 @@ import { Worker, isMainThread, parentPort, workerData } from 'worker_threads';
 import { exec } from 'child_process';
 import os from 'os';
 import { fileURLToPath } from 'url';
+import config from '../config.js'; // Import config
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const POKEDEX_PATH = path.join(__dirname, '../data/user/generated/pokedex_modified.json');
+const POKEDEX_PATH = config.POKEDEX_FILE; // Use the path from config.ts
 const OUTPUT_PATH = path.join(__dirname, '../data/user/generated/pvp_ranks.json');
 const TEMP_OUTPUT_PATH = OUTPUT_PATH + '.tmp';
 
