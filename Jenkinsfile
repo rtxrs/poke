@@ -10,8 +10,8 @@ pipeline {
     
     environment {
         TARGET_SERVER = '34.53.125.33'
-        TARGET_PATH = '/var/www/poke'
         SERVICE_NAME = 'poke'
+        TARGET_PATH = '/var/www/poke'
         // SERVER_SSH_USER = 'rafael' // Assuming 'rafael' is the user for SSH
     }
     
@@ -70,7 +70,7 @@ pipeline {
                         sh """
                             # Create a temporary directory on the target server for staging the deployment
                             DEPLOY_TMP_DIR="/tmp/jenkins_deploy_\$(date +%Y%m%d%H%M%S)"
-                            ssh -o StrictHostKeyChecking=no rafael@\${TARGET_SERVER} "mkdir -p \\"\${DEPLOY_TMP_DIR}\\""
+                            ssh -o StrictHostKeyChecking=no rafael@${env.TARGET_SERVER} "mkdir -p \\"\${DEPLOY_TMP_DIR}\\""
 
                             # Create a temporary directory outside the workspace for the tarball
                             JENKINS_TAR_TMP_DIR="/tmp/jenkins_tar_tmp_\$(date +%Y%m%d%H%M%S)"
@@ -89,13 +89,13 @@ pipeline {
                                 . # Archive contents of current directory
 
                             # 2. Copy the combined archive to the server's temporary staging directory
-                            scp -o StrictHostKeyChecking=no "\\"\${TARBALL_PATH}\\"" rafael@\${TARGET_SERVER}:\\"\${DEPLOY_TMP_DIR}/\\"
+                            scp -o StrictHostKeyChecking=no "\\"\${TARBALL_PATH}\\"" rafael@${env.TARGET_SERVER}:\\"\${DEPLOY_TMP_DIR}/\\"
 
                             # Clean up the temporary directory on the Jenkins agent
                             rm -rf "\\"\${JENKINS_TAR_TMP_DIR}\\""
 
                             # 3. Execute server-side deployment operations
-                            ssh -o StrictHostKeyChecking=no rafael@\${TARGET_SERVER} "
+                            ssh -o StrictHostKeyChecking=no rafael@${env.TARGET_SERVER} "
                                 # Ensure the target application directory exists and has correct permissions
                                 sudo mkdir -p \\"\${TARGET_PATH}\\"
                                 sudo chown rafael:rafael \\"\${TARGET_PATH}\\"
@@ -163,7 +163,7 @@ pipeline {
                                 # Restart the application using PM2
                                 # 'sudo pm2 restart \${SERVICE_NAME}' attempts to restart an existing process
                                 # '|| sudo pm2 start ecosystem.config.cjs --name \${SERVICE_NAME}' starts it if not found
-                                sudo pm2 restart \\"\${SERVICE_NAME}\\" || sudo pm2 start ecosystem.config.cjs --name \\"\${SERVICE_NAME}\\"
+                                sudo pm2 restart \\"${env.SERVICE_NAME}\\" || sudo pm2 start ecosystem.config.cjs --name \\"${env.SERVICE_NAME}\\"
                                 sudo pm2 save # Save PM2 process list to retain after reboot
                             "
                         """
