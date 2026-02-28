@@ -78,7 +78,7 @@ pipeline {
                             TARBALL_PATH="\\"\${JENKINS_TAR_TMP_DIR}/deployment.tar.gz\\""
 
                             # 1. Create a combined tarball of all necessary files (source code and built 'dist')
-                            # The tar command will operate on the current directory (${WORKSPACE}),
+                            # The tar command will operate on the current directory,
                             # but create the tarball in the /tmp location.
                             tar -czf "\\"\${TARBALL_PATH}\\"" \\
                                 --exclude='node_modules' \\
