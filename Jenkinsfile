@@ -105,20 +105,20 @@ pipeline {
 
                                 # --- BEGIN: Safely clean and prepare TARGET_PATH ---
                                 # Temporarily move persistent directories out of the way
-                                TEMP_PERSIST_DIR="/tmp/poke_persist_\$(date +%Y%m%d%H%M%S)"
-                                mkdir -p "\${TEMP_PERSIST_DIR}" # Ensure directory is created
+                                TEMP_PERSIST_DIR=\\"/tmp/poke_persist_\$(date +%Y%m%d%H%M%S)\\"
+                                mkdir -p \\"\${TEMP_PERSIST_DIR}\\" # Ensure directory is created
 
                                 # Check and move 'data' if it exists
-                                if [ -d "data" ]; then
-                                    sudo mv data "\${TEMP_PERSIST_DIR}/"
+                                if [ -d \\"data\\" ]; then
+                                    sudo mv data \\"\${TEMP_PERSIST_DIR}/\\"
                                 fi
                                 # Check and move 'node_modules' if it exists (for speed, will reinstall later anyway)
-                                if [ -d "node_modules" ]; then
-                                    sudo mv node_modules "\${TEMP_PERSIST_DIR}/"
+                                if [ -d \\"node_modules\\" ]; then
+                                    sudo mv node_modules \\"\${TEMP_PERSIST_DIR}/\\"
                                 fi
                                 # Check and move '.env' if it exists
-                                if [ -f ".env" ]; then
-                                    sudo mv .env "\${TEMP_PERSIST_DIR}/"
+                                if [ -f \\".env\\" ]; then
+                                    sudo mv .env \\"\${TEMP_PERSIST_DIR}/\\"
                                 fi
 
                                 # Now, delete everything else that should be replaced by the new deployment
@@ -137,16 +137,16 @@ pipeline {
 
                                 # Navigate back to TARGET_PATH and move persistent directories back
                                 cd \${TARGET_PATH}
-                                if [ -d "\${TEMP_PERSIST_DIR}/data" ]; then
-                                    sudo mv "\${TEMP_PERSIST_DIR}/data" .
+                                if [ -d \\"\${TEMP_PERSIST_DIR}/data\\" ]; then
+                                    sudo mv \\"\${TEMP_PERSIST_DIR}/data\\" .
                                 fi
-                                if [ -d "\${TEMP_PERSIST_DIR}/node_modules" ]; then
-                                    sudo mv "\${TEMP_PERSIST_DIR}/node_modules" .
+                                if [ -d \\"\${TEMP_PERSIST_DIR}/node_modules\\" ]; then
+                                    sudo mv \\"\${TEMP_PERSIST_DIR}/node_modules\\" .
                                 fi
-                                if [ -f "\${TEMP_PERSIST_DIR}/.env" ]; then
-                                    sudo mv "\${TEMP_PERSIST_DIR}/.env" .
+                                if [ -f \\"\${TEMP_PERSIST_DIR}/.env\\" ]; then
+                                    sudo mv \\"\${TEMP_PERSIST_DIR}/.env\\" .
                                 fi
-                                rm -rf "\${TEMP_PERSIST_DIR}" # Clean up temporary persistent directory
+                                rm -rf \\"\${TEMP_PERSIST_DIR}\\" # Clean up temporary persistent directory
 
                                 # Source NVM to ensure 'pnpm' is in the PATH for the 'rafael' user
                                 # This assumes NVM is installed and configured for the user on the target server.
@@ -154,11 +154,11 @@ pipeline {
                                 [ -s \\"\\\$NVM_DIR/nvm.sh\\" ] && \\. \\"\\\$NVM_DIR/nvm.sh\\"  # Loads nvm
                                 [ -s \\"\\\$NVM_DIR/bash_completion\\" ] && \\. \\"\\\$NVM_DIR/bash_completion\\"  # Loads nvm bash_completion
 
-                                # Get absolute path to pnpm after NVM has been sourced
-                                PNPM_BIN=\$(which pnpm)
+                                # Hardcode pnpm path for sudo execution as NVM_DIR is consistent.
+                                PNPM_FULL_PATH="/root/.nvm/versions/node/v24.4.0/bin/pnpm"
 
                                 # Install production-only dependencies using absolute path with sudo
-                                sudo "\${PNPM_BIN}" install --prod --frozen-lockfile
+                                sudo "\${PNPM_FULL_PATH}" install --prod --frozen-lockfile
 
                                 # Restart the application using PM2
                                 # 'sudo pm2 restart \${SERVICE_NAME}' attempts to restart an existing process
