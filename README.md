@@ -14,7 +14,7 @@ A comprehensive, high-performance web application designed to visualize and anal
 - **Raid Team Builder:** Automatically suggests the best counters from your collection for current Raid Bosses or Max Battles.
 
 ### Global Analytics
-- **Live Rankings:** See how you stack up against other trainers in terms of distance walked, catches, and collection rarity.
+- **Live Rankings:** See how you weigh up against other trainers in terms of distance walked, catches, and collection rarity.
 - **Showcase:** A global leaderboard of the strongest (by CP) and rarest (by IV/Shiny/Event probability) Pokémon across the community.
 
 ### Technical Power
@@ -28,9 +28,10 @@ A comprehensive, high-performance web application designed to visualize and anal
 - **Backend:** Node.js, Express, TypeScript (ESM)
 - **Frontend:** Vue.js 3, Vite, TypeScript, Tailwind CSS v4, DaisyUI
 - **Data Engine:** Multi-threaded worker scripts for heavy calculations (PvP Ranks)
-- **Testing:** Vitest
+- **Testing:** Vitest (Unit/Integration), Playwright (E2E/Visual Regression)
 - **Package Manager:** pnpm
 - **Process Management:** PM2
+- **CI/CD:** Jenkins
 
 ---
 
@@ -41,15 +42,17 @@ A comprehensive, high-performance web application designed to visualize and anal
 ├── dist/                   # Compiled production build
 │   ├── client/             # Bundled Frontend (Vite)
 │   └── ...                 # Compiled Backend (TSC)
-├── pgsharp_player_data/     # Raw JSON uploads from PGSharp
+├── Jenkinsfile             # Jenkins CI/CD pipeline definition
+├── pgsharp_player_data/    # Raw JSON uploads from PGSharp
+├── playwright.config.js    # Playwright configuration for E2E/Visual tests
 ├── public/                 # Frontend source (HTML, Styles, TypeScript)
 ├── routes/                 # Express API and Auth routes
 ├── scripts/                # Utility scripts (PvP gen, scraping, etc.)
 ├── services/               # Core business logic (PlayerData, Pokedex, etc.)
-├── tests/                  # Vitest unit and integration tests
 ├── server.ts               # Express application entry point
+├── tests/                  # Vitest unit and integration tests
+│   └── visual.spec.js      # Playwright visual regression tests
 ├── vite.config.ts          # Vite frontend configuration
-├── tailwind.config.ts      # Tailwind configuration (v4 via CSS)
 └── ecosystem.config.cjs    # PM2 configuration
 ```
 
@@ -86,7 +89,7 @@ pnpm dev
 ```
 
 ### 5. Deployment Workflow
-This project uses a **Build Locally, Pull Remotely** workflow to save server resources.
+This project uses a **Build Locally, Pull Remotely** workflow to save server resources. It also includes a `Jenkinsfile` for CI/CD automation.
 
 **Locally:**
 ```bash
@@ -104,9 +107,16 @@ pnpm run deploy-pull
 
 ## 🧪 Testing
 
+### Unit and Integration Tests (Vitest)
 Validate the core services and data logic using Vitest:
 ```bash
 pnpm test
+```
+
+### End-to-End and Visual Regression Tests (Playwright)
+Run the Playwright tests for end-to-end functionality and visual regression:
+```bash
+npx playwright test
 ```
 
 ---

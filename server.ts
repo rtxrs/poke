@@ -82,37 +82,38 @@ app.use('/api', apiRoutes);
         console.log('✅ Required directories initialized.');
 
         await pokedexService.initialize();
-        
-        const pokedexPath = config.POKEDEX_RAW_FILE; 
-        const ranksPath = config.RANKINGS_FILE;
-        
+
+        // Check for PvP Ranks binary file instead of JSON
+        const PVP_BINARY_PATH = path.join(__dirname, 'data/user/generated/pvp_ranks.bin');
+        const pokedexPath = config.POKEDEX_RAW_FILE;
+
         let runGen = false;
         try {
-            await fsPromises.access(ranksPath);
+            await fsPromises.access(PVP_BINARY_PATH); // Checks for pvp_ranks.bin
             const pokedexStats = await fsPromises.stat(pokedexPath);
-            const ranksStats = await fsPromises.stat(ranksPath);
-            
-            if (ranksStats.mtime < pokedexStats.mtime) {
-                console.log('⚠️ PvP Ranks file is older than Pokedex source. Regenerating...');
+            const binaryStats = await fsPromises.stat(PVP_BINARY_PATH);
+
+            if (binaryStats.mtime < pokedexStats.mtime) {
+                console.log('⚠️ PvP Ranks binary file is older than Pokedex source. Regenerating...');
                 runGen = true;
             }
         } catch (e) {
-            console.log('⚠️ PvP Ranks file not found. Generating...');
+            console.log('⚠️ PvP Ranks binary file not found. Generating...');
             runGen = true;
         }
 
         if (runGen) {
-            console.log('⚠️ PvP Ranks file is older/missing. Starting background generation...');
+            console.log('⚠️ PvP Ranks binary file is older/missing. Starting background generation...');
             // Check if we are running the compiled code or source
             const isProd = __dirname.includes('dist');
-            const scriptPath = isProd 
+            const scriptPath = isProd
                 ? path.join(__dirname, 'scripts/generate_pvp_ranks.js')
                 : path.join(__dirname, 'scripts/generate_pvp_ranks.ts');
             const command = isProd ? `node ${scriptPath}` : `pnpm tsx ${scriptPath}`;
-            
+
             const child = exec(command, { cwd: __dirname });
-            
-            child.stdout?.on('data', (data) => process.stdout.write(data)); 
+
+            child.stdout?.on('data', (data) => process.stdout.write(data));
             child.stderr?.on('data', (data) => process.stderr.write(data));
 
             child.on('close', (code) => {
@@ -129,8 +130,7 @@ app.use('/api', apiRoutes);
 
         await pvpService.init();
         await playerDataService.init();
-        await playerDataService.initializeRankings();
-        app.listen(config.PORT, () => console.log(`🚀 Server running at http://localhost:${config.PORT}`));
+        await playerDataService.initializeRankings();        app.listen(config.PORT, () => console.log(`🚀 Server running at http://localhost:${config.PORT}`));
     } catch (error) {
         console.error('❌ CRITICAL: Failed to initialize services. Server will not start.', error);
         process.exit(1);

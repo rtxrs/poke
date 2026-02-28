@@ -20,7 +20,7 @@ app.set('trust proxy', 1);
 // --- Middleware ---
 app.use(compression());
 app.use((req, res, next) => {
-    res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' unpkg.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com; img-src 'self' data: raw.githubusercontent.com unpkg.com; font-src 'self' fonts.gstatic.com; connect-src 'self' https://pokemon-go-api.github.io https://pogoapi.net https://raw.githubusercontent.com; worker-src 'self';");
+    res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' unpkg.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com; img-src 'self' data: raw.githubusercontent.com unpkg.com; font-src 'self' fonts.gstatic.com https://www.slant.co data:; connect-src 'self' https://pokemon-go-api.github.io https://pogoapi.net https://raw.githubusercontent.com; worker-src 'self';");
     next();
 });
 app.use(express.json({ limit: '10mb' }));
@@ -68,24 +68,25 @@ app.use('/api', apiRoutes);
         }
         console.log('✅ Required directories initialized.');
         await pokedexService.initialize();
+        // Check for PvP Ranks binary file instead of JSON
+        const PVP_BINARY_PATH = path.join(__dirname, 'data/user/generated/pvp_ranks.bin');
         const pokedexPath = config.POKEDEX_RAW_FILE;
-        const ranksPath = config.RANKINGS_FILE;
         let runGen = false;
         try {
-            await fsPromises.access(ranksPath);
+            await fsPromises.access(PVP_BINARY_PATH); // Checks for pvp_ranks.bin
             const pokedexStats = await fsPromises.stat(pokedexPath);
-            const ranksStats = await fsPromises.stat(ranksPath);
-            if (ranksStats.mtime < pokedexStats.mtime) {
-                console.log('⚠️ PvP Ranks file is older than Pokedex source. Regenerating...');
+            const binaryStats = await fsPromises.stat(PVP_BINARY_PATH);
+            if (binaryStats.mtime < pokedexStats.mtime) {
+                console.log('⚠️ PvP Ranks binary file is older than Pokedex source. Regenerating...');
                 runGen = true;
             }
         }
         catch (e) {
-            console.log('⚠️ PvP Ranks file not found. Generating...');
+            console.log('⚠️ PvP Ranks binary file not found. Generating...');
             runGen = true;
         }
         if (runGen) {
-            console.log('⚠️ PvP Ranks file is older/missing. Starting background generation...');
+            console.log('⚠️ PvP Ranks binary file is older/missing. Starting background generation...');
             // Check if we are running the compiled code or source
             const isProd = __dirname.includes('dist');
             const scriptPath = isProd
